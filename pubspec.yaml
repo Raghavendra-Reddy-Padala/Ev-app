@@ -12,6 +12,9 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   bolt_ui_kit: ^1.2.0
+  intl: ^0.20.2
+  google_maps_flutter: ^2.12.1
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
