@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
+import '../data/models/bike_model.dart';
+import '../utils/constants.dart';
+import '../utils/theme.dart';
 
 class TripSliderController extends GetxController {
   final RxBool isEndTripSliderVisible = false.obs;
@@ -174,7 +179,7 @@ class TripControls {
       bikeMetricsController.stopTracking();
 
       List<List<double>> locations = sharedPreferencesService.getLocationList();
-      logger.i("Locations => \$locations");
+      logger.i("Locations => $locations");
 
       final StartTripController startTripController = Get.find();
       final id = startTripController.tripId.value;

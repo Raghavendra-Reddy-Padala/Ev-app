@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class TripSummaryContainer extends StatelessWidget {
   final String startTime;
@@ -63,7 +67,7 @@ class MetricColumn extends StatelessWidget {
       children: [
         Text(
           title,
-          style: CustomTextTheme.bodySmallI.copyWith(color: Colors.grey),
+          style: CustomTextTheme.bodySmallP.copyWith(color: Colors.grey),
         ),
         SizedBox(height: ScreenUtil().screenWidth * 0.01),
         Text(

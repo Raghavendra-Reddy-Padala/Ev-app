@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../data/models/misc_models.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class ActivityWidget extends StatelessWidget {
   final Trip? trip;

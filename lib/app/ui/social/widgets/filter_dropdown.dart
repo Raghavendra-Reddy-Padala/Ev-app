@@ -1,3 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../../controllers/filter_controller.dart';
+import '../../../utils/theme.dart';
+
 class CustomDropdown extends StatelessWidget {
   final List<String> items;
   final FilterController controller;

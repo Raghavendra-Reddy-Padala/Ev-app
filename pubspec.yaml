@@ -15,6 +15,20 @@ dependencies:
   intl: ^0.20.2
   google_maps_flutter: ^2.12.1
   share_plus: ^10.1.4
+  get: ^4.7.2
+  screenshot: ^3.0.0
+  flutter_screenutil: ^5.9.3
+  fl_chart: ^0.70.2
+  cached_network_image: ^3.4.1
+  carousel_slider: ^5.0.0
+  image_picker: ^1.1.2
+  google_fonts: ^6.2.1
+  geocoding: ^3.0.0
+  sensors_plus: ^6.1.1
+  path_provider: ^2.1.4
+  geolocator: ^10.0.0
+
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

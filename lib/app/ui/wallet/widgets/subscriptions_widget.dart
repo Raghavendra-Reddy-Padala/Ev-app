@@ -1,3 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+
 class SubscriptionsWidget extends StatelessWidget {
   final List<UserSubscriptionModel> subscriptions;
 
@@ -9,9 +15,9 @@ class SubscriptionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: subscriptions.map((subscription) =>
-        _buildSubscriptionCard(subscription)
-      ).toList(),
+      children: subscriptions
+          .map((subscription) => _buildSubscriptionCard(subscription))
+          .toList(),
     );
   }
 
@@ -56,10 +62,7 @@ class SubscriptionsWidget extends StatelessWidget {
 class SubscriptionDetailsSection extends StatelessWidget {
   final UserSubscriptionModel subscription;
 
-  const SubscriptionDetailsSection({
-    super.key,
-    required this.subscription
-  });
+  const SubscriptionDetailsSection({super.key, required this.subscription});
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +77,13 @@ class SubscriptionDetailsSection extends StatelessWidget {
         const Divider(),
         SubscriptionInfoRow(
           title: "Subscription Charges",
-          value: "\\$\${subscription.subscriptionDetails.monthlyFee.toStringAsFixed(2)}",
+          value:
+              "\$${subscription.subscriptionDetails.monthlyFee.toStringAsFixed(2)}",
         ),
         SubscriptionInfoRow(
           title: "Security Deposit",
-          value: "\\$\${subscription.subscriptionDetails.securityDeposit.toStringAsFixed(2)}",
+          value:
+              "\$${subscription.subscriptionDetails.securityDeposit.toStringAsFixed(2)}",
         ),
         SubscriptionInfoRow(
           title: "Subscription Type",
@@ -104,14 +109,10 @@ class SubscriptionInfoRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: CustomTextTheme.bodyMediumP.copyWith(color: Colors.black)
-        ),
-        Text(
-          value,
-          style: CustomTextTheme.bodyMediumP.copyWith(color: Colors.black)
-        ),
+        Text(title,
+            style: CustomTextTheme.bodyMediumP.copyWith(color: Colors.black)),
+        Text(value,
+            style: CustomTextTheme.bodyMediumP.copyWith(color: Colors.black)),
       ],
     );
   }

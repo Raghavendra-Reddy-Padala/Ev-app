@@ -1,4 +1,8 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../utils/constants.dart';
+import '../../utils/theme.dart';
 
 class GraphView extends StatelessWidget {
   final Map<int, double> data;
@@ -149,7 +153,7 @@ class GraphView extends StatelessWidget {
         reservedSize: 40,
         getTitlesWidget: (value, meta) {
           return Text(
-            '\${value.toInt()} Hr',
+            '${value.toInt()} Hr',
             style: CustomTextTheme.bodySmallP,
           );
         },

@@ -1,10 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../data/models/misc_models.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class TripShareButton extends StatelessWidget {
   final ScreenshotController screenshotController;

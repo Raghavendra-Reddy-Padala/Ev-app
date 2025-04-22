@@ -1,4 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class UserSection extends StatelessWidget {
   const UserSection({super.key});
@@ -139,7 +145,7 @@ class UserDetails extends StatelessWidget {
         ),
         SizedBox(width: 8.w),
         UserStatBox(
-          value: "\$trips",
+          value: "$trips",
           unit: "trips",
           color: EVColors.primary,
         ),
@@ -217,7 +223,7 @@ class UserStatBox extends StatelessWidget {
             ),
             Text(
               unit,
-              style: CustomTextTheme.bodySmallI.copyWith(
+              style: CustomTextTheme.bodySmallP.copyWith(
                 color: Colors.white,
                 fontSize: 10.sp,
               ),

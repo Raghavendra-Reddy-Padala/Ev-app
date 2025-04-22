@@ -1,4 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+import '../../global_widgets/graphs.dart';
 
 class TripSummaryGraph extends StatelessWidget {
   final DateTimeRange selectedDateRange;
@@ -27,7 +35,7 @@ class TripSummaryGraph extends StatelessWidget {
     final DateFormat formatter = DateFormat('d MMM');
     final String start = formatter.format(selectedDateRange.start);
     final String end = formatter.format(selectedDateRange.end);
-    return '\$start - \$end';
+    return '$start - $end';
   }
 
   Widget _buildGraphCard(
@@ -117,7 +125,7 @@ class TripSummaryGraph extends StatelessWidget {
     final double totalDistance = _calculateTotalDistance(activityController);
 
     return Text(
-      "\${totalDistance.toStringAsFixed(2)} Km",
+      "${totalDistance.toStringAsFixed(2)} Km",
       style: CustomTextTheme.bodySmallPBold.copyWith(color: Colors.black),
     );
   }

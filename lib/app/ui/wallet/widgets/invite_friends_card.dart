@@ -1,3 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+
 class InviteFriendsCard extends StatelessWidget {
   const InviteFriendsCard({super.key});
 

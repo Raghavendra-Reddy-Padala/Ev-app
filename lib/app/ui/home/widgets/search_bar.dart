@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomSearchBar extends StatelessWidget {
   const CustomSearchBar({super.key});
@@ -107,7 +110,7 @@ class CustomSearchBar extends StatelessWidget {
     return ListTile(
       title: Text(station.name),
       subtitle: Text(
-          '\${station.currentCapacity}/\${station.capacity} bikes available'),
+          '${station.currentCapacity}/${station.capacity} bikes available'),
       onTap: () => _onStationSelect(homeController, station),
     );
   }
