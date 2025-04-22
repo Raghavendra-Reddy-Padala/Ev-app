@@ -1,4 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../../utils/constants.dart';
 
 class GroupDialogHelper {
   static void showCreateGroupDialog(BuildContext context) {
@@ -188,10 +195,10 @@ class GroupDialogHelper {
     try {
       if (imageFile != null) {
         logger.i(
-            "Group created with Name: \$name, Description: \$description, and Image: \${imageFile.path}");
+            "Group created with Name: $name, Description: $description, and Image: ${imageFile.path}");
       } else {
         logger.i(
-            "Group created with Name: \$name and Description: \$description (No image selected)");
+            "Group created with Name: $name and Description: $description (No image selected)");
       }
 
       await groupController.createGroup(name, description);
@@ -202,11 +209,10 @@ class GroupDialogHelper {
       });
 
       Toast.show(
-          message: "Group \$name created successfully",
-          type: ToastType.success);
+          message: "Group $name created successfully", type: ToastType.success);
     } catch (e) {
       Toast.show(
-          message: "Failed to create Group \$name: \$e", type: ToastType.error);
+          message: "Failed to create Group $name: $e", type: ToastType.error);
     }
   }
 }
@@ -237,7 +243,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
         });
       }
     } catch (e) {
-      logger.e("Error picking image: \$e");
+      logger.e("Error picking image: $e");
       Get.snackbar(
         "Error",
         "Failed to pick image. Please try again.",

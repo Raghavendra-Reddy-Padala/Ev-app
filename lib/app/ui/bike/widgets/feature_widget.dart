@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../utils/constants.dart';
+import 'feature_details.dart';
+
 class BikeFeatureWidget extends StatelessWidget {
   final Bike bike;
 
@@ -19,17 +22,17 @@ class BikeFeatureWidget extends StatelessWidget {
           children: [
             BikeFeatureDetail(
               feature: "Top Speed",
-              value: "\${bike.topSpeed} km/h",
+              value: "${bike.topSpeed} km/h",
             ),
             _buildDivider(),
             BikeFeatureDetail(
               feature: "Range",
-              value: "\${bike.range} km",
+              value: "${bike.range} km",
             ),
             _buildDivider(),
             BikeFeatureDetail(
               feature: "Time",
-              value: "\${bike.timeToStation} hrs",
+              value: "${bike.timeToStation} hrs",
             ),
           ],
         ),

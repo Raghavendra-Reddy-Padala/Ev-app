@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class GroupUserSection extends StatelessWidget {
   final String name;
@@ -83,13 +88,13 @@ class _GroupDetails extends StatelessWidget {
     return Row(
       children: [
         _ContainerHelper(
-          text: "\${aggregateData?.totalKm?.toStringAsFixed(1) ?? '0'} kms",
+          text: "${aggregateData?.totalKm?.toStringAsFixed(1) ?? '0'} kms",
           color: EVColors.primary,
           width: containerWidth / 2,
         ),
         const SizedBox(width: 5),
         _ContainerHelper(
-          text: "\${aggregateData?.totalPoints ?? '0'} points",
+          text: "${aggregateData?.totalPoints ?? '0'} points",
           color: EVColors.primary,
           width: containerWidth / 2,
         ),
@@ -99,7 +104,7 @@ class _GroupDetails extends StatelessWidget {
 
   Widget _buildFollowersRow(double containerWidth, dynamic aggregateData) {
     return _FollowerTab(
-      text: "\${aggregateData?.noOfUsers ?? '0'} Followers",
+      text: "${aggregateData?.noOfUsers ?? '0'} Followers",
       color: Colors.black,
       width: containerWidth,
     );
@@ -130,7 +135,7 @@ class _ContainerHelper extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: CustomTextTheme.bodySmallI.copyWith(color: Colors.white),
+        style: CustomTextTheme.bodySmallP.copyWith(color: Colors.white),
       ),
     );
   }
@@ -159,7 +164,7 @@ class _FollowerTab extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: CustomTextTheme.bodySmallI.copyWith(color: Colors.white),
+          style: CustomTextTheme.bodySmallP.copyWith(color: Colors.white),
         ),
       ),
     );

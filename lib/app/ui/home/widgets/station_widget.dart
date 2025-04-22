@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+import '../../global_widgets/custom_widgets.dart';
+import 'distance_widget.dart';
 
 class StationsWidget extends StatelessWidget {
   final Station station;
@@ -133,7 +139,7 @@ class StationCapacityIndicator extends StatelessWidget {
         _buildCapacityIcon(),
         const SizedBox(width: 2),
         Text(
-          ": \$value",
+          ": $value",
           style: CustomTextTheme.bodyMediumP.copyWith(color: Colors.white),
         )
       ],

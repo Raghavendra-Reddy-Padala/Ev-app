@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../../controllers/filter_controller.dart';
+import '../../../data/models/social_model.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
 
 class ClubCard extends StatelessWidget {
   final Group club;

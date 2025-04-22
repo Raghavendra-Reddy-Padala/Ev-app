@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../utils/helpers.dart';
 
 class TransactionList extends StatelessWidget {
   final List<Transaction> transactions;
@@ -71,7 +75,7 @@ class TransactionItem extends StatelessWidget {
           ),
         ),
         trailing: Text(
-          "\${transaction.isDeposit ? '+' : '-'}₹\$formattedAmount",
+          "${transaction.isDeposit ? '+' : '-'}₹$formattedAmount",
           style: GoogleFonts.poppins(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
@@ -86,7 +90,6 @@ class TransactionItem extends StatelessWidget {
     final String formattedBalance =
         BalanceFormatter.formatTransactionAmount(transaction.amount);
 
-    // Remove negative sign if present since we show it separately
     if (formattedBalance.startsWith('-')) {
       return formattedBalance.substring(1);
     }

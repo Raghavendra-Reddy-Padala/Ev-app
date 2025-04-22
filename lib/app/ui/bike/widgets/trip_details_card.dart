@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+import 'ride_details.dart';
+
 class TripDetailsCard extends StatelessWidget {
   final TripDetails details;
 
@@ -47,13 +51,13 @@ class TripDetailsCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLocationDetail(
-          'Bike Pick up Hub - \${details.pickupTime}',
+          'Bike Pick up Hub - ${details.pickupTime}',
           details.pickupLocation,
           null,
         ),
         _buildSwapIcon(),
         _buildLocationDetail(
-          'Bike drop Hub - \${details.dropTime}',
+          'Bike drop Hub - ${details.dropTime}',
           details.dropLocation,
           null,
         ),

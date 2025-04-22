@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../../controllers/location_controller.dart';
 
 class MapsView extends StatefulWidget {
   const MapsView({super.key});
@@ -18,12 +22,10 @@ class _MapsViewState extends State<MapsView> {
     _initializeMap();
   }
 
-  // Initialize map and station data
   Future<void> _initializeMap() async {
     await locationController.fetchUserLocation();
     await _fetchStations();
 
-    // Update markers whenever station data changes
     ever(_nearbyStationsController.nearbyStations, (stations) {
       if (mounted) {
         setState(() {
@@ -33,7 +35,6 @@ class _MapsViewState extends State<MapsView> {
     });
   }
 
-  // Fetch nearby stations data
   Future<void> _fetchStations() async {
     await _nearbyStationsController.fetchNearbyStations(
       locationController.initialLocation.value.latitude,

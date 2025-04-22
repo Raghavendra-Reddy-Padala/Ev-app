@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../utils/theme.dart';
 
 class DistanceWidget extends StatelessWidget {
   final int distance;
@@ -20,7 +23,7 @@ class DistanceWidget extends StatelessWidget {
               _buildDistanceIcon(),
               texts.distance,
               Text(
-                "\$distance Km",
+                "$distance Km",
                 style: CustomTextTheme.bodySmallXPBold
                     .copyWith(color: Colors.white),
               ),

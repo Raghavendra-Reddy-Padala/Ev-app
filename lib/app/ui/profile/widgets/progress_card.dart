@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../../utils/constants.dart';
 
 class UserProgressCard extends StatelessWidget {
   const UserProgressCard({super.key});
@@ -38,7 +41,7 @@ class UserProgressCard extends StatelessWidget {
       color: Colors.red[100],
       child: Center(
         child: Text(
-          'Error: \$errorMessage',
+          'Error: $errorMessage',
           style: const TextStyle(color: Colors.red),
         ),
       ),
@@ -125,7 +128,7 @@ class UserProgressCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "\$points points",
+            "$points points",
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,

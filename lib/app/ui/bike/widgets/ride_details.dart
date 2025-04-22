@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/theme.dart';
+import 'trip_details_card.dart';
 
 class RideDetails {
   final String type;
@@ -124,7 +129,7 @@ class RideDetailsSection extends StatelessWidget {
 
   Widget _buildPrice() {
     return Text(
-      '₹\${details.price}',
+      '₹${details.price}',
       style: CustomTextTheme.headlineLargeP.copyWith(
         color: Colors.black,
         fontWeight: FontWeight.w700,

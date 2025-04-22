@@ -1,6 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../../controllers/location_controller.dart';
+import 'station_widget.dart';
 
 class StationsList extends StatelessWidget {
   const StationsList({super.key});

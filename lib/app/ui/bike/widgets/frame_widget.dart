@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../utils/theme.dart';
+
 class BikeFrameWidget extends StatelessWidget {
   final Bike bike;
 

@@ -1,3 +1,7 @@
+import 'package:get/get.dart';
+
+import '../utils/helpers.dart';
+
 class GraphController extends GetxController {
   final RxMap<int, double> data = <int, double>{}.obs;
   final RxMap<int, String> labels = <int, String>{}.obs;
