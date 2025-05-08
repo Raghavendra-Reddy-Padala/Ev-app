@@ -1,26 +1,24 @@
-import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:mjollnir/app/utils/helpers.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:bolt_ui_kit/bolt_kit.dart';
+
+import 'core/api/api_constants.dart';
+import 'features/authentication/views/splash.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final ApiService apiService = ApiService(ApiConstants.baseUrl);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  await Controllers().initControllers();
   await BoltKit.initialize(
     primaryColor: Color(0xFFFF9330),
     accentColor: Color(0xFFFFE8CE),
     fontFamily: 'Poppins',
     navigatorKey: navigatorKey,
   );
+  await setupDependencies(apiService);
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -28,20 +26,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BoltKit.builder(
-      designSize: const Size(393, 852),
-      builder: () => GetMaterialApp(
-        title: 'Mjollnir',
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
-        themeMode: ThemeMode.light,
-        defaultTransition: Transition.fadeIn,
-        translationsKeys: {},
-        locale: Get.deviceLocale,
-        fallbackLocale: Locale('en', 'US'),
-      ),
+    return ScreenUtilInit(
+      designSize: const Size(391, 852),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.lightTheme(),
+          themeMode: ThemeMode.light,
+          navigatorKey: navigatorKey,
+          title: 'Mjollnir',
+          builder: (context, child) {
+            ScreenUtil.init(context);
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              child: child!,
+            );
+          },
+          home: child,
+        );
+      },
+      child: const Splash(),
     );
   }
 }
