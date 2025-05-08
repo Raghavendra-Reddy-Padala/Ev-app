@@ -18,7 +18,7 @@ abstract class BaseController extends GetxController {
 
   Future<void> _checkDummyDataSetting() async {
     try {
-      useDummyData.value = localStorage.getBool('useDummyData') ?? kDebugMode;
+      useDummyData.value = localStorage.getBool('useDummyData');
     } catch (e) {
       print('Error checking dummy data setting: $e');
       useDummyData.value = kDebugMode;

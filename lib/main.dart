@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:bolt_ui_kit/bolt_kit.dart';
 
 import 'core/api/api_constants.dart';
+import 'core/di/dependency_injection.dart';
 import 'features/authentication/views/splash.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -16,7 +17,7 @@ void main() async {
     fontFamily: 'Poppins',
     navigatorKey: navigatorKey,
   );
-  await setupDependencies(apiService);
+  await setupDependencies();
 
   runApp(const MyApp());
 }

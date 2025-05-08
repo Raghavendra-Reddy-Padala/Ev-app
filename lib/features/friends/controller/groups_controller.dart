@@ -181,7 +181,8 @@ class GroupController extends BaseController {
           final dummyResponse =
               DummyDataService.createGroupResponse(name, description);
 
-          userGroups.add(Group(
+          userGroups.add(
+            Group(
               id: dummyResponse['group_id'],
               name: name,
               description: description,
@@ -193,7 +194,9 @@ class GroupController extends BaseController {
               lastActivity: DateTime.now().toIso8601String(),
               totalDistance: 0.0,
               totalTrips: 0,
-              averageSpeed: 0.0));
+              averageSpeed: 0.0,
+            ),
+          );
           return true;
         },
       );

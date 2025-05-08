@@ -1,16 +1,20 @@
+import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mjollnir/core/storage/local_storage.dart';
 
 import '../../../core/api/base/base_controller.dart';
+import '../../../core/navigation/navigation_service.dart';
 import '../../../main.dart';
 
+import '../../../shared/models/trips/trips_model.dart';
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
 
 class TripsController extends BaseController {
   final RxList<Trip> trips = <Trip>[].obs;
   final RxList<TripLocation> tripLocations = <TripLocation>[].obs;
-
+  Rx<EndTripModel?> endTripDetails = Rx<EndTripModel?>(null);
   final RxDouble currentSpeed = 0.0.obs;
   final RxDouble totalDistance = 0.0.obs;
   final RxDouble totalDuration = 0.0.obs;
@@ -23,6 +27,37 @@ class TripsController extends BaseController {
   void onInit() {
     super.onInit();
     fetchTrips();
+  }
+
+  Future<bool> dataSend(EndTrip endData, String tripId) async {
+    final LocalStorage localStorage = Get.find();
+    String? authToken = localStorage.getToken();
+    if (authToken == null) {
+      //NavigationService.pushReplacementTo(const LoginMainView());
+      return false;
+    }
+    try {
+      final response = await apiService.post(
+          endpoint: '/v1/trips/end/$tripId',
+          headers: {"Authorization": authToken},
+          body: endData.toJson());
+      print("RESPONSE => ${response.data}");
+
+      if (response.statusCode == 200) {
+        endTripDetails.value = EndTripModel.fromJson(response.data);
+        Toast.show(
+          message: "Trip Ended!",
+          type: ToastType.success,
+        );
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+
+      return false;
+    }
   }
 
   Future<void> fetchTrips() async {

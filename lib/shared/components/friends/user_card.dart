@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../features/friends/controller/follow_controller.dart';
 import '../../constants/colors.dart';
 import '../cards/app_cards.dart';
 import '../indicators/loading_indicator.dart';
@@ -79,8 +80,6 @@ class UserCard extends StatelessWidget {
               ),
             ),
           ),
-
-          // Follow button or indicator
           Padding(
             padding: EdgeInsets.all(12.w),
             child: Obx(() {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../features/friends/controller/groups_controller.dart';
 import '../../constants/colors.dart';
-import '../badges/text_badges.dart';
 
 class GroupProfileHeader extends StatelessWidget {
   final String name;
@@ -65,9 +65,9 @@ class GroupProfileHeader extends StatelessWidget {
 
   Widget _buildGroupDetails(GroupController groupController) {
     final aggregateData = groupController.groupAggregateData.value;
-    final totalKm = aggregateData?.totalKm?.toStringAsFixed(1) ?? '0';
-    final totalPoints = aggregateData?.totalPoints?.toString() ?? '0';
-    final membersCount = aggregateData?.noOfUsers?.toString() ?? '0';
+    final totalKm = aggregateData?.totalKm.toStringAsFixed(1) ?? '0';
+    final totalPoints = aggregateData?.totalPoints.toString() ?? '0';
+    final membersCount = aggregateData?.noOfUsers.toString() ?? '0';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,8 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-//import '../../features/authentication/views/login/login_main_view.dart';
 import '../storage/local_storage.dart';
 import '../utils/logger.dart';
 import 'failures.dart';
@@ -36,7 +33,6 @@ class ErrorHandler {
         return ServerFailure(message: 'Bad certificate');
 
       case DioExceptionType.unknown:
-      default:
         return UnknownFailure(
             message: error.message ?? 'Unknown error occurred');
     }
@@ -81,10 +77,7 @@ class ErrorHandler {
     localStorage.setLoggedIn(false);
     localStorage.remove('token');
 
-    // Only navigate if not already on login page
-    if (!Get.currentRoute.contains('/login')) {
-      // Get.offAll(() => const LoginMainView());
-    }
+    if (!Get.currentRoute.contains('/login')) {}
   }
 
   static void logError(dynamic e) {

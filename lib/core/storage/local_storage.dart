@@ -98,7 +98,7 @@ class LocalStorage {
     }
   }
 
-  Future<void> savePath(List<List<double>> points) async {
+  Future<void> savePathPoints(List<List<double>> points) async {
     List<String> encodedPoints = [];
     for (var point in points) {
       if (point.length >= 2) {
@@ -109,7 +109,15 @@ class LocalStorage {
     await _preferences?.setStringList('pathPoints', encodedPoints);
   }
 
-  List<List<double>> getPath() {
+  Future<void> setTime(int seconds) async {
+    await _preferences?.setInt('total_duration', seconds);
+  }
+
+  int getTime() {
+    return _preferences?.getInt('total_duration') ?? 0;
+  }
+
+  List<List<double>> getPathPoints() {
     try {
       final List<String>? encodedPoints =
           _preferences?.getStringList('pathPoints');

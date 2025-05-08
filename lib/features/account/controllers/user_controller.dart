@@ -4,6 +4,7 @@ import 'package:mjollnir/main.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
+import '../../friends/controller/follow_controller.dart';
 
 class UserController extends BaseController {
   final Rxn<UserDetailsResponse> userData = Rxn<UserDetailsResponse>();

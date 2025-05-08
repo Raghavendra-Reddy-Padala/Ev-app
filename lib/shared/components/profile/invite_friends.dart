@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import '../../constants/colors.dart';
 import '../cards/app_cards.dart';
 import '../badges/text_badges.dart';
