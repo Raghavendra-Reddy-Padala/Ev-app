@@ -69,7 +69,8 @@ class StationController extends BaseController {
           );
 
           if (response != null) {
-            final stationResponse = StationResponse.fromJson(response.data);
+            final stationResponse =
+                GetNearbyStationsResponse.fromJson(response.data);
             stations.assignAll(stationResponse.stations);
             filteredStations.assignAll(stationResponse.stations);
             _updateMarkers();
@@ -79,7 +80,7 @@ class StationController extends BaseController {
         },
         dummyData: () {
           final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse = StationResponse.fromJson(dummyData);
+          final stationResponse = GetNearbyStationsResponse.fromJson(dummyData);
           stations.assignAll(stationResponse.stations);
           filteredStations.assignAll(stationResponse.stations);
           _updateMarkers();
@@ -108,7 +109,8 @@ class StationController extends BaseController {
           );
 
           if (response != null) {
-            final stationResponse = StationResponse.fromJson(response.data);
+            final stationResponse =
+                GetNearbyStationsResponse.fromJson(response.data);
             stations.assignAll(stationResponse.stations);
             filteredStations.assignAll(stationResponse.stations);
             _updateMarkers();
@@ -118,7 +120,7 @@ class StationController extends BaseController {
         },
         dummyData: () {
           final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse = StationResponse.fromJson(dummyData);
+          final stationResponse = GetNearbyStationsResponse.fromJson(dummyData);
           stations.assignAll(stationResponse.stations);
           filteredStations.assignAll(stationResponse.stations);
           _updateMarkers();

@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
+import '../../storage/local_storage.dart';
+
 abstract class BaseController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
   final RxBool useDummyData = RxBool(false);
-  final SharedPreferencesService _preferences = SharedPreferencesService();
+  final LocalStorage localStorage = Get.find<LocalStorage>();
 
   @override
   void onInit() {
@@ -16,7 +18,7 @@ abstract class BaseController extends GetxController {
 
   Future<void> _checkDummyDataSetting() async {
     try {
-      useDummyData.value = _preferences.getBool('useDummyData') ?? kDebugMode;
+      useDummyData.value = localStorage.getBool('useDummyData') ?? kDebugMode;
     } catch (e) {
       print('Error checking dummy data setting: $e');
       useDummyData.value = kDebugMode;
@@ -25,7 +27,7 @@ abstract class BaseController extends GetxController {
 
   void toggleDummyData(bool enable) {
     useDummyData.value = enable;
-    _preferences.setBool('useDummyData', enable);
+    localStorage.setBool('useDummyData', enable);
   }
 
   void resetState() {
@@ -52,6 +54,6 @@ abstract class BaseController extends GetxController {
   }
 
   Future<String?> getToken() async {
-    return _preferences.getToken();
+    return localStorage.getToken();
   }
 }

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
 import '../../../shared/models/bike/bike_model.dart';
-import '../../../shared/services/ummy_data_service.dart';
+import '../../../shared/services/dummy_data_service.dart';
 
 class BikeController extends BaseController {
   final RxList<Bike> bikes = <Bike>[].obs;
