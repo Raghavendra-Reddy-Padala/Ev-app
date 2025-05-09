@@ -4,7 +4,6 @@ abstract class Failure {
   Failure({required this.message});
 }
 
-// Network-related failures
 class ConnectionFailure extends Failure {
   ConnectionFailure({required String message}) : super(message: message);
 }
@@ -17,7 +16,6 @@ class RequestCancelledFailure extends Failure {
   RequestCancelledFailure() : super(message: 'Request was cancelled');
 }
 
-// Server-related failures
 class ServerFailure extends Failure {
   ServerFailure({required String message}) : super(message: message);
 }

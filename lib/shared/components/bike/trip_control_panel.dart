@@ -2,11 +2,16 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:slider_button/slider_button.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../core/utils/logger.dart';
+import '../../../features/account/controllers/trips_controller.dart';
+import '../../../features/bikes/controller/bike_metrics_controller.dart';
 import '../../../features/main_page_controller.dart';
 import '../../constants/colors.dart';
+import '../../models/trips/trips_model.dart';
+import 'ride_summary.dart';
 
 class TripControlPanel extends StatelessWidget {
   final RxBool isEndTripSliderVisible;
@@ -36,9 +41,8 @@ class _TripControlButtons extends StatelessWidget {
   final VoidCallback onShowEndTripSlider;
 
   const _TripControlButtons({
-    Key? key,
     required this.onShowEndTripSlider,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -140,14 +144,13 @@ class _EndTripSlider extends StatelessWidget {
   final VoidCallback onHideSlider;
 
   const _EndTripSlider({
-    super.key,
     required this.onHideSlider,
   });
 
   @override
   Widget build(BuildContext context) {
     final BikeMetricsController bikeManager = Get.find<BikeMetricsController>();
-    final EndTripController endTripController = Get.find<EndTripController>();
+    final TripsController endTripController = Get.find<TripsController>();
     final localStorage = Get.find<LocalStorage>();
     final isLoading = false.obs;
 
@@ -173,8 +176,7 @@ class _EndTripSlider extends StatelessWidget {
         action: () async {
           try {
             isLoading.value = true;
-            final SpeedCalculatorController speedCalculatorController =
-                Get.find();
+
             final BikeMetricsController bikeMetricsController = Get.find();
 
             if (bikeMetricsController.endPosition != null) {
@@ -244,7 +246,7 @@ class _EndTripSlider extends StatelessWidget {
             );
 
             bikeMetricsController.resetTripData();
-            speedCalculatorController.resetTripData();
+
             onHideSlider();
           } catch (e) {
             AppLogger.e('Error ending trip', error: e);

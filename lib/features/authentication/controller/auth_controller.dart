@@ -74,8 +74,8 @@ class AuthController extends BaseController {
       });
 
       if (response != null && response.success) {
-        await _preferences.setToken(response.data);
-        await _preferences.setLoggedIn(true);
+        await localStorage.setToken(response.data);
+        await localStorage.setLoggedIn(true);
       }
 
       return response;
@@ -117,8 +117,8 @@ class AuthController extends BaseController {
       });
 
       if (response != null && response.success) {
-        await _preferences.setToken(response.data.token);
-        await _preferences.setLoggedIn(true);
+        await localStorage.setToken(response.data.token);
+        await localStorage.setLoggedIn(true);
       }
 
       return response;
@@ -131,7 +131,7 @@ class AuthController extends BaseController {
   }
 
   Future<void> logout() async {
-    await _preferences.logout();
+    await localStorage.logout();
     currentUser.value = null;
   }
 }

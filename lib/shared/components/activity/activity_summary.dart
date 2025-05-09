@@ -57,13 +57,18 @@ class ActivitySummaryCard extends StatelessWidget {
   }
 
   String formatDuration() {
-    final int hours = duration.toInt();
-    final int minutes = ((duration - hours) * 60).round();
-
-    if (hours > 0) {
-      return "$hours h $minutes min";
-    } else {
-      return "$minutes min";
+    try {
+      final double durationValue = double.parse(duration);
+      final int hours = durationValue.toInt();
+      final int minutes = ((durationValue - hours) * 60).round();
+      if (hours > 0) {
+        return "$hours h $minutes min";
+      } else {
+        return "$minutes min";
+      }
+    } catch (e) {
+      print(e);
+      return duration;
     }
   }
 }

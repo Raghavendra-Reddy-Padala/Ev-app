@@ -8,7 +8,6 @@ class LocalStorage {
     _preferences = await SharedPreferences.getInstance();
   }
 
-  // String operations
   Future<void> setString(String key, String value) async {
     await _preferences?.setString(key, value);
   }
@@ -17,7 +16,6 @@ class LocalStorage {
     return _preferences?.getString(key);
   }
 
-  // Boolean operations
   Future<void> setBool(String key, bool value) async {
     await _preferences?.setBool(key, value);
   }
@@ -26,7 +24,6 @@ class LocalStorage {
     return _preferences?.getBool(key) ?? defaultValue;
   }
 
-  // Int operations
   Future<void> setInt(String key, int value) async {
     await _preferences?.setInt(key, value);
   }
@@ -35,7 +32,6 @@ class LocalStorage {
     return _preferences?.getInt(key);
   }
 
-  // Double operations
   Future<void> setDouble(String key, double value) async {
     await _preferences?.setDouble(key, value);
   }
@@ -44,7 +40,6 @@ class LocalStorage {
     return _preferences?.getDouble(key);
   }
 
-  // List operations
   Future<void> setStringList(String key, List<String> value) async {
     await _preferences?.setStringList(key, value);
   }
@@ -66,7 +61,6 @@ class LocalStorage {
     return stringList.map((e) => double.tryParse(e) ?? 0.0).toList();
   }
 
-  // Complex data operations
   Future<void> setObject(String key, Map<String, dynamic> value) async {
     await _preferences?.setString(key, jsonEncode(value));
   }
@@ -82,7 +76,6 @@ class LocalStorage {
     }
   }
 
-  // Location list operations
   Future<void> saveLocationList(List<List<double>> locations) async {
     String jsonString = jsonEncode(locations);
     await _preferences?.setString('locations', jsonString);
@@ -105,7 +98,7 @@ class LocalStorage {
     }
   }
 
-  Future<void> savePath(List<List<double>> points) async {
+  Future<void> savePathPoints(List<List<double>> points) async {
     List<String> encodedPoints = [];
     for (var point in points) {
       if (point.length >= 2) {
@@ -116,7 +109,15 @@ class LocalStorage {
     await _preferences?.setStringList('pathPoints', encodedPoints);
   }
 
-  List<List<double>> getPath() {
+  Future<void> setTime(int seconds) async {
+    await _preferences?.setInt('total_duration', seconds);
+  }
+
+  int getTime() {
+    return _preferences?.getInt('total_duration') ?? 0;
+  }
+
+  List<List<double>> getPathPoints() {
     try {
       final List<String>? encodedPoints =
           _preferences?.getStringList('pathPoints');
@@ -135,7 +136,6 @@ class LocalStorage {
     }
   }
 
-  // Authentication operations
   Future<void> setToken(String token) async {
     await _preferences?.setString('token', token);
   }
@@ -152,7 +152,6 @@ class LocalStorage {
     return _preferences?.getBool('is_logged_in') ?? false;
   }
 
-  // Bike operations
   Future<void> setBikeSubscribed(bool isSubscribed) async {
     await _preferences?.setBool('bike_subscribed', isSubscribed);
   }

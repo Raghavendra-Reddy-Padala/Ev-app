@@ -24,8 +24,6 @@ class TransactionList extends StatelessWidget {
     if (transactions.isEmpty) {
       return _buildEmptyState();
     }
-
-    // Group transactions by date
     final groupedTransactions = _groupTransactionsByDate();
 
     return ListView.builder(
@@ -66,15 +64,43 @@ class TransactionList extends StatelessWidget {
 
   Map<String, List<Transaction>> _groupTransactionsByDate() {
     final Map<String, List<Transaction>> grouped = {};
+    final DateFormat dateFormatter = DateFormat('yyyy-MM-dd');
 
     for (final transaction in transactions) {
-      if (!grouped.containsKey(transaction.date)) {
-        grouped[transaction.date] = [];
+      final dateKey = dateFormatter.format(transaction.timestamp);
+
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
       }
-      grouped[transaction.date]!.add(transaction);
+      grouped[dateKey]!.add(transaction);
     }
 
-    return grouped;
+    final sortedKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    final sortedMap = <String, List<Transaction>>{};
+    for (final key in sortedKeys) {
+      final date = DateTime.parse(key);
+      final formattedDate = _getFormattedDate(date);
+
+      sortedMap[formattedDate] = grouped[key]!;
+    }
+
+    return sortedMap;
+  }
+
+  String _getFormattedDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateToCheck = DateTime(date.year, date.month, date.day);
+
+    if (dateToCheck == today) {
+      return 'Today';
+    } else if (dateToCheck == yesterday) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('MMMM d, yyyy').format(date);
+    }
   }
 
   Widget _buildLoadingState() {
@@ -125,10 +151,12 @@ class TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color amountColor = transaction.isDeposit ? Colors.green : Colors.red;
-    final IconData icon = transaction.isDeposit
-        ? Icons.arrow_downward_rounded
-        : Icons.arrow_upward_rounded;
+    final bool isDeposit = transaction.type.toLowerCase() == 'deposit' ||
+        transaction.type.toLowerCase() == 'income';
+
+    final Color amountColor = isDeposit ? Colors.green : Colors.red;
+    final IconData icon =
+        isDeposit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded;
 
     return AppCard(
       margin: EdgeInsets.only(bottom: 8.h, left: 16.w, right: 16.w),
@@ -155,7 +183,7 @@ class TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.details,
+                  transaction.description,
                   style: TextStyle(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
@@ -165,7 +193,7 @@ class TransactionCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  _formatTime(transaction.date),
+                  _formatTime(transaction.timestamp),
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: Colors.grey.shade600,
@@ -175,7 +203,7 @@ class TransactionCard extends StatelessWidget {
             ),
           ),
           Text(
-            _formatAmount(transaction.amount, transaction.isDeposit),
+            _formatAmount(transaction.amount, isDeposit),
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
@@ -187,32 +215,17 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  String _formatAmount(String amount, bool isDeposit) {
-    final cleanAmount = amount.replaceAll(' rs', '').trim();
+  String _formatAmount(double amount, bool isDeposit) {
+    final formatter = NumberFormat.currency(
+      symbol: '₹',
+      decimalDigits: 2,
+      locale: 'en_IN',
+    );
 
-    try {
-      final double amountValue = double.parse(cleanAmount);
-      final formatter = NumberFormat.currency(
-        symbol: '₹',
-        decimalDigits: 2,
-        locale: 'en_IN',
-      );
-
-      return "${isDeposit ? '+' : '-'}${formatter.format(amountValue.abs())}";
-    } catch (e) {
-      return "${isDeposit ? '+' : '-'}₹$cleanAmount";
-    }
+    return "${isDeposit ? '+' : '-'}${formatter.format(amount.abs())}";
   }
 
-  String _formatTime(String dateString) {
-    try {
-      final parts = dateString.split(' ');
-      if (parts.length > 1) {
-        return parts[1];
-      }
-      return dateString;
-    } catch (e) {
-      return dateString;
-    }
+  String _formatTime(DateTime timestamp) {
+    return DateFormat('HH:mm').format(timestamp);
   }
 }

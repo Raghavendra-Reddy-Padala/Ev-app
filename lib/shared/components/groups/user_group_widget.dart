@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/colors.dart';
-import '../../models/group/group.dart';
+import '../../models/group/group_models.dart';
 import '../cards/app_cards.dart';
 
 class GroupListItem extends StatelessWidget {

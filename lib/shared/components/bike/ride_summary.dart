@@ -1,321 +1,202 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../constants/colors.dart';
-import '../cards/app_cards.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:mjollnir/shared/constants/colors.dart';
 
-class SummaryCard extends StatelessWidget {
-  final RideDetails rideDetails;
-  final TripDetails tripDetails;
+import '../../../core/navigation/navigation_service.dart';
+import '../../../core/storage/local_storage.dart';
+import '../../../features/account/controllers/trips_controller.dart';
+import '../../../features/bikes/controller/bike_metrics_controller.dart';
+import '../../models/trips/trips_model.dart';
+import '../map/path_view.dart';
+import 'summary_card.dart';
 
-  const SummaryCard({
-    super.key,
-    required this.rideDetails,
-    required this.tripDetails,
-  });
+class RideSummary extends StatelessWidget {
+  final EndTrip? tripData;
 
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: RideDetailsSection(details: rideDetails),
-          ),
-          Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: TripDetailsCard(details: tripDetails),
-          ),
-        ],
-      ),
-    );
-  }
-}
+  RideSummary({super.key, this.tripData});
 
-class RideDetails {
-  final String type;
-  final String bikeImage;
-  final double price;
-  final String rideId;
-  final String frameNumber;
-  final String duration;
-  final String calories;
-  final String status;
-
-  const RideDetails({
-    required this.type,
-    required this.bikeImage,
-    required this.price,
-    required this.rideId,
-    required this.frameNumber,
-    required this.duration,
-    required this.calories,
-    required this.status,
-  });
-}
-
-class RideDetailsSection extends StatelessWidget {
-  final RideDetails details;
-
-  const RideDetailsSection({
-    super.key,
-    required this.details,
-  });
+  final ScreenshotController screenshotController = ScreenshotController();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildBasicInfo(),
-        SizedBox(width: 15.w),
-        Expanded(child: _buildDetailedInfo()),
-      ],
-    );
-  }
+    final BikeMetricsController bikeController =
+        Get.find<BikeMetricsController>();
 
-  Widget _buildBasicInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          details.type,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 10.h),
-        SizedBox(
-          width: 80.w,
-          height: 48.h,
-          child: Image.asset(
-            details.bikeImage,
-            fit: BoxFit.contain,
-          ),
-        ),
-        SizedBox(height: 10.h),
-        Text(
-          '₹${details.price}',
-          style: TextStyle(
-            fontSize: 22.sp,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
-          ),
-        ),
-      ],
-    );
-  }
+    final LocalStorage sharedPreferencesService = Get.find();
+    bool takingScreenshot = false;
 
-  Widget _buildDetailedInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInfoRow(),
-        Divider(height: 20.h),
-        _buildStatsRow(),
-      ],
-    );
-  }
+    final TripsController endTripController = Get.find();
+    final BikeDataController bikeDataController = Get.find();
+    DateTime now = DateTime.now();
+    print(bikeDataController.bikeData.value?.frameNumber);
+    final effectiveTripData = tripData;
 
-  Widget _buildInfoRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _InfoItem(
-          title: 'Ride ID',
-          value: details.rideId,
-          titleColor: Colors.grey[600]!,
-        ),
-        _InfoItem(
-          title: 'Frame number',
-          value: details.frameNumber,
-          titleColor: Colors.black87,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _InfoItem(
-          title: 'Duration',
-          value: details.duration,
-          titleColor: Colors.black87,
-        ),
-        _InfoItem(
-          title: 'Calories',
-          value: details.calories,
-          titleColor: Colors.black87,
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoItem extends StatelessWidget {
-  final String title;
-  final String value;
-  final Color titleColor;
-
-  const _InfoItem({
-    required this.title,
-    required this.value,
-    required this.titleColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: titleColor,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class TripDetails {
-  final String pickupTime;
-  final String dropTime;
-  final String pickupLocation;
-  final String dropLocation;
-
-  const TripDetails({
-    required this.pickupTime,
-    required this.dropTime,
-    required this.pickupLocation,
-    required this.dropLocation,
-  });
-}
-
-class TripDetailsCard extends StatelessWidget {
-  final TripDetails details;
-
-  const TripDetailsCard({
-    super.key,
-    required this.details,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Row(
-        children: [
-          _buildLocationIndicators(),
-          SizedBox(width: 16.w),
-          Expanded(child: _buildTripInfo()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationIndicators() {
-    return Column(
-      children: [
-        Icon(Icons.circle_outlined, size: 16.w, color: Colors.green),
-        Container(
-          width: 2.w,
-          height: 40.h,
-          color: Colors.grey[300],
-        ),
-        Icon(Icons.circle_outlined, size: 16.w, color: Colors.red),
-      ],
-    );
-  }
-
-  Widget _buildTripInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLocationDetail(
-          'Bike Pick up - ${details.pickupTime}',
-          details.pickupLocation,
-        ),
-        _buildSwapIcon(),
-        _buildLocationDetail(
-          'Bike drop - ${details.dropTime}',
-          details.dropLocation,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocationDetail(String title, String location) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          location,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwapIcon() {
-    return Stack(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 12.h),
-          child: Divider(thickness: 1),
-        ),
-        Positioned(
-          right: 24.w,
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: SafeArea(
           child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
+            color: Colors.white,
+            child: Screenshot(
+              controller: screenshotController,
+              child: Column(
+                children: [
+                  const Header(heading: "Ride Summary"),
+                  Padding(
+                    padding: EdgeInsets.only(
+                        left: 20.w, right: 20.w, top: 5.w, bottom: 5.w),
+                    child: Column(
+                      children: [
+                        SummaryCard(
+                          rideDetails: RideDetails(
+                            type: 'Electirc Bike',
+                            bikeImage: 'assets/images/bike.png',
+                            price: 0,
+                            rideId: effectiveTripData?.bikeId ??
+                                endTripController
+                                    .endTripDetails.value?.data?.bikeId
+                                    .toString() ??
+                                "k2590tnkfx",
+                            frameNumber: bikeDataController
+                                    .bikeData.value?.frameNumber ??
+                                'FN0199dfff',
+                            duration: _getDurationText(
+                              bikeController.totalDuration.value,
+                              sharedPreferencesService,
+                            ),
+                            calories: _getCaloriesText(
+                              endTripController
+                                  .endTripDetails.value?.data?.kcal,
+                              bikeController.lastTripCalories.value,
+                              sharedPreferencesService,
+                            ),
+                            status: 'Completed',
+                          ),
+                          tripDetails: TripDetails(
+                            pickupTime: effectiveTripData?.startTimestamp !=
+                                    null
+                                ? DateFormat('hh:mma').format(effectiveTripData
+                                        ?.startTimestamp is DateTime
+                                    ? effectiveTripData!.startTimestamp
+                                    : DateTime.parse(effectiveTripData!
+                                        .startTimestamp
+                                        .toString()))
+                                : DateFormat('hh:mma').format(DateTime.now()),
+                            dropTime: effectiveTripData?.endTimestamp != null
+                                ? DateFormat('hh:mma').format(
+                                    effectiveTripData?.endTimestamp is DateTime
+                                        ? effectiveTripData!.endTimestamp
+                                        : DateTime.parse(effectiveTripData!
+                                            .endTimestamp
+                                            .toString()))
+                                : "N/A",
+                            pickupLocation: bikeController
+                                    .startLocationName.value.isNotEmpty
+                                ? bikeController.startLocationName.value
+                                : "Unknown Location",
+                            dropLocation:
+                                bikeController.endLocationName.value.isNotEmpty
+                                    ? bikeController.endLocationName.value
+                                    : "Unknown Location",
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        SizedBox(
+                          width: ScreenUtil().screenWidth,
+                          height: 170.h,
+                          child: PathView(
+                            pathPoints: bikeController.pathPoints.isNotEmpty
+                                ? bikeController.pathPoints
+                                    .map((point) => LatLng(point[0], point[1]))
+                                    .toList()
+                                : [],
+                            isScreenshotMode: takingScreenshot,
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60.h,
+                          child: const Miscellaneous(
+                            diffPage: false,
+                          ).buildDownloadButton(screenshotController, null),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60.h,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                                bottom: ScreenUtil().screenHeight * 0.02),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                NavigationService.pop();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                              ),
+                              child: Text(
+                                'Done',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20.h),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Icon(Icons.swap_vert, size: 24.w),
           ),
         ),
-      ],
+      ),
     );
+  }
+
+  String _getDurationText(
+      double localDuration, SharedPreferencesService sharedPreferencesService) {
+    int time =
+        sharedPreferencesService.getDouble("lastTripDuration")?.toInt() ?? 0;
+    if (time < 60) {
+      return "$time sec";
+    }
+    int totalMinutes = (time / 60).round();
+    int hours = totalMinutes ~/ 60;
+    int remainingMinutes = totalMinutes % 60;
+
+    if (hours > 0) {
+      return "$hours hr $remainingMinutes min";
+    } else {
+      return "$remainingMinutes min";
+    }
+  }
+
+  String _getCaloriesText(num? backendCalories, double bikeController,
+      SharedPreferencesService sharedPreferencesService) {
+    print("Backend calories: ${backendCalories}");
+    print("Current bikeController calories: ${bikeController}");
+
+    double lastTripCal =
+        sharedPreferencesService.getDouble("lastTripCalories") ?? 0.0;
+    print("lastTripCalories from SharedPrefs: ${lastTripCal}");
+
+    if (lastTripCal > 0) {
+      return "${lastTripCal.toInt()} Kcal";
+    }
+
+    if (bikeController > 0) {
+      return "${bikeController.toInt()} Kcal";
+    }
+
+    return "0 Kcal";
   }
 }

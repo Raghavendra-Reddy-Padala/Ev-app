@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import '../../constants/colors.dart';
 import '../cards/app_cards.dart';
 
@@ -10,11 +9,11 @@ class UserProgressCard extends StatelessWidget {
   final int level;
 
   const UserProgressCard({
-    Key? key,
+    super.key,
     required this.currentPoints,
     required this.nextLevelPoints,
     required this.level,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
