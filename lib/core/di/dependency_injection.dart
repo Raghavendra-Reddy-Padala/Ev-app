@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/trips_controller.dart';
 import 'package:mjollnir/features/authentication/controller/auth_controller.dart';
 
-import '../../features/account/controllers/trips_metrics_controller.dart';
 import '../../features/account/controllers/user_controller.dart';
 import '../../features/bikes/controller/bike_controller.dart';
 import '../../features/friends/controller/groups_controller.dart';
