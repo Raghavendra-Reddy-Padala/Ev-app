@@ -12,8 +12,8 @@ final ApiService apiService = ApiService(ApiConstants.baseUrl);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BoltKit.initialize(
-    primaryColor: Color(0xFFFF9330),
-    accentColor: Color(0xFFFFE8CE),
+    primaryColor: AppColors.primary,
+    accentColor: AppColors.accent,
     fontFamily: 'Poppins',
     navigatorKey: navigatorKey,
   );

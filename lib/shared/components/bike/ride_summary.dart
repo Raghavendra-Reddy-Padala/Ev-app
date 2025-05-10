@@ -163,7 +163,7 @@ class RideSummary extends StatelessWidget {
   }
 
   String _getDurationText(
-      double localDuration, SharedPreferencesService sharedPreferencesService) {
+      double localDuration, LocalStorage sharedPreferencesService) {
     int time =
         sharedPreferencesService.getDouble("lastTripDuration")?.toInt() ?? 0;
     if (time < 60) {

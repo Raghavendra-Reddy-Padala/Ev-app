@@ -1,5 +1,77 @@
 import 'package:intl/intl.dart';
 
+class TripSummaryModel {
+  final Averages averages;
+  final double carbonFootprintKg;
+  final double highestSpeed;
+  final LongestRide longestRide;
+  final int maxElevationM;
+  final int totalCalories;
+  final double totalTimeHours;
+  final int totalTrips;
+
+  TripSummaryModel({
+    required this.averages,
+    required this.carbonFootprintKg,
+    required this.highestSpeed,
+    required this.longestRide,
+    required this.maxElevationM,
+    required this.totalCalories,
+    required this.totalTimeHours,
+    required this.totalTrips,
+  });
+
+  factory TripSummaryModel.fromJson(Map<String, dynamic> json) {
+    return TripSummaryModel(
+      averages: Averages.fromJson(json['averages']),
+      carbonFootprintKg: json['carbon_footprint_kg']?.toDouble() ?? 0.0,
+      highestSpeed: json['highest_speed']?.toDouble() ?? 0.0,
+      longestRide: LongestRide.fromJson(json['longest_ride']),
+      maxElevationM: json['max_elevation_m'] ?? 0,
+      totalCalories: json['total_calories'] ?? 0,
+      totalTimeHours: json['total_time_hours']?.toDouble() ?? 0.0,
+      totalTrips: json['total_trips'] ?? 0,
+    );
+  }
+}
+
+class Averages {
+  final int caloriesTrip;
+  final double distanceKm;
+  final double speedKmh;
+
+  Averages({
+    required this.caloriesTrip,
+    required this.distanceKm,
+    required this.speedKmh,
+  });
+
+  factory Averages.fromJson(Map<String, dynamic> json) {
+    return Averages(
+      caloriesTrip: json['calories_trip'] ?? 0,
+      distanceKm: json['distance_km']?.toDouble() ?? 0.0,
+      speedKmh: json['speed_kmh']?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class LongestRide {
+  final double distanceKm;
+  final double durationHours;
+
+  LongestRide({
+    required this.distanceKm,
+    required this.durationHours,
+  });
+
+  factory LongestRide.fromJson(Map<String, dynamic> json) {
+    return LongestRide(
+      distanceKm: json['distance_km']?.toDouble() ?? 0.0,
+      durationHours: json['duration_hours']?.toDouble() ?? 0.0,
+    );
+  }
+}
+
 class EndTrip {
   final String id;
   final String bikeId;
