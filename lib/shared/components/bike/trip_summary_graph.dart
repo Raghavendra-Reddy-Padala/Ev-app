@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
+import '../../../features/account/controllers/activity_controller.dart';
+import '../map/graph_view.dart';
+
 class TripSummaryGraph extends StatelessWidget {
   final DateTimeRange selectedDateRange;
   final Future<void> Function(BuildContext context) pickDateRange;
@@ -124,7 +127,7 @@ class TripSummaryGraph extends StatelessWidget {
 
     return Text(
       "${totalDistance.toStringAsFixed(2)} Km",
-      style: CustomTextTheme.bodySmallPBold.copyWith(color: Colors.black),
+      style: TextStyle(color: Colors.black),
     );
   }
 

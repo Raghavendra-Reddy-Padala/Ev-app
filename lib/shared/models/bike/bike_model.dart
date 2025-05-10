@@ -17,7 +17,7 @@ class Bike {
     required this.timeToStation,
   });
 
-  factory Bike.fromMap(Map<String, dynamic> map) {
+  factory Bike.fromJson(Map<String, dynamic> map) {
     return Bike(
       id: map['id'],
       frameNumber: map['frame_number'],
@@ -29,7 +29,7 @@ class Bike {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'frame_number': frameNumber,
@@ -56,7 +56,7 @@ class BikesResponseModel {
   factory BikesResponseModel.fromMap(Map<String, dynamic> map) {
     return BikesResponseModel(
       success: map['success'],
-      data: List<Bike>.from(map['data']?.map((x) => Bike.fromMap(x))),
+      data: List<Bike>.from(map['data']?.map((x) => Bike.fromJson(x))),
       message: map['message'],
     );
   }
@@ -64,7 +64,7 @@ class BikesResponseModel {
   Map<String, dynamic> toMap() {
     return {
       'success': success,
-      'data': List<dynamic>.from(data.map((x) => x.toMap())),
+      'data': List<dynamic>.from(data.map((x) => x.toJson())),
       'message': message,
     };
   }

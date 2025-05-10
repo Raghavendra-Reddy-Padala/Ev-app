@@ -43,7 +43,6 @@ class BikeMetricsController extends GetxController {
   LatLng? startPosition;
   LatLng? endPosition;
 
-  Stopwatch? _stationaryTimer;
   StreamSubscription<loc.LocationData>? _locationSubscription;
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   Timer? _durationTimer;
@@ -90,7 +89,7 @@ class BikeMetricsController extends GetxController {
   void updateLocation(Position position) async {
     currentPosition.value = position;
 
-    await _tripsController.putTripLocation(
+    await _tripsController.updateTripLocation(
       tripId: _tripsController.tripId.toString(),
       lat: position.latitude,
       long: position.longitude,
@@ -153,7 +152,7 @@ class BikeMetricsController extends GetxController {
   }
 
   Future<void> _loadMetricsFromStorage() async {
-    totalDuration.value = (localStorage.getTime() ?? 0).toDouble();
+    totalDuration.value = (localStorage.getTime()).toDouble();
     totalDistance.value =
         (localStorage.getDouble("totalDistance") ?? 0.0).toDouble();
     currentSpeed.value =

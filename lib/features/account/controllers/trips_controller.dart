@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -21,7 +23,9 @@ class TripsController extends BaseController {
   final RxInt calculatedCalories = 0.obs;
   final RxInt maxElevation = 0.obs;
   final RxString bikeId = ''.obs;
+  final RxString tripId = ''.obs;
   final RxBool isLocationUpdated = false.obs;
+  final LocalStorage localStorage = Get.find<LocalStorage>();
 
   @override
   void onInit() {
@@ -29,34 +33,109 @@ class TripsController extends BaseController {
     fetchTrips();
   }
 
-  Future<bool> dataSend(EndTrip endData, String tripId) async {
-    final LocalStorage localStorage = Get.find();
-    String? authToken = localStorage.getToken();
-    if (authToken == null) {
-      //NavigationService.pushReplacementTo(const LoginMainView());
-      return false;
-    }
+  Future<bool> startTrip(StartTrip startData) async {
     try {
-      final response = await apiService.post(
-          endpoint: '/v1/trips/end/$tripId',
-          headers: {"Authorization": authToken},
-          body: endData.toJson());
-      print("RESPONSE => ${response.data}");
+      isLoading.value = true;
+      errorMessage.value = '';
 
-      if (response.statusCode == 200) {
-        endTripDetails.value = EndTripModel.fromJson(response.data);
-        Toast.show(
-          message: "Trip Ended!",
-          type: ToastType.success,
-        );
-        return true;
-      } else {
-        return false;
-      }
+      final result = await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = localStorage.getToken();
+          if (authToken == null) {
+            NavigationService.pushReplacementTo(const LoginMainView());
+            return false;
+          }
+
+          final response = await apiService.post(
+            endpoint: '/v1/trips/start',
+            headers: {'Authorization': 'Bearer $authToken'},
+            body: startData.toJson(),
+          );
+
+          if (response != null && response.statusCode == 200) {
+            tripId.value = response.data['data']['id'];
+            print('Start Trip API Response: ${response.data}');
+            print('Trip ID: ${tripId.value}');
+
+            return true;
+          }
+          return false;
+        },
+        dummyData: () {
+          final dummyData = DummyDataService.getStartTripResponse();
+          if (dummyData['success']) {
+            tripId.value = dummyData['data']['id'];
+            return true;
+          }
+          return false;
+        },
+      );
+
+      return result;
     } catch (e) {
-      print(e);
-
+      handleError(e);
       return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> dataSend(EndTrip endData, String tripId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final result = await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = localStorage.getToken();
+          if (authToken == null) {
+            NavigationService.pushReplacementTo(const LoginMainView());
+            return false;
+          }
+
+          final response = await apiService.post(
+            endpoint: '/v1/trips/end/$tripId',
+            headers: {'Authorization': 'Bearer $authToken'},
+            body: endData.toJson(),
+          );
+
+          if (response != null && response.statusCode == 200) {
+            endTripDetails.value = EndTripModel.fromJson(response.data);
+
+            Toast.show(
+              message: "Trip Ended!",
+              type: ToastType.success,
+            );
+
+            saveTripsDataToLocalStorage();
+
+            return true;
+          }
+          return false;
+        },
+        dummyData: () {
+          final dummyData = DummyDataService.getEndTripResponse(tripId);
+          if (dummyData['success']) {
+            endTripDetails.value = EndTripModel.fromJson(dummyData);
+
+            Toast.show(
+              message: "Trip Ended!",
+              type: ToastType.success,
+            );
+            saveTripsDataToLocalStorage();
+
+            return true;
+          }
+          return false;
+        },
+      );
+
+      return result;
+    } catch (e) {
+      handleError(e);
+      return false;
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -67,7 +146,7 @@ class TripsController extends BaseController {
 
       await useApiOrDummy(
         apiCall: () async {
-          final String? authToken = await getToken();
+          final String? authToken = localStorage.getToken();
           if (authToken == null) {
             throw Exception('Authentication token not found');
           }
@@ -82,6 +161,7 @@ class TripsController extends BaseController {
           if (response != null) {
             final tripsResponse = TripsResponse.fromJson(response.data);
             trips.assignAll(tripsResponse.data);
+            saveTripsDataToLocalStorage();
             return true;
           }
           return false;
@@ -90,11 +170,14 @@ class TripsController extends BaseController {
           final dummyData = DummyDataService.getTripsResponse();
           final tripsResponse = TripsResponse.fromJson(dummyData);
           trips.assignAll(tripsResponse.data);
+          saveTripsDataToLocalStorage();
+
           return true;
         },
       );
     } catch (e) {
       handleError(e);
+      loadTripsDataFromLocalStorage();
     } finally {
       isLoading.value = false;
     }
@@ -107,7 +190,7 @@ class TripsController extends BaseController {
 
       await useApiOrDummy(
         apiCall: () async {
-          final String? authToken = await getToken();
+          final String? authToken = localStorage.getToken();
           if (authToken == null) {
             throw Exception('Authentication token not found');
           }
@@ -124,6 +207,8 @@ class TripsController extends BaseController {
             final locationsResponse =
                 TripLocationsResponse.fromJson(response.data);
             tripLocations.assignAll(locationsResponse.data);
+            //saveTripLocationsToLocalStorage(tripId);
+
             return true;
           }
           return false;
@@ -132,11 +217,14 @@ class TripsController extends BaseController {
           final dummyData = DummyDataService.getTripLocationsResponse();
           final locationsResponse = TripLocationsResponse.fromJson(dummyData);
           tripLocations.assignAll(locationsResponse.data);
+          //saveTripLocationsToLocalStorage(tripId);
+
           return true;
         },
       );
     } catch (e) {
       handleError(e);
+      // loadTripLocationsFromLocalStorage(tripId);
     } finally {
       isLoading.value = false;
     }
@@ -154,7 +242,7 @@ class TripsController extends BaseController {
 
       final result = await useApiOrDummy(
         apiCall: () async {
-          final String? authToken = await getToken();
+          final String? authToken = localStorage.getToken();
           if (authToken == null) {
             throw Exception('Authentication token not found');
           }
@@ -176,6 +264,8 @@ class TripsController extends BaseController {
             final data = response.data['data'];
             _updateTripMetrics(data);
             isLocationUpdated.value = true;
+            saveTripMetricsToLocalStorage();
+
             return true;
           }
           return false;
@@ -188,6 +278,10 @@ class TripsController extends BaseController {
             isLocationUpdated.value = true;
 
             tripLocations.add(TripLocation(latitude: lat, longitude: long));
+
+            // Save updated metrics to localStorage
+            saveTripMetricsToLocalStorage();
+
             return true;
           }
           return false;
@@ -223,6 +317,88 @@ class TripsController extends BaseController {
     } catch (e) {
       print("Error in convertToLatLng: $e");
       return [];
+    }
+  }
+
+  void saveTripsDataToLocalStorage() {
+    try {
+      if (trips.isNotEmpty) {
+        final List<Map<String, dynamic>> tripsJson =
+            trips.map((trip) => trip.toJson()).toList();
+        localStorage.setString('trips_data', json.encode(tripsJson));
+      }
+    } catch (e) {
+      print("Error saving trips data to localStorage: $e");
+    }
+  }
+
+  void loadTripsDataFromLocalStorage() {
+    try {
+      final String? tripsData = localStorage.getString('trips_data');
+      if (tripsData != null && tripsData.isNotEmpty) {
+        final List<dynamic> tripsJson = json.decode(tripsData);
+        final List<Trip> loadedTrips =
+            tripsJson.map((json) => Trip.fromJson(json)).toList();
+        trips.assignAll(loadedTrips);
+      }
+    } catch (e) {
+      print("Error loading trips data from localStorage: $e");
+    }
+  }
+
+  // void saveTripLocationsToLocalStorage(String tripId) {
+  //   try {
+  //     if (tripLocations.isNotEmpty) {
+  //       final List<Map<String, dynamic>> locationsJson =
+  //           tripLocations.map((location) => location.toJson()).toList();
+  //       localStorage.setString(
+  //           'trip_locations_$tripId', json.encode(locationsJson));
+  //     }
+  //   } catch (e) {
+  //     print("Error saving trip locations to localStorage: $e");
+  //   }
+  // }
+
+  // void loadTripLocationsFromLocalStorage(String tripId) {
+  //   try {
+  //     final String? locationsData =
+  //         localStorage.getString('trip_locations_$tripId');
+  //     if (locationsData != null && locationsData.isNotEmpty) {
+  //       final List<dynamic> locationsJson = json.decode(locationsData);
+  //       final List<TripLocation> loadedLocations =
+  //           locationsJson.map((json) => TripLocation.fromJson(json)).toList();
+  //       tripLocations.assignAll(loadedLocations);
+  //     }
+  //   } catch (e) {
+  //     print("Error loading trip locations from localStorage: $e");
+  //   }
+  // }
+
+  void saveTripMetricsToLocalStorage() {
+    try {
+      localStorage.setDouble("totalDistance", totalDistance.value);
+      localStorage.setDouble("currentSpeed", currentSpeed.value);
+      localStorage.setDouble("totalDuration", totalDuration.value);
+      localStorage.setInt("calculatedCalories", calculatedCalories.value);
+      localStorage.setInt("maxElevation", maxElevation.value);
+      localStorage.setString("bikeId", bikeId.value);
+      localStorage.setString("tripId", tripId.value);
+    } catch (e) {
+      print("Error saving trip metrics to localStorage: $e");
+    }
+  }
+
+  void loadTripMetricsFromLocalStorage() {
+    try {
+      totalDistance.value = localStorage.getDouble("totalDistance") ?? 0.0;
+      currentSpeed.value = localStorage.getDouble("currentSpeed") ?? 0.0;
+      totalDuration.value = localStorage.getDouble("totalDuration") ?? 0.0;
+      calculatedCalories.value = localStorage.getInt("calculatedCalories") ?? 0;
+      maxElevation.value = localStorage.getInt("maxElevation") ?? 0;
+      bikeId.value = localStorage.getString("bikeId") ?? '';
+      tripId.value = localStorage.getString("tripId") ?? '';
+    } catch (e) {
+      print("Error loading trip metrics from localStorage: $e");
     }
   }
 }
