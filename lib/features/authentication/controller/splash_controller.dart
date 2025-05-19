@@ -4,6 +4,9 @@ import 'package:location/location.dart';
 import 'package:mjollnir/core/navigation/navigation_service.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
 import 'package:mjollnir/core/utils/logger.dart';
+import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
+import 'package:mjollnir/features/authentication/views/login_main_veiw.dart';
+import 'package:mjollnir/features/authentication/views/main_page.dart';
 
 class SplashController extends GetxController {
   static SplashController get find => Get.find();
@@ -30,7 +33,7 @@ void _navigateToApp() {
     Get.put(LocationController()); 
   }
   NavigationService.pushReplacementTo(
-    LocalStorage().isLoggedIn() ? MainPage() : const LoginMainView(),
+    LocalStorage().isLoggedIn() ? MainPage() : const LoginMainVeiw(),
   );
 }
 
