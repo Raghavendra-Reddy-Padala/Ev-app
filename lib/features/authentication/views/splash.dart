@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
+import 'package:mjollnir/features/authentication/controller/splash_controller.dart';
 
 import '../../../shared/constants/constants.dart';
 
@@ -13,7 +14,7 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
-  //final SplashController splashController = Get.put(SplashController());
+  final SplashController splashController = Get.put(SplashController());
   @override
   void initState() {
     super.initState();
