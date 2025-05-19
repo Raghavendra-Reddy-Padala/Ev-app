@@ -493,6 +493,8 @@ class DummyDataService {
   }
 
   static getTripSummaryResponse() {}
+
+  static getBikeData(String id) {}
 }
 
 

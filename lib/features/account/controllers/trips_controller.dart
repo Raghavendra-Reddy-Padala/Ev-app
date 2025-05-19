@@ -43,7 +43,7 @@ class TripsController extends BaseController {
         apiCall: () async {
           final String? authToken = localStorage.getToken();
           if (authToken == null) {
-            NavigationService.pushReplacementTo(const LoginMainView());
+            NavigationService.pushReplacementTo(const LoginMainVeiw());
             return false;
           }
 
@@ -90,7 +90,7 @@ class TripsController extends BaseController {
         apiCall: () async {
           final String? authToken = localStorage.getToken();
           if (authToken == null) {
-            NavigationService.pushReplacementTo(const LoginMainView());
+            NavigationService.pushReplacementTo(const LoginMainVeiw());
             return false;
           }
 

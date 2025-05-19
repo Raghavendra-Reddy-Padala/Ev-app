@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/core/storage/local_storage.dart';
 
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
@@ -12,6 +13,9 @@ class GroupController extends BaseController {
   final Rxn<GroupMembersDetailsModel> groupMembersDetails =
       Rxn<GroupMembersDetailsModel>();
   final Rxn<AggregatedData> groupAggregateData = Rxn<AggregatedData>();
+    var joined_groups = <JoinedGroup>[].obs;
+
+
 
   @override
   void onInit() {
@@ -67,6 +71,8 @@ class GroupController extends BaseController {
       isLoading.value = false;
     }
   }
+  
+  
 
   Future<void> fetchUserGroups() async {
     try {
@@ -342,4 +348,21 @@ class GroupController extends BaseController {
       isLoading.value = false;
     }
   }
+
+  
+  Future<void> getAlreadyJoinedGroups() async {
+   String? authtoken = LocalStorage().getToken();
+
+    final response = await apiService.get(endpoint: 'v1/user/groups', headers: {
+      'Authorization': 'Bearer $authtoken'
+    });
+
+    if (response != null && response is List) {
+      joined_groups.value =
+          response.map((e) => JoinedGroup.fromJson(e)).toList();
+    }
+    print("Joined groups: $joined_groups");
+  }
+
+  
 }
