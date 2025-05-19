@@ -86,7 +86,8 @@ class UserCard extends StatelessWidget {
               final bool currentlyFollowing =
                   followController.followedUsers[userId] ?? isFollowing;
               final bool isLoading =
-                  followController.isProcessingUser.value == userId;
+                  followController.isLoading.value &&
+                      followController.followedUsers == userId;
 
               if (isLoading) {
                 return SizedBox(

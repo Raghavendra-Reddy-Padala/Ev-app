@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/shared/models/user/user_model.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
 import '../../../shared/models/auth/auth_models.dart';
 
 class AuthController extends BaseController {
   final Rxn<User> currentUser = Rxn<User>();
+
 
   Future<LoginResponse?> login(String phone) async {
     try {
@@ -30,9 +32,10 @@ class AuthController extends BaseController {
         }
         return null;
       }, dummyData: () {
+
         return LoginResponse(
             success: true,
-            data: Data(accountExists: true, testPhone: true),
+            data: Data(accountExists: true, testPhone: true, token: getToken().toString()),
             message: "Login successful");
       });
 
@@ -128,6 +131,9 @@ class AuthController extends BaseController {
     } finally {
       isLoading.value = false;
     }
+  }
+   Future<String?> getToken() async {
+    return localStorage.getToken();
   }
 
   Future<void> logout() async {

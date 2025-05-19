@@ -1,5 +1,8 @@
 import 'dart:math';
 
+import 'package:mjollnir/shared/models/group/group_models.dart';
+import 'package:mjollnir/shared/models/user/user_model.dart';
+
 class DummyDataService {
   static Map<String, dynamic> getUserData() {
     return {
@@ -471,7 +474,27 @@ class DummyDataService {
       'message': 'User registered successfully'
     };
   }
+    static List<dynamic> getSearchResults(String query) {
+    final users = (getAllUsersResponse()['data'] as List).map((user) => User.fromJson(user)).toList();
+    final groups = (getGroupsResponse()['groups'] as List).map((group) => Group.fromJson(group)).toList();
+    
+    final results = <dynamic>[];
+    
+    if (query.isNotEmpty) {
+      results.addAll(users.where((user) =>
+          user.firstName.toLowerCase().contains(query.toLowerCase()) ||
+          user.lastName.toLowerCase().contains(query.toLowerCase())));
+      
+      results.addAll(groups.where(
+          (group) => group.name.toLowerCase().contains(query.toLowerCase())));
+    }
+    
+    return results;
+  }
+
+  static getTripSummaryResponse() {}
 }
+
 
 class DateTimeUtils {
   static String formatDate(DateTime date) {

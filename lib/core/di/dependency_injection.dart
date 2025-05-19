@@ -23,5 +23,4 @@ Future<void> setupDependencies() async {
   Get.put(AuthController());
   Get.put(BikeController());
   Get.put(TripsController());
-  Get.put(TripMetricsController());
 }
