@@ -41,16 +41,17 @@ class LoginResponse {
 class Data {
   final bool accountExists;
   final bool testPhone;
+  final String token;
 
   Data({
     required this.accountExists,
-    required this.testPhone,
+    required this.testPhone, required this.token,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) {
     return Data(
       accountExists: json['account_exists'],
-      testPhone: json['test_phone'],
+      testPhone: json['test_phone'], token: '',
     );
   }
 
@@ -58,6 +59,7 @@ class Data {
     return {
       'account_exists': accountExists,
       'test_phone': testPhone,
+      
     };
   }
 }

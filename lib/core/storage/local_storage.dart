@@ -191,4 +191,10 @@ class LocalStorage {
   Future<void> clearAll() async {
     await _preferences?.clear();
   }
+
+  Future<void> logout() async {
+    await _preferences?.remove('token');
+    await setLoggedIn(false);
+  }
+
 }

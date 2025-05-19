@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/base/base_controller.dart';
+import 'package:mjollnir/core/storage/local_storage.dart';
 import '../../../main.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
@@ -9,6 +9,8 @@ import '../../../shared/services/dummy_data_service.dart';
 class ActivityController extends GetxController {
   var data = <int, double>{}.obs;
   var xLabels = <int, String>{}.obs;
+  final RxBool useDummyData = RxBool(false);
+  final LocalStorage localStorage = Get.find<LocalStorage>();
   var selectedDateRange = DateTimeRange(
     start: DateTime.now().subtract(const Duration(days: 6)),
     end: DateTime.now(),
@@ -107,10 +109,19 @@ class ActivityController extends GetxController {
     generateGraphData();
   }
 
+Future<T> useApiOrDummy<T>({
+    required Future<T> Function() apiCall,
+    required T Function() dummyData,
+  }) async {
+    if (useDummyData.value) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return dummyData();
+    } else {
+      return await apiCall();
+    }
+  }
+
   Future<String?> getToken() async {
-    // Implement your token retrieval logic here
-    // For example:
-    // return await StorageService.getAuthToken();
-    return null; // Replace with actual implementation
+    return localStorage.getToken();
   }
 }

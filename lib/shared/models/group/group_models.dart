@@ -1,9 +1,18 @@
+
 class Group {
-  int id;
+  String id;
   String name;
   String description;
   DateTime createdAt;
   String createdBy;
+  int memberCount;
+  bool isMember;
+  bool isCreator;
+  String lastActivity;
+  double totalDistance;
+  int totalTrips;
+  double averageSpeed;
+  AggregatedData? aggregatedData;
 
   Group({
     required this.id,
@@ -11,6 +20,14 @@ class Group {
     required this.description,
     required this.createdAt,
     required this.createdBy,
+    required this.memberCount,
+    required this.isMember,
+    required this.isCreator,
+    required this.lastActivity,
+    required this.totalDistance,
+    required this.totalTrips,
+    required this.averageSpeed,
+    this.aggregatedData,
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
@@ -20,6 +37,16 @@ class Group {
       description: json['description'],
       createdAt: DateTime.parse(json['created_at']),
       createdBy: json['created_by'],
+      memberCount: json['member_count'] ?? 0,
+      isMember: json['is_member'] ?? false,
+      isCreator: json['is_creator'] ?? false,
+      lastActivity: json['last_activity'] ?? '',
+      totalDistance: json['total_distance'] != null ? (json['total_distance'] as num).toDouble() : 0.0,
+      totalTrips: json['total_trips'] ?? 0,
+      averageSpeed: json['average_speed'] != null ? (json['average_speed'] as num).toDouble() : 0.0,
+      aggregatedData: json['aggregated_data'] != null 
+          ? AggregatedData.fromJson(json['aggregated_data']) 
+          : null,
     );
   }
 
@@ -30,6 +57,14 @@ class Group {
       'description': description,
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,
+      'member_count': memberCount,
+      'is_member': isMember,
+      'is_creator': isCreator,
+      'last_activity': lastActivity,
+      'total_distance': totalDistance,
+      'total_trips': totalTrips,
+      'average_speed': averageSpeed,
+      'aggregated_data': aggregatedData?.toJson(),
     };
   }
 }

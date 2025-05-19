@@ -3,7 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:mjollnir/features/bikes/controller/bike_controller.dart';
+import 'package:mjollnir/shared/components/header/header.dart';
+import 'package:mjollnir/shared/components/misc/miscdownloader.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
+import 'package:screenshot/screenshot.dart';
 
 import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
@@ -29,7 +33,7 @@ class RideSummary extends StatelessWidget {
     bool takingScreenshot = false;
 
     final TripsController endTripController = Get.find();
-    final BikeDataController bikeDataController = Get.find();
+    final BikeController bikeDataController = Get.find();
     DateTime now = DateTime.now();
     print(bikeDataController.bikeData.value?.frameNumber);
     final effectiveTripData = tripData;
@@ -119,9 +123,10 @@ class RideSummary extends StatelessWidget {
                         SizedBox(
                           width: double.infinity,
                           height: 60.h,
-                          child: const Miscellaneous(
+                          child:  Miscellaneous(
                             diffPage: false,
-                          ).buildDownloadButton(screenshotController, null),
+                            screenshotController: ScreenshotController(),
+                          ),
                         ),
                         SizedBox(
                           width: double.infinity,
@@ -181,7 +186,7 @@ class RideSummary extends StatelessWidget {
   }
 
   String _getCaloriesText(num? backendCalories, double bikeController,
-      SharedPreferencesService sharedPreferencesService) {
+      LocalStorage sharedPreferencesService) {
     print("Backend calories: ${backendCalories}");
     print("Current bikeController calories: ${bikeController}");
 

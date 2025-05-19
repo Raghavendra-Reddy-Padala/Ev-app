@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mjollnir/shared/constants/constants.dart';
 import '../../constants/colors.dart';
 
 class GraphView extends StatelessWidget {
@@ -225,7 +226,7 @@ class GraphView extends StatelessWidget {
         child: SizedBox(
           width: ScreenUtil().screenWidth * 0.35,
           height: ScreenUtil().screenWidth * 0.05,
-          child: const CompanyLogo(),
+          child: Image.asset(Constants.currentLogo),
         ),
       ),
     );
