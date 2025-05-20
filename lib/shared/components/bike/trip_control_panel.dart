@@ -2,7 +2,6 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:slider_button/slider_button.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../core/utils/logger.dart';
@@ -162,113 +161,128 @@ class _EndTripSlider extends StatelessWidget {
           ),
         );
       }
-
-      return SliderButton(
-        shimmer: false,
-        width: Get.width,
+      return Container(
         height: 60.h,
-        buttonSize: 50.h,
-        backgroundColor: Colors.red,
-        baseColor: Colors.white,
-        buttonColor: Colors.white,
-        highlightedColor: Colors.red.shade700,
-        vibrationFlag: true,
-        action: () async {
-          try {
-            isLoading.value = true;
-
-            final BikeMetricsController bikeMetricsController = Get.find();
-
-            if (bikeMetricsController.endPosition != null) {
-              await bikeMetricsController.getLocationName(
-                bikeMetricsController.endPosition!.latitude,
-                bikeMetricsController.endPosition!.longitude,
-                false,
-              );
-            }
-
-            bikeMetricsController.saveTripSummary();
-            bikeMetricsController.stopTracking();
-
-            final locations = localStorage.getLocationList();
-            AppLogger.i("Locations => $locations");
-
-            final startTripController = Get.find();
-            final id = startTripController.tripId.value;
-            final durationObject = Duration(
-              seconds: bikeMetricsController.totalDuration.value.toInt(),
-            );
-
-            final EndTrip endTripData = EndTrip(
-              id: id,
-              bikeId: bikeManager.bikeID.value,
-              stationId: "0",
-              startTimestamp: DateTime.now().subtract(durationObject),
-              endTimestamp: DateTime.now(),
-              distance: bikeMetricsController.totalDistance.value,
-              duration: bikeMetricsController.totalDuration.value,
-              averageSpeed: bikeMetricsController.currentSpeed.value,
-              path: locations,
-            );
-
-            await endTripController.dataSend(endTripData, id);
-
-            await localStorage.remove('locations');
-            await localStorage.setBikeSubscribed(false);
-            await localStorage.setBikeCode("");
-            await localStorage.setEncodedID('');
-            await localStorage.setDeviceID("");
-            await localStorage.setInt('time', 0);
-
-            bikeManager.bikeSubscribed.value = false;
-            bikeManager.bikeID.value = "";
-            bikeManager.totalDuration.value = 0;
-
-            final MainPageController mainPageController = Get.find();
-            mainPageController.isBikeSubscribed.value = false;
-
-            AwesomeNotifications().createNotification(
-              content: NotificationContent(
-                id: 3,
-                channelKey: 'ride_channel',
-                title: 'Trip Ended',
-                body: 'Your trip has successfully ended. Thanks for riding!',
-                notificationLayout: NotificationLayout.Default,
-              ),
-            );
-
-            NavigationService.pushToWithCallback(
-              RideSummary(tripData: endTripData),
-              () {
-                localStorage.setBikeSubscribed(false);
-                Get.find<BikeMetricsController>().bikeSubscribed.value = false;
-              },
-            );
-
-            bikeMetricsController.resetTripData();
-
-            onHideSlider();
-          } catch (e) {
-            AppLogger.e('Error ending trip', error: e);
-            isLoading.value = false;
-          }
-          return true;
-        },
-        alignLabel: Alignment.center,
-        label: Text(
-          "SLIDE TO END TRIP",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
+        width: Get.width,
+        color: Colors.white,
+        child: Center(
+          child: Text(
+            "Slide to end trip",
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
           ),
         ),
-        icon: Icon(
-          Icons.arrow_forward,
-          color: Colors.red,
-          size: 24.w,
-        ),
       );
+
+      // return SliderButton(
+      //   shimmer: false,
+      //   width: Get.width,
+      //   height: 60.h,
+      //   buttonSize: 50.h,
+      //   backgroundColor: Colors.red,
+      //   baseColor: Colors.white,
+      //   buttonColor: Colors.white,
+      //   highlightedColor: Colors.red.shade700,
+      //   vibrationFlag: true,
+      //   action: () async {
+      //     try {
+      //       isLoading.value = true;
+
+      //       final BikeMetricsController bikeMetricsController = Get.find();
+
+      //       if (bikeMetricsController.endPosition != null) {
+      //         await bikeMetricsController.getLocationName(
+      //           bikeMetricsController.endPosition!.latitude,
+      //           bikeMetricsController.endPosition!.longitude,
+      //           false,
+      //         );
+      //       }
+
+      //       bikeMetricsController.saveTripSummary();
+      //       bikeMetricsController.stopTracking();
+
+      //       final locations = localStorage.getLocationList();
+      //       AppLogger.i("Locations => $locations");
+
+      //       final startTripController = Get.find();
+      //       final id = startTripController.tripId.value;
+      //       final durationObject = Duration(
+      //         seconds: bikeMetricsController.totalDuration.value.toInt(),
+      //       );
+
+      //       final EndTrip endTripData = EndTrip(
+      //         id: id,
+      //         bikeId: bikeManager.bikeID.value,
+      //         stationId: "0",
+      //         startTimestamp: DateTime.now().subtract(durationObject),
+      //         endTimestamp: DateTime.now(),
+      //         distance: bikeMetricsController.totalDistance.value,
+      //         duration: bikeMetricsController.totalDuration.value,
+      //         averageSpeed: bikeMetricsController.currentSpeed.value,
+      //         path: locations,
+      //       );
+
+      //       await endTripController.dataSend(endTripData, id);
+
+      //       await localStorage.remove('locations');
+      //       await localStorage.setBikeSubscribed(false);
+      //       await localStorage.setBikeCode("");
+      //       await localStorage.setEncodedID('');
+      //       await localStorage.setDeviceID("");
+      //       await localStorage.setInt('time', 0);
+
+      //       bikeManager.bikeSubscribed.value = false;
+      //       bikeManager.bikeID.value = "";
+      //       bikeManager.totalDuration.value = 0;
+
+      //       final MainPageController mainPageController = Get.find();
+      //       mainPageController.isBikeSubscribed.value = false;
+
+      //       AwesomeNotifications().createNotification(
+      //         content: NotificationContent(
+      //           id: 3,
+      //           channelKey: 'ride_channel',
+      //           title: 'Trip Ended',
+      //           body: 'Your trip has successfully ended. Thanks for riding!',
+      //           notificationLayout: NotificationLayout.Default,
+      //         ),
+      //       );
+
+      //       NavigationService.pushToWithCallback(
+      //         RideSummary(tripData: endTripData),
+      //         () {
+      //           localStorage.setBikeSubscribed(false);
+      //           Get.find<BikeMetricsController>().bikeSubscribed.value = false;
+      //         },
+      //       );
+
+      //       bikeMetricsController.resetTripData();
+
+      //       onHideSlider();
+      //     } catch (e) {
+      //       AppLogger.e('Error ending trip', error: e);
+      //       isLoading.value = false;
+      //     }
+      //     return true;
+      //   },
+      //   alignLabel: Alignment.center,
+      //   label: Text(
+      //     "SLIDE TO END TRIP",
+      //     style: TextStyle(
+      //       color: Colors.white,
+      //       fontSize: 18.sp,
+      //       fontWeight: FontWeight.w600,
+      //     ),
+      //   ),
+      //   icon: Icon(
+      //     Icons.arrow_forward,
+      //     color: Colors.red,
+      //     size: 24.w,
+      //   ),
+      // );
     });
   }
 }
