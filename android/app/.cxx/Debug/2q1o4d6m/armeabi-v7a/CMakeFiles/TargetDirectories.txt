@@ -1,0 +1,2 @@
+/Users/mohammedaymaan/code/apps/ev/android/app/.cxx/Debug/2q1o4d6m/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/mohammedaymaan/code/apps/ev/android/app/.cxx/Debug/2q1o4d6m/armeabi-v7a/CMakeFiles/rebuild_cache.dir
