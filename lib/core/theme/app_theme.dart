@@ -14,7 +14,7 @@ class AppTheme {
         background: AppColors.background,
         surface: Colors.white,
       ),
-      fontFamily: 'Poppins',
+      fontFamily: GoogleFonts.poppins().fontFamily,
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
       elevatedButtonTheme: _elevatedButtonTheme(),

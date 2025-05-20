@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class LoginMainVeiw extends StatefulWidget {
@@ -10,6 +11,10 @@ class LoginMainVeiw extends StatefulWidget {
 class _LoginMainVeiwState extends State<LoginMainVeiw> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: Center(
+        child: Text("Hi", style: TextStyle(color: Colors.white)),
+      ),
+    );
   }
 }
