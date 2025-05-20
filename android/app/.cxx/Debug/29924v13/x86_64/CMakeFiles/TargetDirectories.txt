@@ -1,0 +1,2 @@
+/Users/mohammedaymaan/code/apps/ev/android/app/.cxx/Debug/29924v13/x86_64/CMakeFiles/edit_cache.dir
+/Users/mohammedaymaan/code/apps/ev/android/app/.cxx/Debug/29924v13/x86_64/CMakeFiles/rebuild_cache.dir
