@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/trips_controller.dart';
 import 'package:mjollnir/features/authentication/controller/auth_controller.dart';
+import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
 
 import '../../features/account/controllers/user_controller.dart';
 import '../../features/bikes/controller/bike_controller.dart';
@@ -23,4 +24,9 @@ Future<void> setupDependencies() async {
   Get.put(AuthController());
   Get.put(BikeController());
   Get.put(TripsController());
+  Get.put(LocationController());
+  Get.put(TripsController());
+  Get.put(StationController());
+  
+  
 }

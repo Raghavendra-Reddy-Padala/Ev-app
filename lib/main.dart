@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:bolt_ui_kit/bolt_kit.dart';
+import 'package:mjollnir/features/authentication/views/register_view.dart';
+import 'package:mjollnir/features/main_page.dart';
 
 import 'core/api/api_constants.dart';
 import 'core/di/dependency_injection.dart';
@@ -11,6 +13,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final ApiService apiService = ApiService(ApiConstants.baseUrl);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppColors.initialize(
+        primary: Colors.green,
+        accent: Colors.red,
+    );
   await BoltKit.initialize(
     primaryColor: AppColors.primary,
     accentColor: AppColors.accent,
@@ -49,7 +55,7 @@ class MyApp extends StatelessWidget {
           home: child,
         );
       },
-      child: const Splash(),
+      child:  MainPage(),
     );
   }
 }

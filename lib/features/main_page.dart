@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/home/controller/views/home_main_view.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 import '../core/storage/local_storage.dart';
@@ -14,9 +15,7 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      const Placeholder(
-        child: Center(child: Text("Home")),
-      ),
+      HomeMainView(),
       const Placeholder(),
       // QrScanView(onSuccess: () {
       //   mainPageController.updateSubscriptionStatus(true);

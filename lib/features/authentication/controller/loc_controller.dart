@@ -7,6 +7,8 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:mjollnir/core/utils/logger.dart';
+import 'package:mjollnir/features/home/controller/station_controller.dart';
+import 'package:mjollnir/shared/constants/strings.dart';
 import 'package:mjollnir/shared/models/stations/station.dart';
 
 class LocationController extends GetxController {
@@ -156,113 +158,113 @@ class LocationController extends GetxController {
   }
 }
 
-// class MapsView extends StatefulWidget {
-//   const MapsView({super.key});
+class MapsView extends StatefulWidget {
+  const MapsView({super.key});
 
-//   @override
-//   State<MapsView> createState() => _MapsViewState();
-// }
+  @override
+  State<MapsView> createState() => _MapsViewState();
+}
 
-// class _MapsViewState extends State<MapsView> {
-//   final LocationController locationController = Get.find();
-//   final GetNearbyStationsController _nearbyStationsController =
-//       Get.find<GetNearbyStationsController>();
-//   final Set<Marker> _markers = {};
+class _MapsViewState extends State<MapsView> {
+  final LocationController locationController = Get.find();
+  final  _nearbyStationsController =
+      Get.find<StationController>();
+  final Set<Marker> _markers = {};
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _initializeMap();
-//   }
+  @override
+  void initState() {
+    super.initState();
+    _initializeMap();
+  }
 
-//   void _initializeMap() async {
-//     await locationController.fetchUserLocation();
-//     await _fetchStations();
+  void _initializeMap() async {
+    await locationController.fetchUserLocation();
+    await _fetchStations();
 
-//     ever(_nearbyStationsController.nearbyStations, (stations) {
-//       if (mounted) {
-//         setState(() {
-//           _updateMarkers(stations);
-//         });
-//       }
-//     });
-//   }
+    ever(_nearbyStationsController.nearbyStations, (stations) {
+      if (mounted) {
+        setState(() {
+          _updateMarkers(stations);
+        });
+      }
+    });
+  }
 
-//   Future<void> _fetchStations() async {
-//     await _nearbyStationsController.fetchNearbyStations(
-//       locationController.initialLocation.value.latitude,
-//       locationController.initialLocation.value.longitude,
-//     );
-//   }
+  Future<void> _fetchStations() async {
+    await _nearbyStationsController.fetchNearbyStations(
+      locationController.initialLocation.value.latitude,
+      locationController.initialLocation.value.longitude,
+    );
+  }
 
-//   void _updateMarkers(List<Station> stations) {
-//     if (!mounted) return;
+  void _updateMarkers(List<Station> stations) {
+    if (!mounted) return;
 
-//     setState(() {
-//       _markers.clear();
-//       _markers.addAll(
-//         stations.map((station) => Marker(
-//               markerId: MarkerId(station.id),
-//               position: LatLng(
-//                 double.parse(station.locationLatitude),
-//                 double.parse(station.locationLongitude),
-//               ),
-//               infoWindow: InfoWindow(
-//                 title: station.name,
-//                 snippet:
-//                     'Capacity: ${station.currentCapacity}/${station.capacity}',
-//               ),
-//             )),
-//       );
-//     });
-//   }
+    setState(() {
+      _markers.clear();
+      _markers.addAll(
+        stations.map((station) => Marker(
+              markerId: MarkerId(station.id),
+              position: LatLng(
+                double.parse(station.locationLatitude),
+                double.parse(station.locationLongitude),
+              ),
+              infoWindow: InfoWindow(
+                title: station.name,
+                snippet:
+                    'Capacity: ${station.currentCapacity}/${station.capacity}',
+              ),
+            )),
+      );
+    });
+  }
 
-//   // String _getMapStyle(BuildContext context) {
-//   //   return Theme.of(context).brightness == Brightness.dark
-//   //       ? MapStyles.customDark
-//   //       : MapStyles.customLight;
-//   // }
+  String _getMapStyle(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? MapStyles.customDark
+        : MapStyles.customLight;
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Obx(() {
-//       if (!locationController.isLocationReady.value) {
-//         return const Center(child: CircularProgressIndicator());
-//       }
-//       WidgetsBinding.instance.addPostFrameCallback((_) {
-//         _updateMarkers(_nearbyStationsController.nearbyStations);
-//       });
-//       return Stack(children: [
-//         GoogleMap(
-//           initialCameraPosition: CameraPosition(
-//             target: locationController.initialLocation.value,
-//             zoom: 7,
-//           ),
-//           myLocationEnabled: true,
-//           myLocationButtonEnabled: false,
-//           zoomControlsEnabled: false,
-//           markers: locationController.markers.toSet(),
-//           onMapCreated: (GoogleMapController controller) {
-//             locationController.mapController.value = controller;
-//             controller.setMapStyle(_getMapStyle(context));
-//             _nearbyStationsController.nearbyStations.listen((stations) {
-//               locationController.markLocations(
-//                 stations
-//                     .map((station) => LatLng(
-//                           double.parse(station.locationLatitude),
-//                           double.parse(station.locationLongitude),
-//                         ))
-//                     .toList(),
-//               );
-//             });
-//           },
-//         ),
-//       ]);
-//     });
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (!locationController.isLocationReady.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateMarkers(_nearbyStationsController.nearbyStations);
+      });
+      return Stack(children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: locationController.initialLocation.value,
+            zoom: 7,
+          ),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          markers: locationController.markers.toSet(),
+          onMapCreated: (GoogleMapController controller) {
+            locationController.mapController.value = controller;
+            controller.setMapStyle(_getMapStyle(context));
+            _nearbyStationsController.nearbyStations.listen((stations) {
+              locationController.markLocations(
+                stations
+                    .map((station) => LatLng(
+                          double.parse(station.locationLatitude),
+                          double.parse(station.locationLongitude),
+                        ))
+                    .toList(),
+              );
+            });
+          },
+        ),
+      ]);
+    });
+  }
 
-//   @override
-//   void dispose() {
-//     super.dispose();
-//   }
-// }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
