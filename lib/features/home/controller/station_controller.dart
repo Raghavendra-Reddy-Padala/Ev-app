@@ -12,7 +12,7 @@ class StationController extends BaseController {
   final RxList<Station> filteredStations = <Station>[].obs;
   final RxSet<Marker> markers = <Marker>{}.obs;
   final Rxn<LatLng> userLocation = Rxn<LatLng>();
-    var nearbyStations = <Station>[].obs;
+  var nearbyStations = <Station>[].obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
@@ -67,7 +67,7 @@ class StationController extends BaseController {
           final response = await apiService.get(
             endpoint: '/v1/stations/get',
             headers: {
-              'X-Karma-Admin-Auth': 'ajbkbakweiuy387yeuqqwfahdjhsabd',
+              'Authentication': '',
             },
           );
 
@@ -107,12 +107,12 @@ class StationController extends BaseController {
           final response = await apiService.get(
             endpoint: '/v1/stations/get_nearby?lat=$lat&lon=$lon&limit=6',
             headers: {
-              'X-Karma-Admin-Auth': 'ajbkbakweiuy387yeuqqwfahdjhsabd',
+              'Authentication': '',
             },
           );
           if (response.success) {
-        nearbyStations.value = response.stations;
-      }
+            nearbyStations.value = response.stations;
+          }
 
           if (response != null) {
             final stationResponse =
