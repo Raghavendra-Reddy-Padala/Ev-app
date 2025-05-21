@@ -12,6 +12,9 @@ class StationController extends BaseController {
   final RxList<Station> filteredStations = <Station>[].obs;
   final RxSet<Marker> markers = <Marker>{}.obs;
   final Rxn<LatLng> userLocation = Rxn<LatLng>();
+    var nearbyStations = <Station>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
 
   GoogleMapController? mapController;
 
@@ -107,11 +110,15 @@ class StationController extends BaseController {
               'X-Karma-Admin-Auth': 'ajbkbakweiuy387yeuqqwfahdjhsabd',
             },
           );
+          if (response.success) {
+        nearbyStations.value = response.stations;
+      }
 
           if (response != null) {
             final stationResponse =
                 GetNearbyStationsResponse.fromJson(response.data);
             stations.assignAll(stationResponse.stations);
+            nearbyStations.value = response.stations;
             filteredStations.assignAll(stationResponse.stations);
             _updateMarkers();
             return true;
@@ -122,6 +129,7 @@ class StationController extends BaseController {
           final dummyData = DummyDataService.getStationsResponse();
           final stationResponse = GetNearbyStationsResponse.fromJson(dummyData);
           stations.assignAll(stationResponse.stations);
+          nearbyStations.value = stationResponse.stations;
           filteredStations.assignAll(stationResponse.stations);
           _updateMarkers();
           return true;
