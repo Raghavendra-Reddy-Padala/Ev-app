@@ -1,18 +1,26 @@
+import 'dart:async';
+
 import 'package:bolt_ui_kit/bolt_kit.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
+import 'package:mjollnir/core/routes/app_routes.dart';
 import 'package:mjollnir/shared/models/user/user_model.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/services/image_service.dart';
 import '../../../main.dart';
+import '../../../shared/components/otp/otp_modal.dart';
 import '../../../shared/models/auth/auth_models.dart';
+
+enum AuthState { login, otp, register }
 
 class AuthController extends BaseController {
   final Rxn<User> currentUser = Rxn<User>();
 
-  // Form controllers for signup
+  //Form controllers for login
   final TextEditingController phoneController = TextEditingController();
+  // Form controllers for signup
+
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
@@ -29,6 +37,11 @@ class AuthController extends BaseController {
   final Rx<String> userType = "student".obs;
   final Rx<String?> profileImageUrl = Rx<String?>(null);
   final RxInt currentStep = 1.obs;
+  final Rx<AuthState> authState = AuthState.login.obs;
+  final RxBool isOtpVerified = false.obs;
+  final RxBool isOtpFailed = false.obs;
+  final RxInt resendTimer = 0.obs;
+  Timer? _resendTimerInstance;
 
   void initSignup(String phone) {
     phoneController.text = phone;
@@ -111,7 +124,6 @@ class AuthController extends BaseController {
         height: '${heightController.text} ${heightUnit.value}',
         weight: '${weightController.text} ${weightUnit.value}',
         type: userType.value,
-        //place: placeController.text,
         email: emailController.text,
         avatar: profileImageUrl.value ?? '',
         employee_id: userType.value == "employee" ? idController.text : '',
@@ -140,36 +152,73 @@ class AuthController extends BaseController {
     Toast.show(message: message, type: ToastType.error);
   }
 
+  void handleGoogleLogin() {
+    showErrorToast('Google login not implemented yet');
+  }
+
+  void startResendTimer() {
+    resendTimer.value = 30;
+    _resendTimerInstance?.cancel();
+    _resendTimerInstance = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendTimer.value > 0) {
+        resendTimer.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void handleLogin() async {
+    if (phoneController.text.isEmpty || phoneController.text.length != 10) {
+      showErrorToast('Please enter a valid phone number');
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      final response = await login(phoneController.text);
+
+      if (response != null && response.success) {
+        //authState.value = AuthState.otp;
+        startResendTimer();
+        OtpBottomSheet.show(Get.context!, this);
+      } else {
+        showErrorToast('Failed to login. Please try again.');
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<LoginResponse?> login(String phone) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-
-      final String authToken = 'ajbkbakweiuy387yeuqqwfahdjhsabd';
-      final data = {'phone': phone};
+      final data = {'phone': '+91$phone'};
 
       final response = await useApiOrDummy(apiCall: () async {
         final apiResponse = await apiService.post(
-          endpoint: '/v1/auth/login',
+          endpoint: ApiConstants.login,
           headers: {
-            'X-Karma-Admin-Auth': authToken,
             'Content-Type': 'application/json',
+            'X-Karma-App': 'dafjcnalnsjn'
           },
           body: data,
         );
-
+        print(apiResponse);
         if (apiResponse != null) {
-          return LoginResponse.fromJson(apiResponse.data);
+          return LoginResponse.fromJson(apiResponse);
         }
         return null;
       }, dummyData: () {
         return LoginResponse(
-            success: true,
-            data: Data(
-                accountExists: true,
-                testPhone: true,
-                token: getToken().toString()),
-            message: "Login successful");
+          success: true,
+          data: Data(
+              accountExists: true,
+              testPhone: true,
+              token: getToken().toString()),
+          message: "Login successful",
+        );
       });
 
       return response;
@@ -189,18 +238,17 @@ class AuthController extends BaseController {
       final String? token = await getToken();
       final headers = {
         'Content-Type': 'application/json',
-        if (token != null && token.isNotEmpty)
-          'Authorization': 'Bearer \$token',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
       final response = await useApiOrDummy(apiCall: () async {
         final apiResponse = await apiService.post(
-            endpoint: '/v1/auth/signup',
+            endpoint: ApiConstants.signup,
             headers: headers,
             body: signupRequest.toJson());
 
         if (apiResponse != null) {
-          return SignupResponse.fromJson(apiResponse.data);
+          return SignupResponse.fromJson(apiResponse);
         }
         return null;
       }, dummyData: () {
@@ -230,16 +278,18 @@ class AuthController extends BaseController {
       errorMessage.value = '';
 
       final data = {
-        'phone': phone,
+        'phone': '+91$phone',
         'otp': otp,
       };
 
       final response = await useApiOrDummy(apiCall: () async {
-        final apiResponse =
-            await apiService.post(endpoint: '/v1/auth/verify_otp', body: data);
+        final apiResponse = await apiService.post(
+            endpoint: ApiConstants.verifyOtp,
+            headers: {'X-Karma-App': 'dafjcnalnsjn'},
+            body: data);
 
         if (apiResponse != null) {
-          return OtpResponse.fromJson(apiResponse.data);
+          return OtpResponse.fromJson(apiResponse);
         }
         return null;
       }, dummyData: () {
@@ -254,7 +304,7 @@ class AuthController extends BaseController {
       });
 
       if (response != null && response.success) {
-        await localStorage.setToken(response.data.token);
+        await localStorage.setToken(response.data.token ?? '');
         await localStorage.setLoggedIn(true);
       }
 
@@ -265,6 +315,50 @@ class AuthController extends BaseController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> handleOtpVerification(String otpValue) async {
+    if (otpValue.length != 6) {
+      showErrorToast('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      final response = await verifyOtp(phoneController.text, otpValue);
+
+      if (response != null && response.success) {
+        isOtpVerified.value = true;
+        isOtpFailed.value = false;
+        //Navigator.of(Get.context!).pop();
+
+        if (!response.data.accountExists) {
+          initSignup(phoneController.text);
+          Get.toNamed(Routes.REGISTER);
+        } else {
+          Get.offAllNamed(Routes.HOME);
+        }
+      } else {
+        isOtpFailed.value = true;
+        isOtpVerified.value = false;
+        showErrorToast('Invalid OTP. Please try again.');
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void resendOtp() {
+    if (resendTimer.value > 0) return;
+
+    handleLogin();
+  }
+
+  void goBackToLogin() {
+    authState.value = AuthState.login;
+    isOtpVerified.value = false;
+    isOtpFailed.value = false;
+    _resendTimerInstance?.cancel();
   }
 
   Future<String?> getToken() async {

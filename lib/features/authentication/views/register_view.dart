@@ -6,6 +6,7 @@ import 'package:mjollnir/shared/constants/constants.dart';
 import '../../../shared/components/auth/signup_form_fields.dart';
 import '../../../shared/components/buttons/custom_button.dart';
 import '../../../shared/components/profile_picker/profile_image_picker.dart';
+import '../../../shared/components/texts/tac.dart';
 
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
@@ -14,24 +15,29 @@ class SignupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: GetBuilder<AuthController>(
-            builder: (controller) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 10.h),
-                  Image.asset(Constants.currentLogo),
-                  SizedBox(height: 20.h),
-                  if (controller.currentStep.value == 1)
-                    _buildPersonalInfoForm(controller, context)
-                  else if (controller.currentStep.value == 2)
-                    _buildAdditionalInfoForm(controller, context)
-                  else
-                    _buildProfilePictureStep(controller, context),
-                ],
-              );
-            },
+        child: Center(
+          child: SingleChildScrollView(
+            child: GetBuilder<AuthController>(
+              builder: (controller) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 10.h),
+                    Padding(
+                      padding: EdgeInsets.all(20.w),
+                      child: Image.asset(Constants.currentLogo),
+                    ),
+                    SizedBox(height: 20.h),
+                    if (controller.currentStep.value == 1)
+                      _buildPersonalInfoForm(controller, context)
+                    else if (controller.currentStep.value == 2)
+                      _buildAdditionalInfoForm(controller, context)
+                    else
+                      _buildProfilePictureStep(controller, context),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -54,20 +60,15 @@ class SignupScreen extends StatelessWidget {
           SignupFormFields.dobField(controller.dobController),
           SizedBox(height: 10.h),
           SignupFormFields.genderDropdown(controller.gender),
-          SizedBox(height: 10.h),
-          SignupFormFields.heightField(
-              controller.heightController, controller.heightUnit),
-          SizedBox(height: 10.h),
-          SignupFormFields.weightField(
-              controller.weightController, controller.weightUnit),
           SizedBox(height: 20.h),
           CustomButton(
             label: 'Continue',
             onPressed: controller.validateAndContinue,
             width: double.infinity,
+            backgroundColor: Colors.black,
           ),
-          SizedBox(height: 10.h),
-          //const TermsText(),
+          SizedBox(height: 20.h),
+          const TermsText(),
         ],
       ),
     );
@@ -97,6 +98,14 @@ class SignupScreen extends StatelessWidget {
               )),
           SignupFormFields.emailField(
               controller.emailController, controller.userType.value),
+          SizedBox(height: 10.h),
+          SignupFormFields.genderDropdown(controller.gender),
+          SizedBox(height: 10.h),
+          SignupFormFields.heightField(
+              controller.heightController, controller.heightUnit),
+          SizedBox(height: 10.h),
+          SignupFormFields.weightField(
+              controller.weightController, controller.weightUnit),
           SizedBox(height: 20.h),
           CustomButton(
             label: 'Continue',
@@ -104,7 +113,7 @@ class SignupScreen extends StatelessWidget {
             width: double.infinity,
           ),
           SizedBox(height: 10.h),
-          //const TermsText(),
+          const TermsText(),
         ],
       ),
     );
@@ -128,7 +137,7 @@ class SignupScreen extends StatelessWidget {
             width: double.infinity,
           ),
           SizedBox(height: 10.h),
-          //const TermsText(),
+          const TermsText(),
         ],
       ),
     );

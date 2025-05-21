@@ -1,7 +1,8 @@
 class Constants {
-  static String currentLogo = '';
+  static String currentLogo = 'assets/company/Logo-Black.png';
   static String bike = '';
   static String distance = '';
+  static String google = 'assets/images/google.png';
   static const String lightMapStyle = '''
   [
   {

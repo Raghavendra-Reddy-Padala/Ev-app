@@ -1,12 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:mjollnir/core/api/api_constants.dart';
 import 'dart:convert';
-import '../../core/utils/logger.dart';
 import '../../shared/components/logger/logger.dart';
-import '../../shared/constants/constants.dart';
 import '../storage/local_storage.dart';
 
 enum ImageType {

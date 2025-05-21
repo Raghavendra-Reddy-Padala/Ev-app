@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mjollnir/features/home/controller/views/home_main_view.dart';
+import 'package:mjollnir/features/home/views/home_main_view.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 import '../core/storage/local_storage.dart';

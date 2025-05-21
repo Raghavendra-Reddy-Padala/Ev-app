@@ -1,18 +1,15 @@
 import 'dart:convert';
-
 import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
-import 'package:mjollnir/features/authentication/views/login_main_view.dart';
-
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../main.dart';
-
 import '../../../shared/models/trips/trips_model.dart';
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
+import '../../authentication/views/auth_view.dart';
 
 class TripsController extends BaseController {
   final RxList<Trip> trips = <Trip>[].obs;
@@ -43,7 +40,7 @@ class TripsController extends BaseController {
         apiCall: () async {
           final String? authToken = localStorage.getToken();
           if (authToken == null) {
-            NavigationService.pushReplacementTo(const LoginMainVeiw());
+            NavigationService.pushReplacementTo(const AuthView());
             return false;
           }
 
@@ -90,7 +87,7 @@ class TripsController extends BaseController {
         apiCall: () async {
           final String? authToken = localStorage.getToken();
           if (authToken == null) {
-            NavigationService.pushReplacementTo(const LoginMainVeiw());
+            NavigationService.pushReplacementTo(const AuthView());
             return false;
           }
 

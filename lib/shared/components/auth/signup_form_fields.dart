@@ -10,7 +10,7 @@ class SignupFormFields {
       controller: controller,
       hintText: "9999999999",
       keyboardType: TextInputType.phone,
-      prefixText: "+91",
+      prefixText: "+91  ",
       readOnly: readOnly,
     );
   }
@@ -43,10 +43,9 @@ class SignupFormFields {
         );
 
         if (pickedDate != null) {
-          String formattedDate =
-              "\${pickedDate.day.toString().padLeft(2, '0')}/"
-              "\${pickedDate.month.toString().padLeft(2, '0')}/"
-              "\${pickedDate.year}";
+          String formattedDate = "${pickedDate.day.toString().padLeft(2, '0')}/"
+              "${pickedDate.month.toString().padLeft(2, '0')}/"
+              "${pickedDate.year}";
           controller.text = formattedDate;
         }
       },
