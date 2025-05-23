@@ -96,69 +96,71 @@ class OtpResponse {
 
 class SignupRequest {
   final String phone;
-  final String otp;
-  final String email;
   final String firstName;
   final String lastName;
   final String dateOfBirth;
-  final String password;
-  final String type;
-  final String employee_id;
-  final String company;
-  final String college;
-  final String student_id;
+  final String gender;
   final String height;
   final String weight;
-  final String gender;
+  final String type;
+  final String email;
   final String avatar;
+  final String employee_id;
+  final String student_id;
+  final String college;
+  final String company;
+  final String otp;
+  final String password;
   final String banner;
   final String weightUnit;
   final String heightUnit;
+  final String place;
+
   SignupRequest({
     required this.phone,
-    required this.otp,
-    required this.email,
     required this.firstName,
     required this.lastName,
     required this.dateOfBirth,
-    required this.password,
-    required this.type,
-    required this.college,
-    required this.company,
-    required this.employee_id,
-    required this.student_id,
+    required this.gender,
     required this.height,
     required this.weight,
-    required this.gender,
+    required this.type,
+    required this.email,
     required this.avatar,
+    required this.employee_id,
+    required this.student_id,
+    required this.college,
+    required this.company,
+    required this.otp,
+    required this.password,
     required this.banner,
     required this.weightUnit,
     required this.heightUnit,
+    required this.place,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'phone': phone,
-      'otp': otp,
-      'email': email,
-      'first_name': firstName,
-      'last_name': lastName,
-      'date_of_birth': dateOfBirth,
-      'password': password,
-      'type': type,
-      'employee_id': employee_id,
-      'company': company,
-      'college': college,
-      'student_id': student_id,
-      'height': height,
-      'weight': weight,
-      'gender': gender,
-      'avatar': avatar,
-      'banner': banner,
-      'weight_unit': weightUnit,
-      'height_unit': heightUnit,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'phone': phone,
+        'first_name': firstName,
+        'last_name': lastName,
+        'date_of_birth': dateOfBirth,
+        'gender': gender,
+        'height': height,
+        'weight': weight,
+        'type': type,
+        'email': email,
+        'avatar': avatar,
+        'employee_id': employee_id,
+        'student_id': student_id,
+        'college': college,
+        'company': company,
+        'otp': otp,
+        'password': password,
+        'banner': banner,
+        'weight_unit': weightUnit,
+        'height_unit': heightUnit,
+        'place': place,
+      };
 }
 
 class SignupResponse {

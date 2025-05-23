@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -20,7 +20,7 @@ class AuthController extends BaseController {
   //Form controllers for login
   final TextEditingController phoneController = TextEditingController();
   // Form controllers for signup
-
+  final RxString storedOtp = ''.obs;
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
@@ -69,9 +69,7 @@ class AuthController extends BaseController {
     if (firstNameController.text.isEmpty ||
         lastNameController.text.isEmpty ||
         dobController.text.isEmpty ||
-        gender.value.isEmpty ||
-        heightController.text.isEmpty ||
-        weightController.text.isEmpty) {
+        gender.value.isEmpty) {
       showErrorToast('Please fill in all fields');
       return;
     }
@@ -83,6 +81,8 @@ class AuthController extends BaseController {
   void validateSecondFormAndContinue() {
     if (placeController.text.isEmpty ||
         emailController.text.isEmpty ||
+        heightController.text.isEmpty ||
+        weightController.text.isEmpty ||
         (userType.value != "general" && idController.text.isEmpty)) {
       showErrorToast('Please fill in all fields');
       return;
@@ -95,9 +95,12 @@ class AuthController extends BaseController {
     update();
   }
 
-  Future<void> updateProfileImage() async {
+  Future<void> updateProfileImage(ImageSource source) async {
     try {
-      final url = await ImageService.pickAndUploadImage(type: ImageType.avatar);
+      final url = await ImageService.pickAndUploadImage(
+        type: ImageType.avatar,
+        source: source,
+      );
       if (url != null) {
         profileImageUrl.value = url;
       }
@@ -107,10 +110,10 @@ class AuthController extends BaseController {
   }
 
   void completeSignup() async {
-    if (profileImageUrl.value == null) {
-      showErrorToast('Please upload a profile picture');
-      return;
-    }
+    // if (profileImageUrl.value == null) {
+    //   showErrorToast('Please upload a profile picture');
+    //   return;
+    // }
 
     try {
       isLoading.value = true;
@@ -121,27 +124,28 @@ class AuthController extends BaseController {
         lastName: lastNameController.text,
         dateOfBirth: dobController.text,
         gender: gender.value,
-        height: '${heightController.text} ${heightUnit.value}',
-        weight: '${weightController.text} ${weightUnit.value}',
+        height: heightController.text,
+        weight: weightController.text,
         type: userType.value,
         email: emailController.text,
         avatar: profileImageUrl.value ?? '',
         employee_id: userType.value == "employee" ? idController.text : '',
         student_id: userType.value == "student" ? idController.text : '',
-        otp: '',
+        college: userType.value == "student" ? placeController.text : '',
+        company: userType.value == "employee" ? placeController.text : '',
+        otp: storedOtp.value,
         password: '',
         banner: '',
-        college: '',
-        company: '',
-        weightUnit: '',
-        heightUnit: '',
+        weightUnit: weightUnit.value,
+        heightUnit: heightUnit.value,
+        place: userType.value == "general" ? placeController.text : '',
       );
 
       final response = await signup(signupRequest);
 
       if (response != null && response.success) {
         resetSignupData();
-        Get.offAllNamed('/main');
+        Get.offAllNamed(Routes.HOME);
       }
     } finally {
       isLoading.value = false;
@@ -276,7 +280,7 @@ class AuthController extends BaseController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-
+      storedOtp.value = otp;
       final data = {
         'phone': '+91$phone',
         'otp': otp,
