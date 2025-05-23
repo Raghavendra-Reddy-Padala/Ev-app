@@ -15,6 +15,72 @@ class SignupFormFields {
     );
   }
 
+  static Widget placeField(TextEditingController controller, String userType) {
+    // Only show college dropdown for students
+    if (userType == "student") {
+      return Builder(builder: (context) {
+        final theme = Theme.of(context);
+
+        return SizedBox(
+          width: 350.w,
+          height: 50.w,
+          child: DropdownButtonFormField<String>(
+            value: controller.text.isNotEmpty ? controller.text : null,
+            onChanged: (value) {
+              controller.text = value ?? "";
+            },
+            items: [
+              DropdownMenuItem(
+                  value: "JNTUH",
+                  child: Text("JNTUH", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "OU",
+                  child: Text("OU", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "CBIT",
+                  child: Text("CBIT", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "VNR",
+                  child: Text("VNR", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "MGIT",
+                  child: Text("MGIT", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "MVSR",
+                  child: Text("MVSR", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "GITAM",
+                  child: Text("GITAM", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "BITS",
+                  child: Text("BITS", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "IIIT",
+                  child: Text("IIIT", style: theme.textTheme.bodyMedium)),
+              DropdownMenuItem(
+                  value: "VASAVI",
+                  child: Text("VASAVI", style: theme.textTheme.bodyMedium)),
+            ],
+            decoration: _getInputDecoration(hintText: "Select College"),
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          ),
+        );
+      });
+    } else if (userType == "employee") {
+      return Builder(builder: (context) {
+        return _buildTextField(
+          controller: controller,
+          hintText: "Company Name",
+        );
+      });
+    } else {
+      return _buildTextField(
+        controller: controller,
+        hintText: "Place",
+      );
+    }
+  }
+
   static Widget firstNameField(TextEditingController controller) {
     return _buildTextField(
       controller: controller,
@@ -136,64 +202,6 @@ class SignupFormFields {
         ),
       );
     });
-  }
-
-  static Widget placeField(TextEditingController controller, String userType) {
-    if (userType == "general") {
-      return _buildTextField(
-        controller: controller,
-        hintText: "Place",
-      );
-    } else {
-      return Builder(builder: (context) {
-        final theme = Theme.of(context);
-
-        return SizedBox(
-          width: 350.w,
-          height: 50.w,
-          child: DropdownButtonFormField<String>(
-            value: controller.text.isNotEmpty ? controller.text : null,
-            onChanged: (value) {
-              controller.text = value ?? "";
-            },
-            items: [
-              DropdownMenuItem(
-                  value: "JNTUH",
-                  child: Text("JNTUH", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "OU",
-                  child: Text("OU", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "CBIT",
-                  child: Text("CBIT", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "VNR",
-                  child: Text("VNR", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "MGIT",
-                  child: Text("MGIT", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "MVSR",
-                  child: Text("MVSR", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "GITAM",
-                  child: Text("GITAM", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "BITS",
-                  child: Text("BITS", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "IIIT",
-                  child: Text("IIIT", style: theme.textTheme.bodyMedium)),
-              DropdownMenuItem(
-                  value: "VASAVI",
-                  child: Text("VASAVI", style: theme.textTheme.bodyMedium)),
-            ],
-            decoration: _getInputDecoration(hintText: "Select College"),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-          ),
-        );
-      });
-    }
   }
 
   static Widget idField(TextEditingController controller, String userType) {

@@ -99,8 +99,6 @@ class SignupScreen extends StatelessWidget {
           SignupFormFields.emailField(
               controller.emailController, controller.userType.value),
           SizedBox(height: 10.h),
-          SignupFormFields.genderDropdown(controller.gender),
-          SizedBox(height: 10.h),
           SignupFormFields.heightField(
               controller.heightController, controller.heightUnit),
           SizedBox(height: 10.h),
@@ -111,6 +109,7 @@ class SignupScreen extends StatelessWidget {
             label: 'Continue',
             onPressed: controller.validateSecondFormAndContinue,
             width: double.infinity,
+            backgroundColor: Colors.black,
           ),
           SizedBox(height: 10.h),
           const TermsText(),
@@ -129,12 +128,14 @@ class SignupScreen extends StatelessWidget {
           ProfileImagePicker(
             imageUrl: controller.profileImageUrl,
             onImageSelected: controller.updateProfileImage,
+            size: 120,
           ),
           SizedBox(height: 30.h),
           CustomButton(
             label: 'Complete Signup',
             onPressed: controller.completeSignup,
             width: double.infinity,
+            backgroundColor: Colors.black,
           ),
           SizedBox(height: 10.h),
           const TermsText(),

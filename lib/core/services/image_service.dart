@@ -22,7 +22,7 @@ enum ImageType {
 
 class ImageService {
   ImageService._();
-  static final ImagePicker _picker = ImagePicker();
+  //static final ImagePicker _picker = ImagePicker();
   static final LocalStorage _storage = LocalStorage();
 
   static Future<String?> pickAndUploadImage({
@@ -30,18 +30,18 @@ class ImageService {
     ImageSource source = ImageSource.gallery,
   }) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
         source: source,
-        imageQuality: 80, // Added quality parameter for optimization
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
       );
 
-      if (pickedFile == null) {
-        Logger.i('No image selected');
-        return null;
-      }
+      if (image == null) return null;
 
-      Logger.i('Image picked: ${pickedFile.path}');
-      return await _uploadImage(pickedFile, type);
+      Logger.i('Image picked: ${image.path}');
+      return await _uploadImage(image, type);
     } catch (e) {
       Logger.e('Error in pickAndUploadImage: $e');
       return null;
@@ -50,7 +50,7 @@ class ImageService {
 
   static Future<String?> _uploadImage(XFile file, ImageType type) async {
     try {
-      final url = '${ApiConstants.baseUrl}/v1/files/upload?type=${type.value}';
+      final url = '${ApiConstants.baseUrl}/files/upload?type=${type.value}';
       Logger.d('Uploading to: $url');
 
       var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -64,7 +64,7 @@ class ImageService {
 
       final token = await _storage.getToken();
       request.headers.addAll({
-        'Accept': 'application/json',
+        //'Accept': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
       });
       if (kDebugMode) {
