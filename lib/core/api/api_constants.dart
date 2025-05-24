@@ -2,7 +2,7 @@ class ApiConstants {
   static const String baseUrl = 'https://ev.coffeecodes.in/v1';
 
   static const String login = 'auth/login';
-  static const String signup = 'auth/signup';
+  static const String signup = 'auth/register';
   static const String verifyOtp = 'auth/verify_otp';
 
   static const String userGet = 'user/get';

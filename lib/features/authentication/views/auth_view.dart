@@ -16,7 +16,7 @@ class AuthView extends StatelessWidget {
 }
 
 class AuthContent extends StatelessWidget {
-  AuthContent({Key? key}) : super(key: key);
+  AuthContent({super.key});
 
   final AuthController controller = Get.find<AuthController>();
 

@@ -34,7 +34,7 @@ class RideSummary extends StatelessWidget {
 
     final TripsController endTripController = Get.find();
     final BikeController bikeDataController = Get.find();
-    DateTime now = DateTime.now();
+
     print(bikeDataController.bikeData.value?.frameNumber);
     final effectiveTripData = tripData;
 
@@ -123,7 +123,7 @@ class RideSummary extends StatelessWidget {
                         SizedBox(
                           width: double.infinity,
                           height: 60.h,
-                          child:  Miscellaneous(
+                          child: Miscellaneous(
                             diffPage: false,
                             screenshotController: ScreenshotController(),
                           ),

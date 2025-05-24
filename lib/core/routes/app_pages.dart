@@ -22,11 +22,6 @@ class AppPages {
     ),
     GetPage(
       name: Routes.HOME,
-      page: () =>MainPage(),
-      transition: Transition.rightToLeft,
-    ),
-    GetPage(
-      name: Routes.WALLET,
       page: () => MainPage(),
       transition: Transition.rightToLeft,
     ),

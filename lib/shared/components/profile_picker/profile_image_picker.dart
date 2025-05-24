@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/services/image_service.dart';
 import '../../constants/colors.dart';
 
 /// A reusable widget for picking and displaying profile images

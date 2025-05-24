@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:mjollnir/core/api/api_constants.dart';
 import 'dart:convert';
+import 'package:get/get.dart';
 import '../../shared/components/logger/logger.dart';
 import '../storage/local_storage.dart';
+import 'file_upload_service.dart';
 
 enum ImageType {
   avatar,
@@ -23,7 +25,7 @@ enum ImageType {
 class ImageService {
   ImageService._();
   //static final ImagePicker _picker = ImagePicker();
-  static final LocalStorage _storage = LocalStorage();
+  static final LocalStorage _storage = Get.find();
 
   static Future<String?> pickAndUploadImage({
     required ImageType type,
@@ -41,7 +43,17 @@ class ImageService {
       if (image == null) return null;
 
       Logger.i('Image picked: ${image.path}');
-      return await _uploadImage(image, type);
+      String? url = await _uploadImage(image, type);
+      if (url == null) {
+        url = await FileUploadService.uploadFile(
+          image.path,
+          customFileName:
+              '${type.toString()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          customMimeType: 'image/jpeg',
+        );
+      }
+
+      return url;
     } catch (e) {
       Logger.e('Error in pickAndUploadImage: $e');
       return null;
@@ -64,7 +76,7 @@ class ImageService {
 
       final token = await _storage.getToken();
       request.headers.addAll({
-        //'Accept': 'application/json',
+        'X-Karma-App': 'dafjcnalnsjn',
         if (token != null) 'Authorization': 'Bearer $token',
       });
       if (kDebugMode) {
