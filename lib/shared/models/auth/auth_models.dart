@@ -115,6 +115,15 @@ class SignupRequest {
   final String weightUnit;
   final String heightUnit;
   final String place;
+  // New fields
+  final String age;
+  final int points;
+  final String inviteCode;
+  final String addressLine;
+  final String city;
+  final String state;
+  final String pincode;
+  final String country;
 
   SignupRequest({
     required this.phone,
@@ -137,6 +146,15 @@ class SignupRequest {
     required this.weightUnit,
     required this.heightUnit,
     required this.place,
+    // New fields
+    required this.age,
+    required this.points,
+    required this.inviteCode,
+    required this.addressLine,
+    required this.city,
+    required this.state,
+    required this.pincode,
+    required this.country,
   });
 
   Map<String, dynamic> toJson() => {
@@ -160,6 +178,15 @@ class SignupRequest {
         'weight_unit': weightUnit,
         'height_unit': heightUnit,
         'place': place,
+        // New fields
+        'age': age,
+        'points': points,
+        'invite_code': inviteCode,
+        'address_line': addressLine,
+        'city': city,
+        'state': state,
+        'pincode': pincode,
+        'country': country,
       };
 }
 

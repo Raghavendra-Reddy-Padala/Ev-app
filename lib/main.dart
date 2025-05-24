@@ -22,8 +22,6 @@ void main() async {
     fontFamily: 'Poppins',
     navigatorKey: navigatorKey,
   );
-  final LocalStorage local = LocalStorage();
-  local.setBool("useDummyData", true);
   await setupDependencies();
 
   runApp(const MyApp());
@@ -34,8 +32,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localStorage = Get.find<LocalStorage>();
     final String initialRoute =
-        LocalStorage().isLoggedIn() ? Routes.HOME : Routes.LOGIN;
+        localStorage.isLoggedIn() ? Routes.HOME : Routes.LOGIN;
     return BoltKit.builder(
       designSize: const Size(391, 852),
       builder: () {

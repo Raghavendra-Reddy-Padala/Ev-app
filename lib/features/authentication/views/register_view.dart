@@ -124,16 +124,30 @@ class SignupScreen extends StatelessWidget {
       padding: EdgeInsets.all(20.h),
       child: Column(
         children: [
-          SizedBox(height: 30.h),
+          SizedBox(height: 20.h),
           ProfileImagePicker(
             imageUrl: controller.profileImageUrl,
             onImageSelected: controller.updateProfileImage,
             size: 120,
           ),
-          SizedBox(height: 30.h),
+          SizedBox(height: 10.h),
+          SignupFormFields.addressLineField(controller.addressLineController),
+          SizedBox(height: 10.h),
+          SignupFormFields.cityField(controller.cityController),
+          SizedBox(height: 10.h),
+          SignupFormFields.stateField(controller.stateController),
+          SizedBox(height: 10.h),
+          SignupFormFields.pincodeField(controller.pincodeController),
+          SizedBox(height: 10.h),
+          SignupFormFields.countryField(controller.countryController),
+          SizedBox(height: 10.h),
+          SignupFormFields.inviteCodeField(controller.inviteCodeController),
+          SizedBox(height: 20.h),
           CustomButton(
             label: 'Complete Signup',
-            onPressed: controller.completeSignup,
+            onPressed: () {
+              (controller.validateFinal()) ? controller.completeSignup() : null;
+            },
             width: double.infinity,
             backgroundColor: Colors.black,
           ),

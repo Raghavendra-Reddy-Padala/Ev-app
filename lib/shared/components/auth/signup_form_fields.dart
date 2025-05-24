@@ -73,12 +73,57 @@ class SignupFormFields {
           hintText: "Company Name",
         );
       });
+    } else if (userType == "general") {
+      return const SizedBox.shrink();
     } else {
       return _buildTextField(
         controller: controller,
         hintText: "Place",
       );
     }
+  }
+
+  static Widget addressLineField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "Address Line",
+    );
+  }
+
+  static Widget cityField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "City",
+    );
+  }
+
+  static Widget stateField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "State",
+    );
+  }
+
+  static Widget pincodeField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "Pincode",
+      keyboardType: TextInputType.number,
+    );
+  }
+
+  static Widget countryField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "Country",
+    );
+  }
+
+  static Widget inviteCodeField(TextEditingController controller) {
+    return _buildTextField(
+      controller: controller,
+      hintText: "Invite Code (Optional)",
+    );
   }
 
   static Widget firstNameField(TextEditingController controller) {

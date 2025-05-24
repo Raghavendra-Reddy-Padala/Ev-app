@@ -2,15 +2,10 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
-import '../../../core/utils/logger.dart';
 import '../../../features/account/controllers/trips_controller.dart';
 import '../../../features/bikes/controller/bike_metrics_controller.dart';
-import '../../../features/main_page_controller.dart';
 import '../../constants/colors.dart';
-import '../../models/trips/trips_model.dart';
-import 'ride_summary.dart';
 
 class TripControlPanel extends StatelessWidget {
   final RxBool isEndTripSliderVisible;

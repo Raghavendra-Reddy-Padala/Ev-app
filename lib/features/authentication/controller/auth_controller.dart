@@ -29,7 +29,12 @@ class AuthController extends BaseController {
   final TextEditingController idController = TextEditingController();
   final TextEditingController heightController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
-
+  final TextEditingController addressLineController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
+  final TextEditingController pincodeController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
+  final TextEditingController inviteCodeController = TextEditingController();
   // Observable values for signup
   final Rx<String> heightUnit = 'cm'.obs;
   final Rx<String> weightUnit = 'kg'.obs;
@@ -65,6 +70,19 @@ class AuthController extends BaseController {
     profileImageUrl.value = null;
   }
 
+  bool validateFinal() {
+    if (addressLineController.text.isEmpty ||
+        cityController.text.isEmpty ||
+        stateController.text.isEmpty ||
+        pincodeController.text.isEmpty ||
+        countryController.text.isEmpty) {
+      showErrorToast('Please fill in all fields');
+      return false;
+    }
+
+    return true;
+  }
+
   void validateAndContinue() {
     if (firstNameController.text.isEmpty ||
         lastNameController.text.isEmpty ||
@@ -79,11 +97,11 @@ class AuthController extends BaseController {
   }
 
   void validateSecondFormAndContinue() {
-    if (placeController.text.isEmpty ||
-        emailController.text.isEmpty ||
+    if (emailController.text.isEmpty ||
         heightController.text.isEmpty ||
         weightController.text.isEmpty ||
-        (userType.value != "general" && idController.text.isEmpty)) {
+        (userType.value != "general" &&
+            (placeController.text.isEmpty || idController.text.isEmpty))) {
       showErrorToast('Please fill in all fields');
       return;
     }
@@ -110,19 +128,20 @@ class AuthController extends BaseController {
   }
 
   void completeSignup() async {
-    // if (profileImageUrl.value == null) {
-    //   showErrorToast('Please upload a profile picture');
-    //   return;
-    // }
-
     try {
       isLoading.value = true;
       errorMessage.value = '';
+      final List<String> dobParts = dobController.text.split('/');
+      final String formattedDob =
+          '${dobParts[2]}-${dobParts[1]}-${dobParts[0]}';
+      final dob = DateTime.parse(formattedDob);
+      final age = DateTime.now().year - dob.year;
+
       final signupRequest = SignupRequest(
-        phone: phoneController.text,
+        phone: '+91${phoneController.text}',
         firstName: firstNameController.text,
         lastName: lastNameController.text,
-        dateOfBirth: dobController.text,
+        dateOfBirth: formattedDob,
         gender: gender.value,
         height: heightController.text,
         weight: weightController.text,
@@ -139,6 +158,14 @@ class AuthController extends BaseController {
         weightUnit: weightUnit.value,
         heightUnit: heightUnit.value,
         place: userType.value == "general" ? placeController.text : '',
+        age: age.toString(),
+        points: 0,
+        inviteCode: inviteCodeController.text,
+        addressLine: addressLineController.text,
+        city: cityController.text,
+        state: stateController.text,
+        pincode: pincodeController.text,
+        country: countryController.text,
       );
 
       final response = await signup(signupRequest);
@@ -242,6 +269,7 @@ class AuthController extends BaseController {
       final String? token = await getToken();
       final headers = {
         'Content-Type': 'application/json',
+        'X-Karma-App': 'dafjcnalnsjn',
         if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
@@ -266,7 +294,6 @@ class AuthController extends BaseController {
         await localStorage.setToken(response.data);
         await localStorage.setLoggedIn(true);
       }
-
       return response;
     } catch (e) {
       handleError(e);
@@ -387,6 +414,12 @@ class AuthController extends BaseController {
     idController.dispose();
     heightController.dispose();
     weightController.dispose();
+    addressLineController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    pincodeController.dispose();
+    countryController.dispose();
+    inviteCodeController.dispose();
     super.onClose();
   }
 }

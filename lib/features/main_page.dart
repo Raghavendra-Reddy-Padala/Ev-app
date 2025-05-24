@@ -52,7 +52,7 @@ class MainPage extends StatelessWidget {
   }
 
   void _checkBikeSubscription() async {
-    LocalStorage sharedPreferencesService = LocalStorage();
+    LocalStorage sharedPreferencesService = Get.find();
 
     mainPageController.updateSubscriptionStatus(
         await sharedPreferencesService.isBikeSubscribed());
