@@ -22,14 +22,11 @@ class UserProgressCard extends StatelessWidget {
 
     return AppCard(
       backgroundColor: AppColors.accent1,
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 15.h, vertical: 10.h),
       child: Row(
         children: [
-          // Level icon
           _buildLevelIcon(),
           SizedBox(width: 12.w),
-
-          // Progress section
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,8 +42,6 @@ class UserProgressCard extends StatelessWidget {
                         color: Colors.black,
                       ),
                     ),
-
-                    // Info button
                     IconButton(
                       onPressed: () => _showLevelInfo(context),
                       icon: Container(
@@ -67,10 +62,6 @@ class UserProgressCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                SizedBox(height: 8.h),
-
-                // Progress bar
                 LinearProgressIndicator(
                   value: progressPercentage,
                   backgroundColor: Colors.green.withOpacity(0.2),
@@ -78,10 +69,6 @@ class UserProgressCard extends StatelessWidget {
                   minHeight: 8.h,
                   borderRadius: BorderRadius.circular(10.r),
                 ),
-
-                SizedBox(height: 8.h),
-
-                // Points info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

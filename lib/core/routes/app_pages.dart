@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:mjollnir/features/authentication/views/auth_view.dart';
 import 'package:mjollnir/features/authentication/views/register_view.dart';
-import 'package:mjollnir/features/home/views/home_main_view.dart';
 import 'package:mjollnir/features/main_page.dart';
 
 import 'app_routes.dart';

@@ -14,20 +14,20 @@ class UserHeader extends StatelessWidget {
   final VoidCallback? onProfileTap;
 
   const UserHeader({
-    Key? key,
+    super.key,
     required this.name,
     this.avatarUrl,
     required this.distance,
     required this.trips,
     required this.followers,
     this.onProfileTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -132,8 +132,8 @@ class UserHeader extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      width: 75.w,
-      height: 36.h,
+      width: 50.w,
+      height: 30.h,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(10.r),
