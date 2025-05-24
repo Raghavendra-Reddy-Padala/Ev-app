@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/account/views/profile_main_view.dart';
 import 'package:mjollnir/features/home/views/home_main_view.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
@@ -22,7 +23,7 @@ class MainPage extends StatelessWidget {
       // }),
       const Placeholder(),
       const Placeholder(),
-      const Placeholder(),
+      ProfileMainView()
     ];
 
     _checkBikeSubscription();

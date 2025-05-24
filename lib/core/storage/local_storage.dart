@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:mjollnir/core/api/api_constants.dart';
+import 'package:mjollnir/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
@@ -6,6 +8,17 @@ class LocalStorage {
 
   Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
+    await getDummyToken();
+  }
+
+  Future<void> getDummyToken() async {
+    final response = await apiService.post(
+        endpoint: ApiConstants.dummyToken,
+        headers: {'X-Karma-App': 'dafjcnalnsjn'});
+    if (response != null) {
+      await _preferences?.setString("dummyToken", response['data']);
+      print(response['data']);
+    }
   }
 
   Future<void> setString(String key, String value) async {
@@ -141,7 +154,9 @@ class LocalStorage {
   }
 
   String? getToken() {
-    return _preferences?.getString('token');
+    return (_preferences?.getBool('useDummyToken') == true)
+        ? _preferences?.getString('dummyToken')
+        : _preferences?.getString('token');
   }
 
   Future<void> setLoggedIn(bool isLoggedIn) async {
@@ -196,5 +211,4 @@ class LocalStorage {
     await _preferences?.remove('token');
     await setLoggedIn(false);
   }
-
 }

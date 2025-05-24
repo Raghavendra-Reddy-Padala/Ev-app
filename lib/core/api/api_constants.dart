@@ -4,6 +4,7 @@ class ApiConstants {
   static const String login = 'auth/login';
   static const String signup = 'auth/register';
   static const String verifyOtp = 'auth/verify_otp';
+  static const String dummyToken = 'auth/dummy';
 
   static const String userGet = 'user/get';
   static const String userFollow = 'user/follow';
@@ -12,6 +13,8 @@ class ApiConstants {
   static const String userGroupsCreated = 'user/groups_created';
   static const String userTimeTravelled = 'user/time_travelled';
   static const String userInviteCode = 'user/invite_code';
+  static const String userDetails = 'user/me';
+  static const String updateProfile = 'user/update';
 
   static const String stationsGet = 'stations/get';
   static const String stationsGetNearby = 'stations/get_nearby';
@@ -23,6 +26,8 @@ class ApiConstants {
   static const String tripsEnd = 'trips/end';
   static const String tripsMyTrips = 'trips/mytrips';
   static const String tripsLocation = 'trips/location';
+  static const String tripsSummary = 'trips/summary';
+  static const String userTrips = 'trips/user';
 
   static const String groupsGetAll = 'groups/getAll';
   static const String groupsCreate = 'groups/create';
@@ -35,6 +40,10 @@ class ApiConstants {
   static const String transactionsGetAll = 'transactions/getAll';
 
   static const String subscriptionsCreate = 'subscriptions/create';
-  static const String userSubscriptionGet = 'user_subscription/get';
+  static const String userSubscriptions = 'user_subscription/get';
   static const String faq = 'faq';
+
+  static const String referralCode = 'user/invite_code';
+  static const String referralBenefits = 'user/referral_benefits';
+  static const String activityGraph = 'analytics/activity_graph';
 }
