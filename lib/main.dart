@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String initialRoute =
-        LocalStorage().isLoggedIn() ? Routes.HOME : Routes.LOGIN;
+         Routes.HOME ;
     return BoltKit.builder(
       designSize: const Size(391, 852),
       builder: () {

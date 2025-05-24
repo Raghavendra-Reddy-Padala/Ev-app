@@ -30,7 +30,7 @@ class WalletController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/wallet/get',
+            endpoint: 'wallet/get',
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ class WalletController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/transactions/getAll',
+            endpoint: 'transactions/getAll',
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ class WalletController extends BaseController {
           }
 
           final response =
-              await apiService.post(endpoint: '/v1/wallet/topup', headers: {
+              await apiService.post(endpoint: 'wallet/topup', headers: {
             'Authorization': 'Bearer $authToken',
           }, body: {
             "balance": amount
