@@ -1,16 +1,25 @@
 class KalmanFilter {
-  double q = 0.01;
-  double r = 0.1;
-  double p = 1.0;
-  double k = 0.0;
-  double x = 0.0;
+  double _q = 0.01; // Process noise (reduce for smoother output)
+  double _r = 0.1; // Measurement noise
+  double _p = 1.0; // Estimation error
+  double _k = 0.0; // Kalman gain
+  double _x = 0.0; // Value (initialized to 0)
 
   double update(double measurement) {
-    p = p + q;
-    k = p / (p + r);
-    x = x + k * (measurement - x);
-    p = (1 - k) * p;
+    // Prediction update
+    _p = _p + _q;
 
-    return x;
+    // Measurement update
+    _k = _p / (_p + _r);
+    _x = _x + _k * (measurement - _x);
+    _p = (1 - _k) * _p;
+
+    return _x;
+  }
+
+  void reset() {
+    _x = 0.0;
+    _p = 1.0;
+    _k = 0.0;
   }
 }
