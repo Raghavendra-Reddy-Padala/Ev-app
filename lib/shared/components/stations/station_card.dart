@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mjollnir/core/navigation/navigation_service.dart';
+import 'package:mjollnir/features/home/views/stationbikesview.dart';
 
 import '../../constants/colors.dart';
 import '../../constants/constants.dart';
@@ -19,54 +21,67 @@ class StationCard extends StatelessWidget {
     this.onGoToLocation,
   });
 
+ 
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 10.h),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(10.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withOpacity(0.8),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _DistanceDisplay(distance: distance),
-                _StationInfo(
-                  name: station.name,
-                  currentCapacity: station.currentCapacity,
-                  totalCapacity: station.capacity,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-                GestureDetector(
-                  onTap: onGoToLocation ?? onTap,
-                  child: Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 24.w,
-                      ),
-                    ),
-                  ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
                 ),
               ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _DistanceDisplay(distance: distance),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: _StationInfo(
+                          name: station.name,
+                          currentCapacity: station.currentCapacity,
+                          totalCapacity: station.capacity,
+                        ),
+                      ),
+                      _ActionButton(onTap: onTap 
+                      ),
+                    ],
+                  ),
+                  // SizedBox(height: 12.h),
+                  // _CapacityBar(
+                  //   current: station.currentCapacity,
+                  //   total: station.capacity,
+                  // ),
+                ],
+              ),
             ),
           ),
         ),
@@ -82,31 +97,41 @@ class _DistanceDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 70.w,
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12.r),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            Constants.distance,
-            width: 24.w,
-            height: 24.w,
-            color: Colors.white,
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.location_on,
+              color: Colors.white,
+              size: 20.w,
+            ),
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 8.h),
           Text(
-            "Distance",
+            "${distance.toStringAsFixed(1)}km",
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           Text(
-            "${distance.toStringAsFixed(1)} km",
+            "away",
             style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              fontSize: 10.sp,
+              color: Colors.white.withOpacity(0.8),
             ),
           ),
         ],
@@ -128,74 +153,137 @@ class _StationInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        SizedBox(height: 8.h),
+        Row(
           children: [
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            _CapacityChip(
+              icon: Icons.electric_bike,
+              label: "Total",
+              count: totalCapacity,
+              color: Colors.white.withOpacity(0.9),
             ),
-            SizedBox(height: 8.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _CapacityIndicator(
-                  icon: Icons.electric_bike,
-                  count: totalCapacity,
-                ),
-                SizedBox(width: 16.w),
-                _CapacityIndicator(
-                  icon: Icons.directions_bike_sharp,
-                  count: currentCapacity,
-                ),
-              ],
+            SizedBox(width: 12.w),
+            _CapacityChip(
+              icon: Icons.directions_bike,
+              label: "Available",
+              count: currentCapacity,
+              color: _getCapacityColor(),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Color _getCapacityColor() {
+    final ratio = currentCapacity / totalCapacity;
+    if (ratio > 0.7) return Colors.greenAccent;
+    if (ratio > 0.3) return Colors.orangeAccent;
+    return Colors.redAccent;
+  }
+}
+
+class _CapacityChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int count;
+  final Color color;
+
+  const _CapacityChip({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 16.w,
+          ),
+          SizedBox(width: 4.w),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "$count",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 9.sp,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _CapacityIndicator extends StatelessWidget {
-  final IconData icon;
-  final int count;
+class _ActionButton extends StatelessWidget {
+  final VoidCallback? onTap;
 
-  const _CapacityIndicator({
-    required this.icon,
-    required this.count,
-  });
+  const _ActionButton({this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 18.w,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
         ),
-        SizedBox(width: 4.w),
-        Text(
-          "$count",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(50.r),
+          child: Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white,
+              size: 20.w,
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

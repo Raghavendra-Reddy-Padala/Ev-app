@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
+import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
@@ -44,14 +45,14 @@ class _HomeMainViewState extends State<HomeMainView> {
     locationController.fetchUserLocation();
     return Scaffold(
       key: _scaffoldKey,
-      drawer:  CustomDrawer(
-        options: [
-        ],
-        onCreateGroup: () {},
-        onInviteFriends: () {},
+      // drawer:  CustomDrawer(
+      //   options: [
+      //   ],
+      //   onCreateGroup: () {},
+      //   onInviteFriends: () {},
 
         
-      ),
+      // ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -68,18 +69,18 @@ class _HomeMainViewState extends State<HomeMainView> {
                 
               ),
             ),
-            Positioned(
-              top: 20.0,
-              left: 15.0,
-              child: IconButton(
-                icon: Icon(Icons.menu, size: 30.w),
-                onPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                color: Theme.of(context).iconTheme.color,
-              ),
-            ),
-            // const StationsList(),
+            // Positioned(
+            //   top: 20.0,
+            //   left: 15.0,
+            //   child: IconButton(
+            //     icon: Icon(Icons.menu, size: 30.w),
+            //     onPressed: () {
+            //       _scaffoldKey.currentState?.openDrawer();
+            //     },
+            //     color: Theme.of(context).iconTheme.color,
+            //   ),
+            // ),
+            const StationsList(),
             Positioned(
               right: 5,
               bottom: 20,

@@ -11,7 +11,13 @@ class BikeController extends BaseController {
   final Rx<Bike?> bikeData = Rx<Bike?>(null);
   final LocalStorage localStorage = Get.find<LocalStorage>();
 
-  Future<void> fetchBikesByStationId(String stationId, String authToken) async {
+  Future<void> fetchBikesByStationId(String stationId) async {
+    String? authToken = localStorage.getToken();
+    if (authToken == null) {
+      print('Auth token is null');
+      print(authToken);
+      return;
+    }
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -19,9 +25,10 @@ class BikeController extends BaseController {
       await useApiOrDummy(
         apiCall: () async {
           final response = await apiService.get(
-            endpoint: '/v1/bikes/get/station/$stationId',
+            endpoint: 'bikes/get/station/$stationId',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn',
             },
           );
           if (response != null) {
