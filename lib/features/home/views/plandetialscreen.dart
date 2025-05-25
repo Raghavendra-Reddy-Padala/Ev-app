@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/shared/company/companylogo.dart';
-import 'package:mjollnir/shared/components/buttons/app_button.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 import 'package:mjollnir/shared/models/bike/bike_model.dart';
 import 'package:mjollnir/shared/models/subscriptions/subscriptions_model.dart';
 import 'package:mjollnir/shared/subscriptions/subscription_controller.dart';
-
 
 class PlanDetailsScreen extends StatelessWidget {
   final Bike bike;
@@ -27,8 +25,8 @@ class PlanDetailsScreen extends StatelessWidget {
 class UI extends StatelessWidget {
   final Bike bike;
   final PlanResponse planResponse;
-   UI({super.key, required this.planResponse, required this.bike});
-      
+  UI({super.key, required this.planResponse, required this.bike});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -52,16 +50,15 @@ class UI extends StatelessWidget {
                 children: [
                   Text(
                     "Monthly Unlimited",
-                    style: AppTextThemes.bodySmall()
-                        .copyWith(color: Colors.black),
+                    style:
+                        AppTextThemes.bodySmall().copyWith(color: Colors.black),
                   ),
                   SizedBox(height: 15.h),
                   SizedBox(
                     width: 80.w,
                     height: 50.h,
                     child: Image.network(
-                     "https://toppng.com/uploads/preview/cycle-hd-images-11549761022izaeyhmkgm.png"
-                    ),
+                        "https://toppng.com/uploads/preview/cycle-hd-images-11549761022izaeyhmkgm.png"),
                   ),
                   SizedBox(
                     height: 10.h,
@@ -94,7 +91,8 @@ class UI extends StatelessWidget {
                           value: planResponse.data[0].discount.toString()),
                       HelperRow(
                           type: "Security Deposit",
-                          value: planResponse.data[0].securityDeposit.toString()),
+                          value:
+                              planResponse.data[0].securityDeposit.toString()),
                     ],
                   ),
                   const Divider(),
@@ -148,7 +146,7 @@ class UI extends StatelessWidget {
                     color: Colors.white,
                   );
                 } else {
-                  return ElevatedButton(onPressed: (){}, child:Text("pay") );
+                  return ElevatedButton(onPressed: () {}, child: Text("pay"));
                 }
               }),
             )),
@@ -185,6 +183,7 @@ class HelperRow extends StatelessWidget {
       ],
     );
   }
+
   ElevatedButton get pay => ElevatedButton(
         onPressed: () {},
         style: ElevatedButton.styleFrom(

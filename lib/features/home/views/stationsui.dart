@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mjollnir/core/navigation/navigation_service.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
 import 'package:mjollnir/features/home/controller/station_controller.dart';
 import 'package:mjollnir/features/home/views/stationbikesview.dart';
@@ -10,7 +9,7 @@ import 'package:mjollnir/shared/components/stations/station_card.dart';
 
 class StationsList extends StatelessWidget {
   const StationsList({super.key});
-  
+
   double _safeParse(String? value, {double defaultValue = 0.0}) {
     if (value == null || value.isEmpty) return defaultValue;
     return double.tryParse(value) ?? defaultValue;
@@ -25,7 +24,7 @@ class StationsList extends StatelessWidget {
     final StationController nearbyStationsController =
         Get.find<StationController>();
     nearbyStationsController.fetchAllStations();
-    
+
     return Obx(() {
       if (nearbyStationsController.isLoading.value) {
         return const Center(child: CircularProgressIndicator());
@@ -34,7 +33,7 @@ class StationsList extends StatelessWidget {
       if (nearbyStationsController.nearbyStations.isEmpty) {
         return const Center(child: Text("No nearby stations found."));
       }
-      
+
       return DraggableScrollableSheet(
         initialChildSize: 0.2,
         minChildSize: 0.2,
@@ -67,8 +66,7 @@ class StationsList extends StatelessWidget {
                   station: station,
                   distance: distance,
                   onTap: () {
-                   Get.to(() => StationBikesView(station: station));
-
+                    Get.to(() => StationBikesView(station: station));
                   },
                 );
               },

@@ -27,10 +27,10 @@ Future<void> setupDependencies() async {
   Get.put(WalletController());
   Get.put(StationController());
   Get.put(AuthController());
-  Get.put(BikeController());
-  Get.put(BikeMetricsController());
   Get.put(TripsController());
 
+  Get.put(BikeController());
+  Get.put(BikeMetricsController());
   Get.put(TripControlService());
   Get.put(QrScannerController());
   Get.put(StationController());
