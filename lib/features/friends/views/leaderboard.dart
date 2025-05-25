@@ -6,10 +6,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/user_controller.dart';
 import 'package:mjollnir/features/friends/controller/follow_controller.dart';
-import 'package:mjollnir/features/friends/controller/views/clubs.dart';
+import 'package:mjollnir/features/friends/views/clubs.dart';
 import 'package:mjollnir/shared/components/friends/group_card.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
+import '../../../shared/components/friends/atheletes_card.dart';
 
 class TabControllerX extends GetxController {
   var selectedIndex = 0.obs;
@@ -95,7 +96,7 @@ class LeaderBoardClubTab extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style:AppTextThemes.bodyMedium().copyWith(
+              style: AppTextThemes.bodyMedium().copyWith(
                 color: isSelected
                     ? Colors.white
                     : Theme.of(context).brightness == Brightness.light
@@ -121,7 +122,8 @@ class LeaderBoardList extends StatelessWidget {
     final UserController userController = Get.find<UserController>();
     userController.getUsers();
     final FilterController filterController = Get.find<FilterController>();
-      print("Building LeaderBoardList, has users: ${userController.getAllUsers.value != null}");
+    print(
+        "Building LeaderBoardList, has users: ${userController.getAllUsers.value != null}");
     if (userController.getAllUsers.value != null) {
       print("User count: ${userController.getAllUsers.value!.data.length}");
     }
@@ -169,29 +171,26 @@ class LeaderBoardList extends StatelessWidget {
           ),
         );
       }
-      if (userController.getAllUsers.value == null || 
+      if (userController.getAllUsers.value == null ||
           userController.getAllUsers.value!.data.isEmpty) {
-            
         return Center(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                              
-                            width: 100.w,
-                            height: 100.h,
-                            child: Image.asset('assets/images/no-data.png'),
-                          ),
-                        ),
-                        Text(
-                          'No Users found!',
-                          style: AppTextThemes.bodyMedium()
-                              .copyWith(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  );
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 50),
+                child: SizedBox(
+                  width: 100.w,
+                  height: 100.h,
+                  child: Image.asset('assets/images/no-data.png'),
+                ),
+              ),
+              Text(
+                'No Users found!',
+                style: AppTextThemes.bodyMedium().copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
+        );
       }
 
       final sortedUsers = filterController.sortUsers(
@@ -204,7 +203,10 @@ class LeaderBoardList extends StatelessWidget {
 
       return Column(
         children: sortedUsers
-            .sublist(0, min(sortedUsers.length, userController.getAllUsers.value!.data.length % 50))
+            .sublist(
+                0,
+                min(sortedUsers.length,
+                    userController.getAllUsers.value!.data.length % 50))
             .map((item) {
           return InkWell(
             onTap: () {
@@ -215,71 +217,9 @@ class LeaderBoardList extends StatelessWidget {
               //   ),
               // );
             },
-            child: Card(
-              margin: EdgeInsets.only(
-                bottom: 10.w,
-              ),
-              elevation: 2,
-              color: AppColors.offwhite,
-              child: Padding(
-                padding: EdgeInsets.all(10.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundImage: item.avatar.isNotEmpty
-                          ? NetworkImage(item.avatar)
-                          : const AssetImage('assets/images/default_pfp.png')
-                              as ImageProvider,
-                    ),
-                    SizedBox(width: 10.w),
-                    Text(
-                      item.firstName,
-                      style: AppTextThemes.bodyMedium().copyWith(
-                        color: Colors.black,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      item.points.toString(),
-                      style: AppTextThemes.bodyMedium().copyWith(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(width: ScreenUtil().screenWidth * 0.08),
-                      Obx(() {
-                        bool isFollowed = followController.followedUsers[item.uid] ?? false;
-                        
-                        if (followController.isLoading.value && followController.followedUsers.containsKey(item.uid)) {
-                          return SizedBox(
-                            width: 24.w,
-                            height: 24.w,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.green),
-                            ),
-                          );
-                        }
-                        return isFollowed
-                          ? Icon(
-                              Icons.check_circle,
-                              color: AppColors.green,
-                              size: 24.w,
-                            )
-                          : IconButton(
-                              icon: const Icon(
-                                Icons.person_add_alt,
-                                color: Colors.black,
-                              ),
-                              onPressed: () => followController.followUser(item.uid),
-                            );
-                      })
-                  ],
-                ),
-              ),
+            child: UserLeaderboardItem(
+              item: item,
+              followController: followController,
             ),
           );
         }).toList(),

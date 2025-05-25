@@ -48,11 +48,12 @@ class GroupController extends BaseController {
                   '${ApiConstants.groupsGetAll}?members=<10&sort_by=activity&order=desc&only_member=false',
               headers: {
                 'Authorization': 'Bearer $authToken',
+                'X-Karma-App': 'dafjcnalnsjn'
               },
               queryParams: queryParams);
 
           if (response != null) {
-            final groupsResponse = GetAllGroupsResponse.fromJson(response.data);
+            final groupsResponse = GetAllGroupsResponse.fromJson(response);
             allGroups.assignAll(groupsResponse.groups);
             return true;
           }
@@ -88,6 +89,7 @@ class GroupController extends BaseController {
             endpoint: ApiConstants.userGroupsCreated,
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -129,6 +131,7 @@ class GroupController extends BaseController {
             endpoint: ApiConstants.userGroups,
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -167,13 +170,16 @@ class GroupController extends BaseController {
             throw Exception('Authentication token not found');
           }
 
-          final response =
-              await apiService.post(endpoint: '/v1/groups/create', headers: {
-            'Authorization': 'Bearer $authToken',
-          }, body: {
-            "name": name,
-            "description": description
-          });
+          final response = await apiService.post(
+              endpoint: ApiConstants.groupsCreate,
+              headers: {
+                'Authorization': 'Bearer $authToken',
+                'X-Karma-App': 'dafjcnalnsjn'
+              },
+              body: {
+                "name": name,
+                "description": description
+              });
 
           if (response != null && response.data['success']) {
             await fetchUserGroups();
@@ -227,9 +233,10 @@ class GroupController extends BaseController {
           }
 
           final response = await apiService.post(
-            endpoint: '/v1/groups/$groupId/join',
+            endpoint: '/groups/$groupId/join',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -283,6 +290,7 @@ class GroupController extends BaseController {
             endpoint: '/v1/groups/$groupId/members/data',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -323,6 +331,7 @@ class GroupController extends BaseController {
             endpoint: '/v1/groups/$groupId/aggregate',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -348,11 +357,14 @@ class GroupController extends BaseController {
   }
 
   Future<void> getAlreadyJoinedGroups() async {
-    String? authtoken = LocalStorage().getToken();
+    String? authtoken = Get.find<LocalStorage>().getToken();
 
     final response = await apiService.get(
-        endpoint: 'v1/user/groups',
-        headers: {'Authorization': 'Bearer $authtoken'});
+        endpoint: '${ApiConstants.groupsGetAll}/?limit=10',
+        headers: {
+          'Authorization': 'Bearer $authtoken',
+          'X-Karma-App': 'dafjcnalnsjn'
+        });
 
     if (response != null && response is List) {
       joined_groups.value =
