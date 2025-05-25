@@ -33,6 +33,19 @@ class TripSummaryModel {
       totalTrips: json['total_trips'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'averages': averages.toJson(),
+      'carbon_footprint_kg': carbonFootprintKg,
+      'highest_speed': highestSpeed,
+      'longest_ride': longestRide.toJson(),
+      'max_elevation_m': maxElevationM,
+      'total_calories': totalCalories,
+      'total_time_hours': totalTimeHours,
+      'total_trips': totalTrips,
+    };
+  }
 }
 
 class TripMetrics {
@@ -93,6 +106,13 @@ class Averages {
       speedKmh: json['speed_kmh']?.toDouble() ?? 0.0,
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'calories_trip': caloriesTrip,
+      'distance_km': distanceKm,
+      'speed_kmh': speedKmh,
+    };
+  }
 }
 
 class LongestRide {
@@ -109,6 +129,12 @@ class LongestRide {
       distanceKm: json['distance_km']?.toDouble() ?? 0.0,
       durationHours: json['duration_hours']?.toDouble() ?? 0.0,
     );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      'distance_km': distanceKm,
+      'duration_hours': durationHours,
+    };
   }
 }
 

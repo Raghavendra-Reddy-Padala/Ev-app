@@ -1,28 +1,34 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
+import '../../../core/api/base/base_controller.dart';
+import '../../../core/navigation/navigation_service.dart';
 import '../../../main.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
+import '../../authentication/views/auth_view.dart';
 
-class ActivityController extends GetxController {
+class ActivityController extends BaseController {
+  // Observable properties
   var data = <int, double>{}.obs;
   var xLabels = <int, String>{}.obs;
-  final RxBool useDummyData = RxBool(false);
-  final LocalStorage localStorage = Get.find<LocalStorage>();
   var selectedDateRange = DateTimeRange(
     start: DateTime.now().subtract(const Duration(days: 6)),
     end: DateTime.now(),
   ).obs;
-  final RxBool isLoading = false.obs;
-  final RxString errorMessage = ''.obs;
-  double? totalDistance;
+
   final Rx<TripSummaryModel?> tripSummary = Rx<TripSummaryModel?>(null);
+  final LocalStorage localStorage = Get.find<LocalStorage>();
+
+  // Additional metrics
+  double? totalDistance;
 
   @override
   void onInit() {
     super.onInit();
+    loadCachedData();
     fetchTripSummary();
   }
 
@@ -33,32 +39,34 @@ class ActivityController extends GetxController {
 
       await useApiOrDummy(
         apiCall: () async {
-          final String? authToken = await getToken();
+          final String? authToken = localStorage.getToken();
           if (authToken == null) {
+            NavigationService.pushReplacementTo(const AuthView());
             throw Exception('Authentication token not found');
           }
 
-          final response = await apiService.post(
-            endpoint: '',
+          final response = await apiService.get(
+            endpoint: 'trips/summary',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn',
             },
           );
 
-          if (response.statusCode == 200) {
-            print("TRIP SUMMARY => ${response.data}");
-            if (response.data['success'] == true &&
-                response.data['data'] != null) {
-              tripSummary.value =
-                  TripSummaryModel.fromJson(response.data['data']);
+          if (response != null) {
+            print("TRIP SUMMARY => ${response}");
+            if (response['success'] == true && response['data'] != null) {
+              tripSummary.value = TripSummaryModel.fromJson(response['data']);
               generateGraphData();
+              saveCachedData();
               return true;
             } else {
               errorMessage.value =
                   response.data['message'] ?? 'Failed to load trip summary';
               return false;
             }
-          } else if (response.statusCode == 401) {
+          } else if (response?.statusCode == 401) {
+            NavigationService.pushReplacementTo(const AuthView());
             return false;
           } else {
             errorMessage.value =
@@ -71,13 +79,13 @@ class ActivityController extends GetxController {
           if (dummyData != null && dummyData['data'] != null) {
             tripSummary.value = TripSummaryModel.fromJson(dummyData['data']);
             generateGraphData();
+            saveCachedData();
           }
           return true;
         },
       );
     } catch (e) {
-      errorMessage.value = e.toString();
-      print(e);
+      handleError(e);
     } finally {
       isLoading.value = false;
     }
@@ -99,7 +107,6 @@ class ActivityController extends GetxController {
       DateTime day = selectedDateRange.value.start.add(Duration(days: i));
       generatedXLabels[i] = DateFormat('d MMM').format(day);
     }
-
     data.value = generatedData;
     xLabels.value = generatedXLabels;
   }
@@ -107,21 +114,66 @@ class ActivityController extends GetxController {
   void setDateRange(DateTimeRange range) {
     selectedDateRange.value = range;
     generateGraphData();
+    saveCachedData();
   }
 
-Future<T> useApiOrDummy<T>({
-    required Future<T> Function() apiCall,
-    required T Function() dummyData,
-  }) async {
-    if (useDummyData.value) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return dummyData();
-    } else {
-      return await apiCall();
+  Future<void> refreshActivity() async {
+    await fetchTripSummary();
+  }
+
+  void saveCachedData() {
+    try {
+      if (tripSummary.value != null) {
+        localStorage.setString(
+            'cached_trip_summary', jsonEncode(tripSummary.value!.toJson()));
+        localStorage.setString('cached_date_range_start',
+            selectedDateRange.value.start.toIso8601String());
+        localStorage.setString('cached_date_range_end',
+            selectedDateRange.value.end.toIso8601String());
+      }
+    } catch (e) {
+      print("Error saving cached activity data: $e");
     }
   }
 
-  Future<String?> getToken() async {
-    return localStorage.getToken();
+  void loadCachedData() {
+    try {
+      final String? cachedSummary =
+          localStorage.getString('cached_trip_summary');
+      final String? cachedStartDate =
+          localStorage.getString('cached_date_range_start');
+      final String? cachedEndDate =
+          localStorage.getString('cached_date_range_end');
+
+      if (cachedSummary != null) {
+        try {
+          final Map<String, dynamic> summaryJson = jsonDecode(cachedSummary);
+          tripSummary.value = TripSummaryModel.fromJson(summaryJson);
+        } catch (e) {
+          print("Error parsing cached trip summary: $e");
+        }
+      }
+
+      if (cachedStartDate != null && cachedEndDate != null) {
+        selectedDateRange.value = DateTimeRange(
+          start: DateTime.parse(cachedStartDate),
+          end: DateTime.parse(cachedEndDate),
+        );
+      }
+
+      if (tripSummary.value != null) {
+        generateGraphData();
+      }
+    } catch (e) {
+      print("Error loading cached activity data: $e");
+    }
+  }
+
+  String formatTime(double hours) {
+    final int totalHours = hours.floor();
+    final int totalMinutes = ((hours - totalHours) * 60).floor();
+    final int totalSeconds =
+        ((((hours - totalHours) * 60) - totalMinutes) * 60).floor();
+    return "${totalHours.toString().padLeft(2, '0')}:${totalMinutes.toString().padLeft(2, '0')}:${totalSeconds.toString().padLeft(2, '0')}";
   }
 }
