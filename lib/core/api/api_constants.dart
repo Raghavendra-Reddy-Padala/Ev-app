@@ -43,11 +43,14 @@ class ApiConstants {
 
   static const String subscriptionsCreate = 'subscriptions/create';
   static const String userSubscriptions = 'user_subscription/get';
-  static const String faq = 'faq';
+  static const String faq = 'faqs';
 
   static const String referralCode = 'user/invite_code';
   static const String referralBenefits = 'user/referral_benefits';
   static const String activityGraph = 'analytics/activity_graph';
 
   static const String toggleBike = 'metal/toggle';
+
+    static const String subscriptions = 'subscriptions';
+  static const String userSubscription = 'user_subscription/';
 }
