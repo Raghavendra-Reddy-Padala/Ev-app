@@ -1,67 +1,66 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:collection';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
-import 'package:sensors_plus/sensors_plus.dart';
-import 'package:geolocator/geolocator.dart';
+import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../core/utils/kalman_filter.dart';
 import '../../../main.dart';
+import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
 
-class BikeMetricsController extends GetxController {
-  late loc.Location _location;
+class BikeMetricsController extends BaseController {
   final LocalStorage localStorage = Get.find<LocalStorage>();
+  final TripsController tripsController = Get.find<TripsController>();
 
-  var bikeSubscribed = false.obs;
-  var currentSpeed = 0.0.obs;
-  var totalDistance = 0.0.obs;
-  var totalDuration = 0.0.obs;
-  var batteryPercentage = '0'.obs;
-  var isTracking = false.obs;
-  var bikeEncoded = ''.obs;
-  var bikeID = ''.obs;
-  var isMoving = false.obs;
+  late loc.Location _location;
 
-  final TripsController _tripsController = Get.find<TripsController>();
+  // Reactive variables
+  final RxBool bikeSubscribed = false.obs;
+  final RxDouble currentSpeed = 0.0.obs;
+  final RxDouble totalDistance = 0.0.obs;
+  final RxDouble totalDuration = 0.0.obs;
+  final RxString batteryPercentage = '0%'.obs;
+  final RxBool isTracking = false.obs;
+  final RxString bikeEncoded = ''.obs;
+  final RxString bikeID = ''.obs;
 
-  final RxList<double> speedHistoryData = <double>[].obs;
-  final RxList<double> durationHistoryData = <double>[].obs;
-  final RxList<DateTime> timePoints = <DateTime>[].obs;
+  // Trip data
   final RxDouble calculatedCalories = 0.0.obs;
   final RxDouble maxElevation = 0.0.obs;
   final RxDouble lastTripCalories = 0.0.obs;
   final RxDouble avgSpeed = 0.0.obs;
-  final RxList<double> calorieHistoryData = <double>[].obs;
 
-  RxList<List<double>> pathPoints = <List<double>>[].obs;
-  RxString startLocationName = ''.obs;
-  RxString endLocationName = ''.obs;
+  // History data
+  final RxList<double> speedHistoryData = <double>[].obs;
+  final RxList<double> durationHistoryData = <double>[].obs;
+  final RxList<double> calorieHistoryData = <double>[].obs;
+  final RxList<DateTime> timePoints = <DateTime>[].obs;
+
+  // Location data
+  final RxList<List<double>> pathPoints = <List<double>>[].obs;
+  final RxString startLocationName = ''.obs;
+  final RxString endLocationName = ''.obs;
   LatLng? startPosition;
   LatLng? endPosition;
 
+  // Private variables
   StreamSubscription<loc.LocationData>? _locationSubscription;
-  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   Timer? _durationTimer;
   Timer? _historyUpdateTimer;
 
-  final _speedFilter = KalmanFilter();
+  final KalmanFilter _speedFilter = KalmanFilter();
   final List<_LocationPoint> _locationBuffer = [];
-  final Queue<double> _speedReadings = Queue<double>();
-  final int _maxReadingsToAverage = 5;
+  final List<double> _speedReadings = [];
+  final List<double> _elevationList = [];
 
-  List<double> speedList = [];
-  List<double> elevationList = [];
-  final double minDistanceThreshold = 5.0;
-  final double minSpeedThreshold = 0.5;
-  final double minAccelerationThreshold = 0.1;
-  bool isFirstLocationUpdate = true;
-  int _lastRecordTimestamp = 0;
-
-  final Rx<Position?> currentPosition = Rx<Position?>(null);
+  bool _isFirstLocationUpdate = true;
+  static const int _maxSpeedReadings = 5;
+  static const double _minDistanceThreshold = 5.0;
+  //static const double _minSpeedThreshold = 0.5;
+  static const double _maxReasonableSpeed = 50.0;
 
   @override
   Future<void> onInit() async {
@@ -70,62 +69,39 @@ class BikeMetricsController extends GetxController {
     await _loadMetricsFromStorage();
     _initializeHistoryData();
     _updateAverageSpeed();
-    _startSensors();
   }
 
-  void _startSensors() {
-    _accelerometerSubscription = accelerometerEvents.listen((event) {
-      final acceleration =
-          sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-
-      if (acceleration < minAccelerationThreshold &&
-          currentSpeed.value < minSpeedThreshold) {
-        _addSpeedReading(0.0);
-        _updateSmoothedSpeed();
-      }
-    });
-  }
-
-  void updateLocation(Position position) async {
-    currentPosition.value = position;
-
-    await _tripsController.updateTripLocation(
-      tripId: _tripsController.tripId.toString(),
-      lat: position.latitude,
-      long: position.longitude,
-      elevation: position.altitude,
-    );
-  }
-
-  void _updateAverageSpeed() {
-    if (totalDistance.value > 0 && totalDuration.value > 0) {
-      double totalMovingTime =
-          localStorage.getDouble('totalMovingTime') ?? totalDuration.value;
-
-      if (totalMovingTime < 1) totalMovingTime = totalDuration.value;
-
-      double movingTimeHours = totalMovingTime / 3600;
-      avgSpeed.value = totalDistance.value / movingTimeHours;
-    } else {
-      avgSpeed.value = 0.0;
-    }
+  Future<void> _loadMetricsFromStorage() async {
+    totalDuration.value = localStorage.getTime().toDouble();
+    totalDistance.value = localStorage.getDouble("totalDistance") ?? 0.0;
+    currentSpeed.value = localStorage.getDouble("currentSpeed") ?? 0.0;
+    calculatedCalories.value = localStorage.getDouble("calories") ?? 0.0;
+    maxElevation.value = localStorage.getDouble("maxElevation") ?? 0.0;
+    lastTripCalories.value = localStorage.getDouble("lastTripCalories") ?? 0.0;
+    bikeID.value = localStorage.getString("bikeId") ?? '';
+    bikeSubscribed.value = localStorage.getBool("bikeSubscribed");
   }
 
   void _initializeHistoryData() {
     final savedSpeedHistory = localStorage.getDoubleList("speedHistory");
     final savedDurationHistory = localStorage.getDoubleList("durationHistory");
-    final savedTimePoints = localStorage.getStringList("timePoints");
     final savedCalorieHistory = localStorage.getDoubleList("calorieHistory");
-    final timePointsList = savedTimePoints ?? [];
+    final savedTimePoints = localStorage.getStringList("timePoints");
 
-    if (savedCalorieHistory.isNotEmpty) {
-      calorieHistoryData.value = savedCalorieHistory;
-    } else {
-      calorieHistoryData.value = List.generate(7, (index) => 0.0);
-    }
+    speedHistoryData.value = savedSpeedHistory.isNotEmpty
+        ? savedSpeedHistory
+        : List.generate(7, (index) => 0.0);
 
-    if (timePointsList.isNotEmpty) {
-      timePoints.value = timePointsList
+    durationHistoryData.value = savedDurationHistory.isNotEmpty
+        ? savedDurationHistory
+        : List.generate(7, (index) => 0.0);
+
+    calorieHistoryData.value = savedCalorieHistory.isNotEmpty
+        ? savedCalorieHistory
+        : List.generate(7, (index) => 0.0);
+
+    if (savedTimePoints?.isNotEmpty == true) {
+      timePoints.value = savedTimePoints!
           .map((timeStr) => DateTime.tryParse(timeStr) ?? DateTime.now())
           .toList();
     } else {
@@ -133,140 +109,259 @@ class BikeMetricsController extends GetxController {
       timePoints.value = List.generate(
           7, (index) => now.subtract(Duration(minutes: (6 - index) * 10)));
     }
-
-    if (savedSpeedHistory.isNotEmpty) {
-      speedHistoryData.value = savedSpeedHistory;
-    } else {
-      speedHistoryData.value = List.generate(7, (index) => 0.0);
-    }
-
-    if (savedDurationHistory.isNotEmpty) {
-      durationHistoryData.value = savedDurationHistory;
-    } else {
-      durationHistoryData.value = List.generate(7, (index) => 0.0);
-    }
-
-    calculatedCalories.value = localStorage.getDouble("calories") ?? 0.0;
-    maxElevation.value = localStorage.getDouble("maxElevation") ?? 0.0;
-    lastTripCalories.value = localStorage.getDouble("lastTripCalories") ?? 0.0;
-  }
-
-  Future<void> _loadMetricsFromStorage() async {
-    totalDuration.value = (localStorage.getTime()).toDouble();
-    totalDistance.value =
-        (localStorage.getDouble("totalDistance") ?? 0.0).toDouble();
-    currentSpeed.value =
-        (localStorage.getDouble("currentSpeed") ?? 0.0).toDouble();
   }
 
   void _persistMetrics() {
     localStorage.setTime(totalDuration.value.toInt());
     localStorage.setDouble("totalDistance", totalDistance.value);
     localStorage.setDouble("currentSpeed", currentSpeed.value);
-    localStorage.setDoubleList("speedHistory", speedHistoryData);
-    localStorage.setDoubleList("durationHistory", durationHistoryData);
-    localStorage.setDoubleList("calorieHistory", calorieHistoryData);
-
-    localStorage.setStringList("timePoints",
-        timePoints.map((time) => time.toIso8601String()).toList());
-
     localStorage.setDouble("calories", calculatedCalories.value);
     localStorage.setDouble("maxElevation", maxElevation.value);
     localStorage.setDouble("lastTripCalories", lastTripCalories.value);
+    localStorage.setString("bikeId", bikeID.value);
+    localStorage.setBool("bikeSubscribed", bikeSubscribed.value);
+
+    localStorage.setDoubleList("speedHistory", speedHistoryData);
+    localStorage.setDoubleList("durationHistory", durationHistoryData);
+    localStorage.setDoubleList("calorieHistory", calorieHistoryData);
+    localStorage.setStringList("timePoints",
+        timePoints.map((time) => time.toIso8601String()).toList());
   }
 
   @override
   void onReady() {
     super.onReady();
 
-    totalDuration.listen((val) {
+    // Set up listeners
+    totalDuration.listen((_) {
       _persistMetrics();
       _updateAverageSpeed();
     });
 
     currentSpeed.listen((_) => _persistMetrics());
-    speedHistoryData.listen((_) => _persistMetrics());
-    durationHistoryData.listen((_) => _persistMetrics());
-    timePoints.listen((_) => _persistMetrics());
     calculatedCalories.listen((_) => _persistMetrics());
     maxElevation.listen((_) => _persistMetrics());
     lastTripCalories.listen((_) => _persistMetrics());
-    calorieHistoryData.listen((_) => _persistMetrics());
-  }
-
-  void updateCalorieHistory(double newCalories) {
-    if (calorieHistoryData.length >= 7) {
-      calorieHistoryData.removeAt(0);
-    }
-
-    calorieHistoryData.add(newCalories);
+    bikeID.listen((_) => _persistMetrics());
+    bikeSubscribed.listen((_) => _persistMetrics());
   }
 
   Future<void> startTracking() async {
-    if (!await _requestLocationPermissions()) return;
+    if (!await _requestLocationPermissions()) {
+      handleError('Location permissions denied');
+      return;
+    }
 
+    try {
+      _resetTripData();
+
+      await _location.changeSettings(
+        interval: 2000,
+        distanceFilter: 5,
+        accuracy: loc.LocationAccuracy.high,
+      );
+
+      _startTimers();
+
+      _locationSubscription = _location.onLocationChanged.listen(
+          _handleLocationUpdate,
+          onError: (error) => handleError('Location tracking error: $error'));
+
+      isTracking.value = true;
+      print("Tracking started successfully");
+    } catch (e) {
+      handleError('Failed to start tracking: $e');
+    }
+  }
+
+  void _resetTripData() {
     pathPoints.clear();
     localStorage.savePathPoints(pathPoints);
     localStorage.saveLocationList([]);
-    isFirstLocationUpdate = true;
+    _isFirstLocationUpdate = true;
+    _locationBuffer.clear();
+    _speedReadings.clear();
+    _elevationList.clear();
+  }
 
-    _location.changeSettings(
-      interval: 2000,
-      distanceFilter: 5,
-      accuracy: loc.LocationAccuracy.high,
-    );
-
+  void _startTimers() {
     _startDurationTimer();
     _startHistoryTimer();
+  }
 
-    _locationSubscription = _location.onLocationChanged.listen((locationData) {
-      _updateMetrics(locationData);
+  void _startDurationTimer() {
+    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (isTracking.value) {
+        totalDuration.value++;
+      }
     });
+  }
 
-    isTracking.value = true;
-    print("Tracking started");
+  void _startHistoryTimer() {
+    _historyUpdateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (isTracking.value) {
+        _updateHistoryData();
+        _calculateCalories();
+      }
+    });
   }
 
   void stopTracking() {
     _locationSubscription?.cancel();
-    _stopDurationTimer();
-    _stopHistoryTimer();
+    _stopTimers();
     isTracking.value = false;
-
     _persistMetrics();
     print("Tracking stopped");
   }
 
   void pauseTracking() {
     _locationSubscription?.pause();
-    _stopDurationTimer();
-    _stopHistoryTimer();
+    _stopTimers();
     print("Tracking paused");
   }
 
   void resumeTracking() {
     _locationSubscription?.resume();
-    _startDurationTimer();
-    _startHistoryTimer();
+    _startTimers();
     print("Tracking resumed");
   }
 
-  void _startHistoryTimer() {
-    _historyUpdateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (isTracking.value) {
-        updateSpeedHistory(currentSpeed.value);
-        updateDurationHistory(0.5);
-        calculateCalories();
-      }
-    });
-  }
-
-  void _stopHistoryTimer() {
+  void _stopTimers() {
+    _durationTimer?.cancel();
     _historyUpdateTimer?.cancel();
+    _durationTimer = null;
     _historyUpdateTimer = null;
   }
 
-  void updateSpeedHistory(double newSpeed) {
+  void _handleLocationUpdate(loc.LocationData locationData) {
+    if (!_isValidLocationData(locationData)) return;
+
+    final newLocation = _LocationPoint.fromLocationData(locationData);
+    _locationBuffer.add(newLocation);
+
+    if (_locationBuffer.length > 5) {
+      _locationBuffer.removeAt(0);
+    }
+
+    _processLocationData(newLocation);
+    _updatePathAndElevation(newLocation);
+  }
+
+  bool _isValidLocationData(loc.LocationData data) {
+    return data.accuracy != null &&
+        data.accuracy! <= 15 &&
+        data.latitude != null &&
+        data.longitude != null;
+  }
+
+  void _processLocationData(_LocationPoint newLocation) {
+    if (_locationBuffer.length >= 2) {
+      final currentPoint = _locationBuffer.last;
+      final previousPoint = _locationBuffer[_locationBuffer.length - 2];
+
+      _updateSpeedAndDistance(previousPoint, currentPoint);
+    }
+
+    if (_isFirstLocationUpdate) {
+      _setStartLocation(newLocation);
+      _isFirstLocationUpdate = false;
+    }
+
+    _setEndLocation(newLocation);
+  }
+
+  void _updateSpeedAndDistance(
+      _LocationPoint previous, _LocationPoint current) {
+    final distance =
+        _calculateHaversineDistance(previous, current) * 1000; // meters
+    final timeDiff = (current.time - previous.time) / 1000; // seconds
+
+    if (timeDiff > 0 && distance >= _minDistanceThreshold) {
+      final speedKmh = (distance / timeDiff) * 3.6;
+      _updateSpeed(speedKmh);
+      _updateDistance(distance / 1000); // convert to km
+    }
+  }
+
+  void _updateSpeed(double newSpeed) {
+    if (newSpeed > _maxReasonableSpeed) return;
+
+    _speedReadings.add(newSpeed);
+    if (_speedReadings.length > _maxSpeedReadings) {
+      _speedReadings.removeAt(0);
+    }
+
+    final smoothedSpeed = _calculateSmoothedSpeed();
+    currentSpeed.value = _speedFilter.update(smoothedSpeed);
+  }
+
+  double _calculateSmoothedSpeed() {
+    if (_speedReadings.isEmpty) return 0.0;
+
+    double totalWeight = 0;
+    double weightedSum = 0;
+
+    for (int i = 0; i < _speedReadings.length; i++) {
+      final weight = i + 1; // Recent speeds have higher weight
+      weightedSum += _speedReadings[i] * weight;
+      totalWeight += weight;
+    }
+
+    return weightedSum / totalWeight;
+  }
+
+  void _updateDistance(double distanceKm) {
+    totalDistance.value += distanceKm;
+  }
+
+  void _updatePathAndElevation(_LocationPoint location) {
+    pathPoints.add([location.lat, location.lng]);
+    localStorage.savePathPoints(pathPoints);
+
+    _elevationList.add(location.altitude);
+    if (location.altitude > maxElevation.value) {
+      maxElevation.value = location.altitude;
+    }
+
+    final locations = localStorage.getLocationList();
+    locations.add([location.lat, location.lng]);
+    localStorage.saveLocationList(locations);
+  }
+
+  void _setStartLocation(_LocationPoint location) {
+    startPosition = LatLng(location.lat, location.lng);
+    _getLocationName(location.lat, location.lng, true);
+  }
+
+  void _setEndLocation(_LocationPoint location) {
+    endPosition = LatLng(location.lat, location.lng);
+  }
+
+  Future<void> _getLocationName(double lat, double lng, bool isStart) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final locationName = '${place.street}, ${place.locality}';
+
+        if (isStart) {
+          startLocationName.value = locationName;
+        } else {
+          endLocationName.value = locationName;
+        }
+      }
+    } catch (e) {
+      print("Error getting location name: $e");
+    }
+  }
+
+  void _updateHistoryData() {
+    _updateSpeedHistory(currentSpeed.value);
+    _updateDurationHistory(0.5); // 30 seconds in minutes
+    _updateCalorieHistory(calculatedCalories.value);
+  }
+
+  void _updateSpeedHistory(double newSpeed) {
     if (speedHistoryData.length >= 7) {
       speedHistoryData.removeAt(0);
       timePoints.removeAt(0);
@@ -274,15 +369,9 @@ class BikeMetricsController extends GetxController {
 
     speedHistoryData.add(newSpeed);
     timePoints.add(DateTime.now());
-
-    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
-    if (currentTimestamp - _lastRecordTimestamp >= 60 * 1000 &&
-        isTracking.value) {
-      _lastRecordTimestamp = currentTimestamp;
-    }
   }
 
-  void updateDurationHistory(double minutes) {
+  void _updateDurationHistory(double minutes) {
     if (durationHistoryData.length >= 7) {
       durationHistoryData.removeAt(0);
     }
@@ -290,43 +379,52 @@ class BikeMetricsController extends GetxController {
     durationHistoryData.add(minutes * 60);
   }
 
-  void calculateCalories() {
-    double met;
-
-    if (currentSpeed.value < 8) {
-      met = 3.0;
-    } else if (currentSpeed.value < 16) {
-      met = 4.0;
-    } else if (currentSpeed.value < 20) {
-      met = 6.0;
-    } else if (currentSpeed.value < 25) {
-      met = 8.0;
-    } else if (currentSpeed.value < 30) {
-      met = 10.0;
-    } else {
-      met = 12.0;
+  void _updateCalorieHistory(double newCalories) {
+    if (calorieHistoryData.length >= 7) {
+      calorieHistoryData.removeAt(0);
     }
 
-    double elevationFactor = 1.0;
-    if (elevationList.length >= 10) {
-      List<double> recentElevations =
-          elevationList.sublist(elevationList.length - 10);
-      double elevationChange = recentElevations.last - recentElevations.first;
+    calorieHistoryData.add(newCalories);
+  }
 
-      if (elevationChange > 5) {
-        elevationFactor = 1.2;
-      } else if (elevationChange < -5) {
-        elevationFactor = 0.9;
-      }
-    }
+  void _calculateCalories() {
+    final met = _getMetValue(currentSpeed.value);
+    final elevationFactor = _getElevationFactor();
+    final userWeight = localStorage.getDouble('userWeight') ?? 70.0;
+    final durationInHours = totalDuration.value / 3600;
 
-    double userWeight = localStorage.getDouble('userWeight') ?? 70.0;
-    double durationInHours = totalDuration.value / 3600;
     calculatedCalories.value =
         met * userWeight * durationInHours * elevationFactor;
     lastTripCalories.value = calculatedCalories.value;
+  }
 
-    updateCalorieHistory(calculatedCalories.value);
+  double _getMetValue(double speed) {
+    if (speed < 8) return 3.0;
+    if (speed < 16) return 4.0;
+    if (speed < 20) return 6.0;
+    if (speed < 25) return 8.0;
+    if (speed < 30) return 10.0;
+    return 12.0;
+  }
+
+  double _getElevationFactor() {
+    if (_elevationList.length < 10) return 1.0;
+
+    final recentElevations = _elevationList.sublist(_elevationList.length - 10);
+    final elevationChange = recentElevations.last - recentElevations.first;
+
+    if (elevationChange > 5) return 1.2;
+    if (elevationChange < -5) return 0.9;
+    return 1.0;
+  }
+
+  void _updateAverageSpeed() {
+    if (totalDistance.value > 0 && totalDuration.value > 0) {
+      final durationInHours = totalDuration.value / 3600;
+      avgSpeed.value = totalDistance.value / durationInHours;
+    } else {
+      avgSpeed.value = 0.0;
+    }
   }
 
   Future<String> fetchBatteryInfo(String encodedId) async {
@@ -334,15 +432,16 @@ class BikeMetricsController extends GetxController {
       bikeEncoded.value = encodedId;
       final response =
           await apiService.get(endpoint: '/v1/metal/status/$encodedId');
-      print(response.data);
-      if (response.statusCode == 200) {
-        batteryPercentage.value = response.data['data'];
-        return response.data['data'];
+
+      if (response?.statusCode == 200) {
+        final batteryData = response!.data['data'];
+        batteryPercentage.value = batteryData;
+        return batteryData;
       }
     } catch (e) {
-      print(e);
+      handleError('Failed to fetch battery info: $e');
     }
-    return '';
+    return '0%';
   }
 
   void saveTripSummary() {
@@ -356,37 +455,53 @@ class BikeMetricsController extends GetxController {
   void resetTripData() {
     lastTripCalories.value = calculatedCalories.value;
     localStorage.setDouble("lastTripCalories", lastTripCalories.value);
+
     totalDistance.value = 0.0;
     totalDuration.value = 0.0;
-    speedList.clear();
-    _speedReadings.clear();
     currentSpeed.value = 0.0;
-    elevationList.clear();
-    maxElevation.value = 0.0;
     calculatedCalories.value = 0.0;
+    maxElevation.value = 0.0;
+
     speedHistoryData.value = List.generate(7, (index) => 0.0);
     durationHistoryData.value = List.generate(7, (index) => 0.0);
     calorieHistoryData.value = List.generate(7, (index) => 0.0);
+
     final now = DateTime.now();
     timePoints.value = List.generate(
         7, (index) => now.subtract(Duration(minutes: (6 - index) * 10)));
-    _stopDurationTimer();
-    _stopHistoryTimer();
+
+    _speedReadings.clear();
+    _elevationList.clear();
+    _locationBuffer.clear();
+
+    _stopTimers();
     _persistMetrics();
-    _lastRecordTimestamp = 0;
   }
 
-  void _startDurationTimer() {
-    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (isTracking.value) {
-        totalDuration.value++;
-      }
-    });
+  TripMetrics getCurrentMetrics() {
+    return TripMetrics(
+      speed: currentSpeed.value,
+      distance: totalDistance.value,
+      duration: totalDuration.value,
+      calories: calculatedCalories.value,
+      elevation: maxElevation.value,
+      batteryPercentage: batteryPercentage.value,
+    );
   }
 
-  void _stopDurationTimer() {
-    _durationTimer?.cancel();
-    _durationTimer = null;
+  double _calculateHaversineDistance(_LocationPoint p1, _LocationPoint p2) {
+    const double earthRadius = 6371.0; // km
+
+    final lat1Rad = p1.lat * pi / 180;
+    final lat2Rad = p2.lat * pi / 180;
+    final deltaLat = (p2.lat - p1.lat) * pi / 180;
+    final deltaLng = (p2.lng - p1.lng) * pi / 180;
+
+    final a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1Rad) * cos(lat2Rad) * sin(deltaLng / 2) * sin(deltaLng / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadius * c;
   }
 
   Future<bool> _requestLocationPermissions() async {
@@ -394,18 +509,15 @@ class BikeMetricsController extends GetxController {
       bool serviceEnabled = await _location.serviceEnabled();
       if (!serviceEnabled) {
         serviceEnabled = await _location.requestService();
-        if (!serviceEnabled) {
-          return false;
-        }
+        if (!serviceEnabled) return false;
       }
 
       var permissionStatus = await _location.hasPermission();
       if (permissionStatus == loc.PermissionStatus.denied) {
         permissionStatus = await _location.requestPermission();
-        if (permissionStatus != loc.PermissionStatus.granted) {
-          return false;
-        }
+        if (permissionStatus != loc.PermissionStatus.granted) return false;
       }
+
       return true;
     } catch (e) {
       print("Error requesting location permissions: $e");
@@ -413,208 +525,10 @@ class BikeMetricsController extends GetxController {
     }
   }
 
-  void _addSpeedReading(double speed) {
-    if (speed > 50.0) return;
-
-    _speedReadings.add(speed);
-    if (_speedReadings.length > _maxReadingsToAverage) {
-      _speedReadings.removeFirst();
-    }
-  }
-
-  void _updateSmoothedSpeed() {
-    if (_speedReadings.isEmpty) return;
-
-    double totalWeight = 0;
-    double weightedSum = 0;
-
-    int weight = 1;
-    for (double speed in _speedReadings) {
-      weightedSum += speed * weight;
-      totalWeight += weight;
-      weight++;
-    }
-
-    double smoothedSpeed = weightedSum / totalWeight;
-
-    if (smoothedSpeed < 6.0) {
-      smoothedSpeed = (smoothedSpeed * 10).round() / 10;
-    }
-
-    currentSpeed.value = _speedFilter.update(smoothedSpeed);
-  }
-
-  bool _isStationary(double speed, double accuracy) {
-    return speed < minSpeedThreshold && accuracy > 15.0;
-  }
-
-  void _updateMetrics(loc.LocationData locationData) {
-    if (locationData.accuracy != null && locationData.accuracy! > 15) return;
-
-    final latitude = locationData.latitude ?? 0.0;
-    final longitude = locationData.longitude ?? 0.0;
-    final altitude = locationData.altitude ?? 0.0;
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-    final newLocation = _LocationPoint(
-      lat: latitude,
-      lng: longitude,
-      time: timestamp,
-      accuracy: locationData.accuracy ?? 0.0,
-      altitude: altitude,
-    );
-
-    _locationBuffer.add(newLocation);
-    if (_locationBuffer.length > 5) {
-      _locationBuffer.removeAt(0);
-    }
-
-    if (_locationBuffer.length >= 2) {
-      final currentPoint = _locationBuffer.last;
-      final previousPoint = _locationBuffer[_locationBuffer.length - 2];
-
-      final distance = _calculateHaversine(previousPoint, currentPoint) * 1000;
-      final timeDiffSeconds = (currentPoint.time - previousPoint.time) / 1000;
-
-      if (timeDiffSeconds > 0) {
-        double speedKmPerHour = (distance / timeDiffSeconds) * 3.6;
-
-        if (distance < minDistanceThreshold) {
-          speedKmPerHour = 0.0;
-        }
-
-        if (_isStationary(speedKmPerHour, locationData.accuracy ?? 100.0)) {
-          speedKmPerHour = 0.0;
-        }
-
-        _addSpeedReading(speedKmPerHour);
-        _updateSmoothedSpeed();
-
-        if (speedKmPerHour > minSpeedThreshold &&
-            distance > minDistanceThreshold / 1000) {
-          final elevationChange =
-              currentPoint.altitude - previousPoint.altitude;
-          final correctedDistance =
-              sqrt(pow(distance, 2) + pow(elevationChange, 2));
-          totalDistance.value += correctedDistance / 1000;
-        }
-      }
-    }
-
-    if (isFirstLocationUpdate) {
-      startPosition = LatLng(latitude, longitude);
-      getLocationName(latitude, longitude, true);
-      isFirstLocationUpdate = false;
-    }
-
-    endPosition = LatLng(latitude, longitude);
-    pathPoints.add([latitude, longitude]);
-    localStorage.savePathPoints(pathPoints);
-
-    elevationList.add(altitude);
-    if (altitude > maxElevation.value) {
-      maxElevation.value = altitude;
-    }
-
-    final locations = localStorage.getLocationList();
-
-    if (!isFirstLocationUpdate && locations.isNotEmpty) {
-      final lastLocation = locations.last;
-      final lastLatitude = lastLocation[0];
-      final lastLongitude = lastLocation[1];
-
-      final distance = _calculateDistance(
-        lastLatitude,
-        lastLongitude,
-        latitude,
-        longitude,
-      );
-
-      if (distance > (minDistanceThreshold / 1000)) {
-        totalDistance.value += distance;
-      }
-    }
-
-    locations.add([latitude, longitude]);
-    localStorage.saveLocationList(locations);
-  }
-
-  Future<void> getLocationName(
-      double latitude, double longitude, bool isStartLocation) async {
-    try {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(latitude, longitude);
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        String locationName = '${place.street}, ${place.locality}';
-
-        if (isStartLocation) {
-          startLocationName.value = locationName;
-        } else {
-          endLocationName.value = locationName;
-        }
-      }
-    } catch (e) {
-      print("Error getting location name: $e");
-    }
-  }
-
-  double _calculateHaversine(_LocationPoint p1, _LocationPoint p2) {
-    const double earthRadius = 6371.0;
-
-    final double lat1 = _degreesToRadians(p1.lat);
-    final double lon1 = _degreesToRadians(p1.lng);
-    final double lat2 = _degreesToRadians(p2.lat);
-    final double lon2 = _degreesToRadians(p2.lng);
-
-    final double dLat = lat2 - lat1;
-    final double dLon = lon2 - lon1;
-
-    final double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    return earthRadius * c;
-  }
-
-  double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
-    const double earthRadius = 6371.0;
-
-    final double lat1Rad = _degreesToRadians(lat1);
-    final double lat2Rad = _degreesToRadians(lat2);
-    final double deltaLat = _degreesToRadians(lat2 - lat1);
-    final double deltaLon = _degreesToRadians(lon2 - lon1);
-
-    final double a = (sin(deltaLat / 2) * sin(deltaLat / 2)) +
-        (cos(lat1Rad) * cos(lat2Rad) * sin(deltaLon / 2) * sin(deltaLon / 2));
-    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    double distance = earthRadius * c;
-
-    if (elevationList.length >= 2) {
-      double elevationDiff =
-          elevationList.last - elevationList[elevationList.length - 2];
-      if (elevationDiff != 0) {
-        double horizontalDistance = distance;
-        double elevationChangeKm = elevationDiff / 1000;
-        distance = sqrt(pow(horizontalDistance, 2) + pow(elevationChangeKm, 2));
-      }
-    }
-
-    return distance;
-  }
-
-  double _degreesToRadians(double degrees) {
-    return degrees * pi / 180;
-  }
-
   @override
   void onClose() {
     _locationSubscription?.cancel();
-    _accelerometerSubscription?.cancel();
-    _durationTimer?.cancel();
-    _historyUpdateTimer?.cancel();
+    _stopTimers();
     _persistMetrics();
     super.onClose();
   }
@@ -634,4 +548,14 @@ class _LocationPoint {
     required this.accuracy,
     required this.altitude,
   });
+
+  factory _LocationPoint.fromLocationData(loc.LocationData data) {
+    return _LocationPoint(
+      lat: data.latitude!,
+      lng: data.longitude!,
+      time: DateTime.now().millisecondsSinceEpoch,
+      accuracy: data.accuracy!,
+      altitude: data.altitude ?? 0.0,
+    );
+  }
 }

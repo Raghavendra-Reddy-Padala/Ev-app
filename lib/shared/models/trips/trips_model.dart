@@ -35,6 +35,46 @@ class TripSummaryModel {
   }
 }
 
+class TripMetrics {
+  final double speed;
+  final double distance;
+  final double duration;
+  final double calories;
+  final double elevation;
+  final String batteryPercentage;
+
+  TripMetrics({
+    required this.speed,
+    required this.distance,
+    required this.duration,
+    required this.calories,
+    required this.elevation,
+    required this.batteryPercentage,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'speed': speed,
+      'distance': distance,
+      'duration': duration,
+      'calories': calories,
+      'elevation': elevation,
+      'battery_percentage': batteryPercentage,
+    };
+  }
+
+  factory TripMetrics.fromJson(Map<String, dynamic> json) {
+    return TripMetrics(
+      speed: json['speed']?.toDouble() ?? 0.0,
+      distance: json['distance']?.toDouble() ?? 0.0,
+      duration: json['duration']?.toDouble() ?? 0.0,
+      calories: json['calories']?.toDouble() ?? 0.0,
+      elevation: json['elevation']?.toDouble() ?? 0.0,
+      batteryPercentage: json['battery_percentage'] ?? '0%',
+    );
+  }
+}
+
 class Averages {
   final int caloriesTrip;
   final double distanceKm;

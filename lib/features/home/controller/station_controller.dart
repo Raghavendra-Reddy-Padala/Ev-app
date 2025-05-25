@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
+import 'package:mjollnir/core/api/api_constants.dart';
 
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
@@ -78,15 +79,12 @@ Future<void> fetchAllStations() async {
 
         if (response != null) {
           print('Response data: ${response}');
-          
-          // The response itself is the parsed JSON Map, not response.data
-          // Use GetMultipleStationsResponse since the API returns an array
           final stationResponse = GetMultipleStationsResponse.fromJson(response);
           if (stationResponse.success) {
             stations.clear();
             stations.addAll(stationResponse.stations);
             filteredStations.assignAll(stations);
-            nearbyStations.assignAll(stations); // Also update nearbyStations
+            nearbyStations.assignAll(stations); 
             _updateMarkers();
             return true;
           } else {

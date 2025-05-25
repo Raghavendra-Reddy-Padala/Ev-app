@@ -2,282 +2,164 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../core/storage/local_storage.dart';
-import '../../../features/account/controllers/trips_controller.dart';
-import '../../../features/bikes/controller/bike_metrics_controller.dart';
-import '../../constants/colors.dart';
+import '../../../core/navigation/navigation_service.dart';
+import '../../../features/bikes/controller/trips_control_service.dart';
+import '../buttons/app_button.dart';
+import 'ride_summary.dart';
 
 class TripControlPanel extends StatelessWidget {
-  final RxBool isEndTripSliderVisible;
-  final VoidCallback onShowEndTripSlider;
-  final VoidCallback onHideEndTripSlider;
-
-  const TripControlPanel({
-    super.key,
-    required this.isEndTripSliderVisible,
-    required this.onShowEndTripSlider,
-    required this.onHideEndTripSlider,
-  });
+  const TripControlPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final TripControlService tripControlService = Get.find();
+
     return Obx(() {
-      if (isEndTripSliderVisible.value) {
-        return _EndTripSlider(onHideSlider: onHideEndTripSlider);
+      if (tripControlService.isEndTripSliderVisible.value) {
+        return _EndTripSlider();
       } else {
-        return _TripControlButtons(onShowEndTripSlider: onShowEndTripSlider);
+        return _TripControlButtons();
       }
     });
   }
 }
 
 class _TripControlButtons extends StatelessWidget {
-  final VoidCallback onShowEndTripSlider;
-
-  const _TripControlButtons({
-    required this.onShowEndTripSlider,
-  });
-
   @override
   Widget build(BuildContext context) {
     final RxBool isTrackingPaused = false.obs;
-    final BikeMetricsController bikeManager = Get.find();
+    final TripControlService tripControlService = Get.find();
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Obx(() {
-            return ElevatedButton.icon(
+            return AppButton(
+              text: isTrackingPaused.value ? "Resume Trip" : "Pause Trip",
+              icon: isTrackingPaused.value ? Icons.play_arrow : Icons.pause,
+              type: isTrackingPaused.value
+                  ? ButtonType.secondary
+                  : ButtonType.primary,
               onPressed: () {
                 if (isTrackingPaused.value) {
-                  bikeManager.startTracking();
+                  tripControlService.resumeTrip();
                   isTrackingPaused.value = false;
-                  AwesomeNotifications().createNotification(
-                    content: NotificationContent(
-                      id: 2,
-                      channelKey: 'ride_channel',
-                      title: 'Ride Resumed',
-                      body: 'Your ride has been resumed successfully.',
-                      notificationLayout: NotificationLayout.Default,
-                    ),
+                  _showNotification(
+                    'Ride Resumed',
+                    'Your ride has been resumed successfully.',
                   );
                 } else {
-                  bikeManager.pauseTracking();
+                  tripControlService.pauseTrip();
                   isTrackingPaused.value = true;
-                  AwesomeNotifications().createNotification(
-                    content: NotificationContent(
-                      id: 1,
-                      channelKey: 'ride_channel',
-                      title: 'Ride Paused',
-                      body:
-                          'Your ride has been paused. You can resume anytime.',
-                      notificationLayout: NotificationLayout.Default,
-                    ),
+                  _showNotification(
+                    'Ride Paused',
+                    'Your ride has been paused. You can resume anytime.',
                   );
                 }
               },
-              icon: Icon(
-                isTrackingPaused.value ? Icons.play_arrow : Icons.pause,
-                color:
-                    isTrackingPaused.value ? AppColors.primary : Colors.white,
-              ),
-              label: Text(
-                isTrackingPaused.value ? "Resume Trip" : "Pause Trip",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color:
-                      isTrackingPaused.value ? AppColors.primary : Colors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isTrackingPaused.value
-                    ? Colors.transparent
-                    : AppColors.primary,
-                side: BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                elevation: 0,
-              ),
             );
           }),
         ),
         SizedBox(width: 10.w),
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: onShowEndTripSlider,
-            icon: Icon(
-              Icons.stop_circle_outlined,
-              color: Colors.white,
-              size: 20.w,
-            ),
-            label: Text(
-              "End Trip",
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-            ),
+          child: AppButton(
+            text: "End Trip",
+            icon: Icons.stop_circle_outlined,
+            type: ButtonType.danger,
+            onPressed: () => tripControlService.showEndTripSlider(),
           ),
         ),
       ],
     );
   }
+
+  void _showNotification(String title, String body) {
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        channelKey: 'ride_channel',
+        title: title,
+        body: body,
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+  }
 }
 
 class _EndTripSlider extends StatelessWidget {
-  final VoidCallback onHideSlider;
-
-  const _EndTripSlider({
-    required this.onHideSlider,
-  });
-
   @override
   Widget build(BuildContext context) {
-    final BikeMetricsController bikeManager = Get.find<BikeMetricsController>();
-    final TripsController endTripController = Get.find<TripsController>();
-    final localStorage = Get.find<LocalStorage>();
-    final isLoading = false.obs;
+    final TripControlService tripControlService = Get.find();
 
-    return Obx(() {
-      if (isLoading.value) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primary,
-          ),
-        );
-      }
-      return Container(
-        height: 60.h,
-        width: Get.width,
-        color: Colors.white,
-        child: Center(
-          child: Text(
-            "Slide to end trip",
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.red,
+    return Container(
+      height: 60.h,
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(30.r),
+      ),
+      child: Stack(
+        children: [
+          Center(
+            child: Text(
+              "Slide to End Trip",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-      );
+          Positioned(
+            left: 4.w,
+            top: 4.h,
+            bottom: 4.h,
+            child: GestureDetector(
+              onPanUpdate: (details) =>
+                  _handleSlide(details, tripControlService),
+              child: Container(
+                width: 52.w,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(26.r),
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.red,
+                  size: 24.w,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-      // return SliderButton(
-      //   shimmer: false,
-      //   width: Get.width,
-      //   height: 60.h,
-      //   buttonSize: 50.h,
-      //   backgroundColor: Colors.red,
-      //   baseColor: Colors.white,
-      //   buttonColor: Colors.white,
-      //   highlightedColor: Colors.red.shade700,
-      //   vibrationFlag: true,
-      //   action: () async {
-      //     try {
-      //       isLoading.value = true;
+  void _handleSlide(DragUpdateDetails details, TripControlService service) {
+    if (details.delta.dx > 5) {
+      _endTrip(service);
+    }
+  }
 
-      //       final BikeMetricsController bikeMetricsController = Get.find();
+  Future<void> _endTrip(TripControlService service) async {
+    try {
+      final success = await service.endTrip();
 
-      //       if (bikeMetricsController.endPosition != null) {
-      //         await bikeMetricsController.getLocationName(
-      //           bikeMetricsController.endPosition!.latitude,
-      //           bikeMetricsController.endPosition!.longitude,
-      //           false,
-      //         );
-      //       }
+      if (success) {
+        AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: 3,
+            channelKey: 'ride_channel',
+            title: 'Trip Ended',
+            body: 'Your trip has successfully ended. Thanks for riding!',
+            notificationLayout: NotificationLayout.Default,
+          ),
+        );
 
-      //       bikeMetricsController.saveTripSummary();
-      //       bikeMetricsController.stopTracking();
-
-      //       final locations = localStorage.getLocationList();
-      //       AppLogger.i("Locations => $locations");
-
-      //       final startTripController = Get.find();
-      //       final id = startTripController.tripId.value;
-      //       final durationObject = Duration(
-      //         seconds: bikeMetricsController.totalDuration.value.toInt(),
-      //       );
-
-      //       final EndTrip endTripData = EndTrip(
-      //         id: id,
-      //         bikeId: bikeManager.bikeID.value,
-      //         stationId: "0",
-      //         startTimestamp: DateTime.now().subtract(durationObject),
-      //         endTimestamp: DateTime.now(),
-      //         distance: bikeMetricsController.totalDistance.value,
-      //         duration: bikeMetricsController.totalDuration.value,
-      //         averageSpeed: bikeMetricsController.currentSpeed.value,
-      //         path: locations,
-      //       );
-
-      //       await endTripController.dataSend(endTripData, id);
-
-      //       await localStorage.remove('locations');
-      //       await localStorage.setBikeSubscribed(false);
-      //       await localStorage.setBikeCode("");
-      //       await localStorage.setEncodedID('');
-      //       await localStorage.setDeviceID("");
-      //       await localStorage.setInt('time', 0);
-
-      //       bikeManager.bikeSubscribed.value = false;
-      //       bikeManager.bikeID.value = "";
-      //       bikeManager.totalDuration.value = 0;
-
-      //       final MainPageController mainPageController = Get.find();
-      //       mainPageController.isBikeSubscribed.value = false;
-
-      //       AwesomeNotifications().createNotification(
-      //         content: NotificationContent(
-      //           id: 3,
-      //           channelKey: 'ride_channel',
-      //           title: 'Trip Ended',
-      //           body: 'Your trip has successfully ended. Thanks for riding!',
-      //           notificationLayout: NotificationLayout.Default,
-      //         ),
-      //       );
-
-      //       NavigationService.pushToWithCallback(
-      //         RideSummary(tripData: endTripData),
-      //         () {
-      //           localStorage.setBikeSubscribed(false);
-      //           Get.find<BikeMetricsController>().bikeSubscribed.value = false;
-      //         },
-      //       );
-
-      //       bikeMetricsController.resetTripData();
-
-      //       onHideSlider();
-      //     } catch (e) {
-      //       AppLogger.e('Error ending trip', error: e);
-      //       isLoading.value = false;
-      //     }
-      //     return true;
-      //   },
-      //   alignLabel: Alignment.center,
-      //   label: Text(
-      //     "SLIDE TO END TRIP",
-      //     style: TextStyle(
-      //       color: Colors.white,
-      //       fontSize: 18.sp,
-      //       fontWeight: FontWeight.w600,
-      //     ),
-      //   ),
-      //   icon: Icon(
-      //     Icons.arrow_forward,
-      //     color: Colors.red,
-      //     size: 24.w,
-      //   ),
-      // );
-    });
+        NavigationService.pushTo(RideSummary());
+      }
+    } catch (e) {
+      print('Error ending trip: $e');
+    }
   }
 }
