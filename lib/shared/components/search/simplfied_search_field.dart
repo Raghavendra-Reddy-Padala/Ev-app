@@ -1,4 +1,4 @@
-import 'package:bolt_ui_kit/bolt_kit.dart ' as BoltKit;
+import 'package:bolt_ui_kit/bolt_kit.dart' as BoltKit;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -23,9 +23,9 @@ class SimpleSearchField extends StatelessWidget {
     return GetX<CustomSearchController>(
       builder: (searchController) {
         // Determine if we should show results
-        final bool showResults = searchController.isSearching.value && 
-                               searchController.searchResults.isNotEmpty;
-        
+        final bool showResults = searchController.isSearching.value &&
+            searchController.searchResults.isNotEmpty;
+
         return Container(
           // Add margin around the entire component
           margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -71,7 +71,7 @@ class SimpleSearchField extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Search results - only visible when searching with results
               if (showResults)
                 SearchResultsList(results: searchController.searchResults),
@@ -136,7 +136,8 @@ class SearchResultItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isUser = item is User;
-    final String name = isUser ? (item as User).firstName : (item as Group).name;
+    final String name =
+        isUser ? (item as User).firstName : (item as Group).name;
     final String type = isUser ? 'User' : 'Group';
     final followController = Get.find<FollowController>();
 
@@ -162,38 +163,38 @@ class SearchResultItem extends StatelessWidget {
           ),
         ),
         trailing: isUser
-          ? Obx(() => followController.isLoading.value
-              ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.green,
+            ? Obx(() => followController.isLoading.value
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.green,
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      Icons.person_add_outlined,
+                      color: AppColors.green,
+                    ),
+                    onPressed: () {
+                      followController.followUser(item.uid);
+                    },
+                  ))
+            : Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Text(
+                  type,
+                  style: BoltKit.AppTextThemes.bodySmall().copyWith(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w600,
                   ),
-                )
-              : IconButton(
-                  icon: Icon(
-                    Icons.person_add_outlined,
-                    color: AppColors.green,
-                  ),
-                  onPressed: () {
-                    followController.followUser(item.uid);
-                  },
-                ))
-          : Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Text(
-                type,
-                style: BoltKit.AppTextThemes.bodySmall().copyWith(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
         onTap: () {
           if (isUser) {
             // NavigationService.pushTo(
