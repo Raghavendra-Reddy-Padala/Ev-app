@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
 import 'package:mjollnir/main.dart';
 
 import '../../../core/api/base/base_controller.dart';
@@ -31,7 +32,7 @@ class UserController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/user/get',
+            endpoint: ApiConstants.userGet,
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -71,7 +72,7 @@ class UserController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/user/getAll',
+            endpoint: ApiConstants.userGetAll,
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',

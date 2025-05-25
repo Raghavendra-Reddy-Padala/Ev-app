@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
 
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
@@ -30,7 +31,7 @@ class WalletController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/wallet/get',
+            endpoint: ApiConstants.walletGet,
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -72,7 +73,7 @@ class WalletController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/transactions/getAll',
+            endpoint: ApiConstants.transactionsGetAll,
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',

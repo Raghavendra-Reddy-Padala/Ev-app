@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/navigation/navigation_service.dart';
-import '../../../features/bikes/controller/bike_metrics_controller.dart';
 import '../../../features/bikes/controller/trips_control_service.dart';
-import '../../constants/colors.dart';
 import '../buttons/app_button.dart';
 import 'ride_summary.dart';
 
@@ -30,7 +28,6 @@ class _TripControlButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final RxBool isTrackingPaused = false.obs;
-    final BikeMetricsController bikeController = Get.find();
     final TripControlService tripControlService = Get.find();
 
     return Row(

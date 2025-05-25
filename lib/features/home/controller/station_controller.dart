@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
+import 'package:mjollnir/core/api/api_constants.dart';
 
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
@@ -65,7 +66,7 @@ class StationController extends BaseController {
       await useApiOrDummy(
         apiCall: () async {
           final response = await apiService.get(
-            endpoint: '/v1/stations/get',
+            endpoint: ApiConstants.stationsGet,
             headers: {
               'Authentication': '',
             },

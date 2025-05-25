@@ -95,16 +95,16 @@ class AppButton extends StatelessWidget {
 
   ButtonStyle _getButtonStyle() {
     return ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.disabled)) {
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
           return type == ButtonType.outline
               ? Colors.transparent
               : AppColors.disabled;
         }
         return _getBackgroundColor();
       }),
-      foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.disabled)) {
+      foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
           return type == ButtonType.outline
               ? AppColors.disabled
               : AppColors.white;
@@ -117,8 +117,8 @@ class AppButton extends StatelessWidget {
           side: _getBorderSide(),
         ),
       ),
-      elevation: MaterialStateProperty.all(type == ButtonType.text ? 0 : 1),
-      padding: MaterialStateProperty.all<EdgeInsets>(
+      elevation: WidgetStateProperty.all(type == ButtonType.text ? 0 : 1),
+      padding: WidgetStateProperty.all<EdgeInsets>(
         EdgeInsets.symmetric(horizontal: 16.w),
       ),
     );

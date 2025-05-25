@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
 
 import '../../../core/api/base/base_controller.dart';
@@ -13,9 +14,7 @@ class GroupController extends BaseController {
   final Rxn<GroupMembersDetailsModel> groupMembersDetails =
       Rxn<GroupMembersDetailsModel>();
   final Rxn<AggregatedData> groupAggregateData = Rxn<AggregatedData>();
-    var joined_groups = <JoinedGroup>[].obs;
-
-
+  var joined_groups = <JoinedGroup>[].obs;
 
   @override
   void onInit() {
@@ -45,7 +44,8 @@ class GroupController extends BaseController {
           };
 
           final response = await apiService.get(
-              endpoint: '/v1/groups/getAll',
+              endpoint:
+                  '${ApiConstants.groupsGetAll}?members=<10&sort_by=activity&order=desc&only_member=false',
               headers: {
                 'Authorization': 'Bearer $authToken',
               },
@@ -71,8 +71,6 @@ class GroupController extends BaseController {
       isLoading.value = false;
     }
   }
-  
-  
 
   Future<void> fetchUserGroups() async {
     try {
@@ -87,7 +85,7 @@ class GroupController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/user/groups_created',
+            endpoint: ApiConstants.userGroupsCreated,
             headers: {
               'Authorization': 'Bearer $authToken',
             },
@@ -128,7 +126,7 @@ class GroupController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/user/groups',
+            endpoint: ApiConstants.userGroups,
             headers: {
               'Authorization': 'Bearer $authToken',
             },
@@ -349,13 +347,12 @@ class GroupController extends BaseController {
     }
   }
 
-  
   Future<void> getAlreadyJoinedGroups() async {
-   String? authtoken = LocalStorage().getToken();
+    String? authtoken = LocalStorage().getToken();
 
-    final response = await apiService.get(endpoint: 'v1/user/groups', headers: {
-      'Authorization': 'Bearer $authtoken'
-    });
+    final response = await apiService.get(
+        endpoint: 'v1/user/groups',
+        headers: {'Authorization': 'Bearer $authtoken'});
 
     if (response != null && response is List) {
       joined_groups.value =
@@ -363,6 +360,4 @@ class GroupController extends BaseController {
     }
     print("Joined groups: $joined_groups");
   }
-
-  
 }
