@@ -55,64 +55,84 @@ class StationController extends BaseController {
       handleError(e);
     }
   }
+Future<void> fetchAllStations() async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
 
-  Future<void> fetchAllStations() async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+    await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = localStorage.getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
+        
+        final response = await apiService.get(
+          endpoint: 'stations/',
+          headers: {
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWdlIjoiSk5UVUgiLCJlbWFpbCI6ImNoaW50dUBnbWFpbC5jb20iLCJlbXBsb3llZV9pZCI6IiIsImdlbmRlciI6Ik1hbGUiLCJuYW1lIjoicGFkYWxhIiwicGhvbmUiOiIrOTE5MzQ2OTEzMTQ0IiwidWlkIjoiM3pmdjF5Y2hmbyJ9.wAq_Sul2320GyqTolwABj-ooqGWIF1wTY-F4oARS4q0',
+            'Content-Type': 'application/json',
+            'X-Karma-App': 'dafjcnalnsjn',
+          },
+        );
 
-      await useApiOrDummy(
-        apiCall: () async {
-          final String? authToken = localStorage.getToken();
-          if (authToken == null) {
-            throw Exception('Authentication token not found');
-          }
-          final response = await apiService.get(
-            endpoint: 'stations/',
-            headers: {
-              'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/json',
-              'X-Karma-App': 'dafjcnalnsjn',
-            },
-          );
-
-          if (response != null) {
-            print('Response data: ${response}');
-            final stationResponse =
-                GetMultipleStationsResponse.fromJson(response);
+        if (response != null) {
+          print('Raw Response data: ${response}');
+          
+          // Debug: Check the structure of response
+          print('Response type: ${response.runtimeType}');
+          print('Response keys: ${response.keys}');
+          
+          try {
+            final stationResponse = GetMultipleStationsResponse.fromJson(response);
+            print('Parsed stations count: ${stationResponse.stations.length}');
+            
             if (stationResponse.success) {
               stations.clear();
               stations.addAll(stationResponse.stations);
               filteredStations.assignAll(stations);
               nearbyStations.assignAll(stations);
+              
+              print('Stations added to controller: ${stations.length}');
+              print('First station: ${stations.isNotEmpty ? stations.first.name : 'No stations'}');
+              
               _updateMarkers();
               return true;
             } else {
               errorMessage.value = stationResponse.message;
+              print('API returned success: false, message: ${stationResponse.message}');
               return false;
             }
+          } catch (parseError) {
+            print('Error parsing response: $parseError');
+            print('Response structure: $response');
+            throw parseError;
           }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse =
-              GetMultipleStationsResponse.fromJson(dummyData);
-          stations.assignAll(stationResponse.stations);
-          filteredStations.assignAll(stationResponse.stations);
-          nearbyStations.assignAll(stationResponse.stations);
-          _updateMarkers();
-          return true;
-        },
-      );
-    } catch (e) {
-      print('Error in fetchAllStations: $e');
-      handleError(e);
-    } finally {
-      isLoading.value = false;
-    }
+        }
+        print('Response is null');
+        return false;
+      },
+      dummyData: () {
+        print('Using dummy data');
+        final dummyData = DummyDataService.getStationsResponse();
+        print('Dummy data: $dummyData');
+        
+        final stationResponse = GetMultipleStationsResponse.fromJson(dummyData);
+        stations.assignAll(stationResponse.stations);
+        filteredStations.assignAll(stationResponse.stations);
+        nearbyStations.assignAll(stationResponse.stations);
+        _updateMarkers();
+        return true;
+      },
+    );
+  } catch (e) {
+    print('Error in fetchAllStations: $e');
+    print('Stack trace: ${StackTrace.current}');
+    handleError(e);
+  } finally {
+    isLoading.value = false;
   }
-
+}
   Future<void> fetchNearbyStations(double lat, double lon) async {
     try {
       isLoading.value = true;

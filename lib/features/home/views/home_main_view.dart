@@ -4,9 +4,11 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
+import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
 import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/features/menubar/faqs.dart';
+import 'package:mjollnir/features/menubar/group_view.dart';
 import 'package:mjollnir/features/menubar/issuespage.dart';
 import 'package:mjollnir/features/menubar/subscriptions.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
@@ -21,11 +23,14 @@ class HomeMainView extends StatefulWidget {
 
 class _HomeMainViewState extends State<HomeMainView> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final ProfileController controller = Get.put(ProfileController());
+  
 
   @override
   void initState() {
     super.initState();
     _initializeLocation();
+    controller.shareReferralCode();
   }
 
   Future<void> _initializeLocation() async {
@@ -60,14 +65,7 @@ class _HomeMainViewState extends State<HomeMainView> {
   }
 
   void _handleInviteFriends() {
-    // Add your invite friends logic here
-    Get.snackbar(
-      'Feature',
-      'Invite friends feature coming soon!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-    );
+    controller.shareReferralCode;
   }
 
   List<DrawerOption> _getDrawerOptions() {
@@ -121,19 +119,10 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.group,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => const GroupView());
-          // Temporary placeholder
-          Get.snackbar('Info', 'Groups page coming soon!');
+          Get.to(() => const GroupView());
         },
       ),
-      DrawerOption(
-        title: 'Settings',
-        icon: Icons.settings,
-        onTap: () {
-          Navigator.pop(context);
-          Get.snackbar('Info', 'Settings page coming soon!');
-        },
-      ),
+      
     ];
   }
 
