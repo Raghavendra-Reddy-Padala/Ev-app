@@ -4,15 +4,13 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
-import 'package:mjollnir/features/account/views/profile_main_view.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
 import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
 class HomeMainView extends StatefulWidget {
-
-   HomeMainView({super.key});
+  const HomeMainView({super.key});
 
   @override
   State<HomeMainView> createState() => _HomeMainViewState();
@@ -20,7 +18,7 @@ class HomeMainView extends StatefulWidget {
 
 class _HomeMainViewState extends State<HomeMainView> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   @override
   void initState() {
     super.initState();
@@ -39,7 +37,7 @@ class _HomeMainViewState extends State<HomeMainView> {
       AppLogger.i('Error initializing location: $e');
     }
   }
-  
+
   void _handleCreateGroup() {
     showDialog(
       context: context,
@@ -68,9 +66,9 @@ class _HomeMainViewState extends State<HomeMainView> {
       colorText: Colors.white,
     );
   }
+
   List<DrawerOption> _getDrawerOptions() {
     return [
-    
       DrawerOption(
         title: 'Subscriptions',
         icon: Icons.subscriptions,
@@ -142,14 +140,13 @@ class _HomeMainViewState extends State<HomeMainView> {
     ];
   }
 
-
   @override
   Widget build(BuildContext context) {
     final LocationController locationController = Get.find();
     locationController.fetchUserLocation();
     return Scaffold(
       key: _scaffoldKey,
-    drawer: CustomDrawer(
+      drawer: CustomDrawer(
         options: _getDrawerOptions(),
         onCreateGroup: _handleCreateGroup,
         onInviteFriends: _handleInviteFriends,
@@ -158,16 +155,14 @@ class _HomeMainViewState extends State<HomeMainView> {
         child: Stack(
           children: [
             const MapsView(),
-             Positioned(
+            Positioned(
               top: 16.0,
               left: 35.0,
               right: 16.0,
               child: CustomSearchBar(
                 controller: TextEditingController(),
                 hintText: 'Search for stations',
-                onChanged: (value) {
-                },
-                
+                onChanged: (value) {},
               ),
             ),
             Positioned(
