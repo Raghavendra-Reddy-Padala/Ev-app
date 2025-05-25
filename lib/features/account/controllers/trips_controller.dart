@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
@@ -45,7 +46,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.post(
-            endpoint: '/v1/trips/start',
+            endpoint: ApiConstants.tripsStart,
             headers: {'Authorization': 'Bearer $authToken'},
             body: startData.toJson(),
           );
@@ -92,7 +93,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.post(
-            endpoint: '/v1/trips/end/$tripId',
+            endpoint: 'trips/end/$tripId',
             headers: {'Authorization': 'Bearer $authToken'},
             body: endData.toJson(),
           );
@@ -150,7 +151,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/trips/mytrips',
+            endpoint: ApiConstants.tripsMyTrips,
             headers: {
               'Authorization': 'Bearer $authToken',
             },
@@ -194,7 +195,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: '/v1/trips/$tripId/locations',
+            endpoint: 'trips/$tripId/locations',
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -246,7 +247,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.put(
-            endpoint: '/v1/trips/location/$tripId',
+            endpoint: 'trips/location/$tripId',
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
@@ -274,10 +275,7 @@ class TripsController extends BaseController {
             final data = dummyData['data'];
             _updateTripMetrics(data);
             isLocationUpdated.value = true;
-
             tripLocations.add(TripLocation(latitude: lat, longitude: long));
-
-            // Save updated metrics to localStorage
             saveTripMetricsToLocalStorage();
 
             return true;
@@ -343,34 +341,6 @@ class TripsController extends BaseController {
       print("Error loading trips data from localStorage: $e");
     }
   }
-
-  // void saveTripLocationsToLocalStorage(String tripId) {
-  //   try {
-  //     if (tripLocations.isNotEmpty) {
-  //       final List<Map<String, dynamic>> locationsJson =
-  //           tripLocations.map((location) => location.toJson()).toList();
-  //       localStorage.setString(
-  //           'trip_locations_$tripId', json.encode(locationsJson));
-  //     }
-  //   } catch (e) {
-  //     print("Error saving trip locations to localStorage: $e");
-  //   }
-  // }
-
-  // void loadTripLocationsFromLocalStorage(String tripId) {
-  //   try {
-  //     final String? locationsData =
-  //         localStorage.getString('trip_locations_$tripId');
-  //     if (locationsData != null && locationsData.isNotEmpty) {
-  //       final List<dynamic> locationsJson = json.decode(locationsData);
-  //       final List<TripLocation> loadedLocations =
-  //           locationsJson.map((json) => TripLocation.fromJson(json)).toList();
-  //       tripLocations.assignAll(loadedLocations);
-  //     }
-  //   } catch (e) {
-  //     print("Error loading trip locations from localStorage: $e");
-  //   }
-  // }
 
   void saveTripMetricsToLocalStorage() {
     try {

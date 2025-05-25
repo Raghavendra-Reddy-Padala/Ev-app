@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:get/state_manager.dart';
-import 'package:mjollnir/core/routes/app_routes.dart';
 import 'package:mjollnir/features/main_page_controller.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../../../core/navigation/navigation_service.dart';
 import '../../../../shared/constants/colors.dart';
 
 class QrCameraView extends StatefulWidget {
@@ -19,12 +15,9 @@ class QrCameraView extends StatefulWidget {
 }
 
 class _QrCameraViewState extends State<QrCameraView> {
-  final MobileScannerController _scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-    facing: CameraFacing.back,
-  );
-
+  final MobileScannerController _scannerController = MobileScannerController();
   bool _isProcessing = false;
+  bool _isTorchOn = false;
 
   @override
   void dispose() {
@@ -45,16 +38,11 @@ class _QrCameraViewState extends State<QrCameraView> {
         ),
         actions: [
           IconButton(
-            icon: ValueListenableBuilder(
-              valueListenable: _scannerController.torchState,
-              builder: (context, state, child) {
-                return Icon(
-                  state == TorchState.off ? Icons.flash_off : Icons.flash_on,
-                  color: state == TorchState.off ? Colors.white : Colors.yellow,
-                );
-              },
+            icon: Icon(
+              _isTorchOn ? Icons.flash_on : Icons.flash_off,
+              color: _isTorchOn ? Colors.yellow : Colors.white,
             ),
-            onPressed: () => _scannerController.toggleTorch(),
+            onPressed: _toggleTorch,
           ),
         ],
       ),
@@ -72,6 +60,17 @@ class _QrCameraViewState extends State<QrCameraView> {
     );
   }
 
+  Future<void> _toggleTorch() async {
+    try {
+      await _scannerController.toggleTorch();
+      setState(() {
+        _isTorchOn = !_isTorchOn;
+      });
+    } catch (e) {
+      print('Error toggling torch: $e');
+    }
+  }
+
   Future<void> _handleDetection(BarcodeCapture capture) async {
     if (_isProcessing || capture.barcodes.isEmpty) return;
 
@@ -85,11 +84,19 @@ class _QrCameraViewState extends State<QrCameraView> {
       if (success && mounted) {
         final MainPageController mainPageController = Get.find();
         mainPageController.isBikeSubscribed.value = true;
+
+        // Navigate back on success
+        Navigator.of(context).pop();
       } else {
-        setState(() => _isProcessing = false);
+        if (mounted) {
+          setState(() => _isProcessing = false);
+        }
       }
     } catch (e) {
-      setState(() => _isProcessing = false);
+      print('Error processing QR code: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 }
@@ -108,8 +115,12 @@ class _ScannerOverlay extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(20.r),
         ),
-        child: CustomPaint(
-          painter: _ScannerCornerPainter(),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(
+              17.r), // Slightly smaller to account for border
+          child: CustomPaint(
+            painter: _ScannerCornerPainter(),
+          ),
         ),
       ),
     );
@@ -120,27 +131,27 @@ class _ScannerCornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
-    const cornerLength = 30.0;
-    const cornerThickness = 4.0;
+    const cornerLength = 20.0;
+    const cornerThickness = 3.0;
 
     // Top-left corner
     canvas.drawRect(
-      const Rect.fromLTWH(0, 0, cornerLength, cornerThickness),
+      const Rect.fromLTWH(10, 10, cornerLength, cornerThickness),
       paint,
     );
     canvas.drawRect(
-      const Rect.fromLTWH(0, 0, cornerThickness, cornerLength),
+      const Rect.fromLTWH(10, 10, cornerThickness, cornerLength),
       paint,
     );
 
     // Top-right corner
     canvas.drawRect(
       Rect.fromLTWH(
-        size.width - cornerLength,
-        0,
+        size.width - cornerLength - 10,
+        10,
         cornerLength,
         cornerThickness,
       ),
@@ -148,8 +159,8 @@ class _ScannerCornerPainter extends CustomPainter {
     );
     canvas.drawRect(
       Rect.fromLTWH(
-        size.width - cornerThickness,
-        0,
+        size.width - cornerThickness - 10,
+        10,
         cornerThickness,
         cornerLength,
       ),
@@ -159,8 +170,8 @@ class _ScannerCornerPainter extends CustomPainter {
     // Bottom-left corner
     canvas.drawRect(
       Rect.fromLTWH(
-        0,
-        size.height - cornerThickness,
+        10,
+        size.height - cornerThickness - 10,
         cornerLength,
         cornerThickness,
       ),
@@ -168,8 +179,8 @@ class _ScannerCornerPainter extends CustomPainter {
     );
     canvas.drawRect(
       Rect.fromLTWH(
-        0,
-        size.height - cornerLength,
+        10,
+        size.height - cornerLength - 10,
         cornerThickness,
         cornerLength,
       ),
@@ -179,8 +190,8 @@ class _ScannerCornerPainter extends CustomPainter {
     // Bottom-right corner
     canvas.drawRect(
       Rect.fromLTWH(
-        size.width - cornerLength,
-        size.height - cornerThickness,
+        size.width - cornerLength - 10,
+        size.height - cornerThickness - 10,
         cornerLength,
         cornerThickness,
       ),
@@ -188,8 +199,8 @@ class _ScannerCornerPainter extends CustomPainter {
     );
     canvas.drawRect(
       Rect.fromLTWH(
-        size.width - cornerThickness,
-        size.height - cornerLength,
+        size.width - cornerThickness - 10,
+        size.height - cornerLength - 10,
         cornerThickness,
         cornerLength,
       ),
@@ -212,6 +223,7 @@ class _ProcessingIndicator extends StatelessWidget {
           children: [
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              strokeWidth: 3,
             ),
             SizedBox(height: 20.h),
             Text(
@@ -219,6 +231,7 @@ class _ProcessingIndicator extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16.sp,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -232,24 +245,23 @@ class _InstructionText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 60.h,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(15.r),
+      bottom: 80.h,
+      left: 20.w,
+      right: 20.w,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        child: Text(
+          'Align QR Code within the scanner frame',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w500,
           ),
-          child: Text(
-            'Align QR Code within the scanner frame',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );

@@ -1,10 +1,9 @@
 import 'package:get/get.dart';
-import '../../../../core/api/base/base_controller.dart';
-import '../../../../core/storage/local_storage.dart';
-
+import '../../../core/api/base/base_controller.dart';
+import '../../../core/storage/local_storage.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
-import 'bike_metrics_controller.dart';
+import '../controller/bike_metrics_controller.dart';
 
 class TripControlService extends BaseController {
   final BikeMetricsController bikeMetricsController = Get.find();
@@ -17,19 +16,20 @@ class TripControlService extends BaseController {
   Future<bool> startTrip(StartTrip startTripData) async {
     try {
       isLoading.value = true;
+      errorMessage.value = '';
+      final success = await tripsController.startTrip(startTripData);
 
-      final response = await tripsController.startTrip(startTripData);
+      if (success) {
+        currentTripId.value = tripsController.tripId.value;
 
-      if (response != null && response.success) {
-        currentTripId.value = response.data?.id ?? '';
         await bikeMetricsController.startTracking();
 
-        // Update bike subscription status
         bikeMetricsController.bikeSubscribed.value = true;
         bikeMetricsController.bikeID.value = startTripData.bikeId;
 
-        await localStorage.setBikeSubscribed(true);
+        await localStorage.setBool('bikeSubscribed', true);
         await localStorage.setString('bikeCode', startTripData.bikeId);
+        await localStorage.setString('tripId', currentTripId.value);
 
         return true;
       }
@@ -46,17 +46,22 @@ class TripControlService extends BaseController {
   Future<bool> endTrip() async {
     try {
       isLoading.value = true;
+      errorMessage.value = '';
 
       if (currentTripId.value.isEmpty) {
-        handleError('No active trip found');
-        return false;
+        currentTripId.value = tripsController.tripId.value;
+
+        if (currentTripId.value.isEmpty) {
+          handleError('No active trip found');
+          return false;
+        }
       }
+
       final endTripData = _prepareEndTripData();
+      final success =
+          await tripsController.dataSend(endTripData, currentTripId.value);
 
-      final response =
-          await tripsController.endTrip(endTripData, currentTripId.value);
-
-      if (response != null && response.success) {
+      if (success) {
         await _cleanupAfterTripEnd();
         return true;
       }
@@ -89,28 +94,22 @@ class TripControlService extends BaseController {
   }
 
   Future<void> _cleanupAfterTripEnd() async {
-    // Stop tracking
     bikeMetricsController.stopTracking();
 
-    // Save trip summary
     bikeMetricsController.saveTripSummary();
-
-    // Update bike subscription status
     bikeMetricsController.bikeSubscribed.value = false;
     bikeMetricsController.bikeID.value = "";
 
-    // Clear local storage
     await localStorage.remove('locations');
-    await localStorage.setBikeSubscribed(false);
+    await localStorage.setBool('bikeSubscribed', false);
     await localStorage.setString('bikeCode', "");
     await localStorage.setString('encodedId', '');
     await localStorage.setString('deviceId', "");
-    await localStorage.setTime(0);
+    await localStorage.setInt('time', 0);
+    await localStorage.setString('tripId', '');
 
-    // Reset trip data
     bikeMetricsController.resetTripData();
 
-    // Clear current trip
     currentTripId.value = '';
     isEndTripSliderVisible.value = false;
   }
@@ -130,4 +129,13 @@ class TripControlService extends BaseController {
   void hideEndTripSlider() {
     isEndTripSliderVisible.value = false;
   }
+
+  void initializeFromStorage() {
+    final storedTripId = localStorage.getString('tripId');
+    if (storedTripId != null && storedTripId.isNotEmpty) {
+      currentTripId.value = storedTripId;
+    }
+  }
+
+  bool get hasActiveTrip => currentTripId.value.isNotEmpty;
 }

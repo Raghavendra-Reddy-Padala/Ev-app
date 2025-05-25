@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/colors.dart';
 
-enum ButtonType { primary, secondary, outline, text, error }
+enum ButtonType { primary, secondary, outline, text, error, danger }
 
 enum ButtonSize { small, medium, large }
 
@@ -15,6 +15,7 @@ class AppButton extends StatelessWidget {
   final bool fullWidth;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final IconData? icon; // Added icon parameter
   final double? width;
   final double? height;
   final BorderRadius? borderRadius;
@@ -29,6 +30,7 @@ class AppButton extends StatelessWidget {
     this.fullWidth = false,
     this.prefixIcon,
     this.suffixIcon,
+    this.icon, // Added icon parameter
     this.width,
     this.height,
     this.borderRadius,
@@ -63,7 +65,15 @@ class AppButton extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (prefixIcon != null) ...[
+        // Handle icon parameter (takes precedence over prefixIcon)
+        if (icon != null) ...[
+          Icon(
+            icon,
+            size: _getIconSize(),
+            color: _getTextColor(),
+          ),
+          SizedBox(width: 8.w),
+        ] else if (prefixIcon != null) ...[
           prefixIcon!,
           SizedBox(width: 8.w),
         ],
@@ -121,6 +131,7 @@ class AppButton extends StatelessWidget {
       case ButtonType.secondary:
         return AppColors.secondary;
       case ButtonType.error:
+      case ButtonType.danger: // Added danger case
         return AppColors.error;
       case ButtonType.outline:
       case ButtonType.text:
@@ -133,6 +144,7 @@ class AppButton extends StatelessWidget {
       case ButtonType.primary:
       case ButtonType.secondary:
       case ButtonType.error:
+      case ButtonType.danger: // Added danger case
         return Colors.white;
       case ButtonType.outline:
         return AppColors.primary;
@@ -146,6 +158,7 @@ class AppButton extends StatelessWidget {
       case ButtonType.primary:
       case ButtonType.secondary:
       case ButtonType.error:
+      case ButtonType.danger: // Added danger case
         return Colors.white;
       case ButtonType.outline:
       case ButtonType.text:
@@ -172,6 +185,17 @@ class AppButton extends StatelessWidget {
         return 14.sp;
       case ButtonSize.large:
         return 16.sp;
+    }
+  }
+
+  double _getIconSize() {
+    switch (size) {
+      case ButtonSize.small:
+        return 16.w;
+      case ButtonSize.medium:
+        return 20.w;
+      case ButtonSize.large:
+        return 24.w;
     }
   }
 
