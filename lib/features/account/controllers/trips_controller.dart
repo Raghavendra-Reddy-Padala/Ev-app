@@ -47,7 +47,10 @@ class TripsController extends BaseController {
 
           final response = await apiService.post(
             endpoint: ApiConstants.tripsStart,
-            headers: {'Authorization': 'Bearer $authToken'},
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
+            },
             body: startData.toJson(),
           );
 
@@ -94,7 +97,10 @@ class TripsController extends BaseController {
 
           final response = await apiService.post(
             endpoint: 'trips/end/$tripId',
-            headers: {'Authorization': 'Bearer $authToken'},
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
+            },
             body: endData.toJson(),
           );
 
@@ -154,6 +160,7 @@ class TripsController extends BaseController {
             endpoint: ApiConstants.tripsMyTrips,
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -199,6 +206,7 @@ class TripsController extends BaseController {
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
@@ -251,6 +259,7 @@ class TripsController extends BaseController {
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
             body: {
               'lat': lat,

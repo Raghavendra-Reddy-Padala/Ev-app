@@ -28,7 +28,7 @@ class StationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           child: Container(
             decoration: BoxDecoration(
-              gradient:  LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
@@ -46,7 +46,7 @@ class StationCard extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(5.w),
+              padding: EdgeInsets.symmetric(vertical: 5.w, horizontal: 10.w),
               child: Row(
                 children: [
                   _LocationIcon(distance: distance),
@@ -209,7 +209,6 @@ class _InfoBox extends StatelessWidget {
               ),
             ],
           ),
-          
         ],
       ),
     );

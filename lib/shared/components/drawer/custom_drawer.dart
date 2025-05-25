@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../constants/colors.dart';
-import '../cards/app_cards.dart';
 import '../buttons/app_button.dart';
 import '../pickers/image_picker.dart';
 
@@ -14,11 +13,11 @@ class CustomDrawer extends StatelessWidget {
   final VoidCallback onInviteFriends;
 
   const CustomDrawer({
-    Key? key,
+    super.key,
     required this.options,
     required this.onCreateGroup,
     required this.onInviteFriends,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +39,8 @@ class CustomDrawer extends StatelessWidget {
               _buildDrawerHeader(),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -50,7 +50,9 @@ class CustomDrawer extends StatelessWidget {
                       SizedBox(height: 20.h),
                       _buildSectionTitle('Menu'),
                       SizedBox(height: 8.h),
-                      ...options.map((option) => _buildOptionItem(option)).toList(),
+                      ...options
+                          .map((option) => _buildOptionItem(option))
+                          .toList(),
                       SizedBox(height: 20.h),
                     ],
                   ),
@@ -62,54 +64,56 @@ class CustomDrawer extends StatelessWidget {
       ),
     );
   }
-Widget _buildDrawerHeader() {
-  return Container(
-    width: double.infinity,
-    padding: EdgeInsets.all(20.w),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [
-          AppColors.primary, 
-          AppColors.primary, 
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Row(
-      children: [
-        Icon(
-          Icons.electric_bike, // or Icons.bolt / Icons.ev_station
-          size: 32.w,
-          color: Colors.white,
-        ),
-        SizedBox(width: 12.w),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'MJÖLLNIR', // All caps for boldness
-              style: TextStyle(
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 1.2, // Tech/industrial feel
-              ),
-            ),
-            Text(
-              'Ride the Future', // Tagline for EV bikes
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.white.withOpacity(0.8),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+
+  Widget _buildDrawerHeader() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary,
+            AppColors.primary,
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-      ],
-    ),
-  );
-}
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.electric_bike,
+            size: 32.w,
+            color: Colors.white,
+          ),
+          SizedBox(width: 12.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'MJÖLLNIR',
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Text(
+                'Ride the Future',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.white.withOpacity(0.8),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
@@ -150,14 +154,14 @@ Widget _buildDrawerHeader() {
           child: Icon(
             option.icon,
             color: AppColors.primary,
-            size: 20.w,
+            size: 18.w,
           ),
         ),
         title: Text(
           option.title,
           style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w500,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w800,
             color: Colors.black87,
           ),
         ),
@@ -179,7 +183,10 @@ Widget _buildDrawerHeader() {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.primary.withOpacity(0.05)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

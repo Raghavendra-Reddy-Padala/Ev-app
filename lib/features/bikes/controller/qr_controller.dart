@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../main.dart';
@@ -50,7 +51,7 @@ class QrScannerController extends BaseController {
       final startTripData = StartTrip(
         bikeId: deviceId,
         stationId: bikeController.bikeData.value?.stationId ?? "0",
-        startTimestamp: DateTime.now(),
+        //startTimestamp: DateTime.now(),
       );
 
       final tripStarted = await tripControlService.startTrip(startTripData);
@@ -101,8 +102,13 @@ class QrScannerController extends BaseController {
 
   Future<bool> _toggleDevice(String encodedDeviceId) async {
     try {
+      final String? authToken = localStorage.getToken();
       final response = await apiService.post(
-        endpoint: '/v1/metal/toggle',
+        endpoint: ApiConstants.toggleBike,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn'
+        },
         body: {'device_id': encodedDeviceId},
       );
 
@@ -117,12 +123,12 @@ class QrScannerController extends BaseController {
     try {
       isLoading.value = true;
 
-      const demoDeviceId = "69pc0d7wok";
+      const demoDeviceId = "775tg4cmmp";
 
       final startTripData = StartTrip(
         bikeId: demoDeviceId,
-        stationId: "0",
-        startTimestamp: DateTime.now(),
+        stationId: "6xugln92qx",
+        // startTimestamp: DateTime.now(),
       );
 
       final success = await tripControlService.startTrip(startTripData);
