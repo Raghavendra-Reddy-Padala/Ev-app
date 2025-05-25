@@ -36,7 +36,6 @@ class MainPage extends StatelessWidget {
           index: mainPageController.selectedIndex.value,
           children: [
             pages[0],
-            pages[1],
             mainPageController.isBikeSubscribed.value
                 ? const BikeDetailsView()
                 : pages[1],
