@@ -6,6 +6,9 @@ import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
 import 'package:mjollnir/features/home/views/stationsui.dart';
+import 'package:mjollnir/features/menubar/faqs.dart';
+import 'package:mjollnir/features/menubar/issuespage.dart';
+import 'package:mjollnir/features/menubar/subscriptions.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
@@ -74,9 +77,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.subscriptions,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => const Subscriptions());
-          // Temporary placeholder
-          Get.snackbar('Info', 'Subscriptions page coming soon!');
+          Get.to(() => const Subscriptions());
         },
       ),
       DrawerOption(
@@ -84,9 +85,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.report_problem,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => const Issues());
-          // Temporary placeholder
-          Get.snackbar('Info', 'Issues page coming soon!');
+          Get.to(() => const Issues());
         },
       ),
       DrawerOption(
@@ -94,9 +93,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.help_outline,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => FAQ());
-          // Temporary placeholder
-          Get.snackbar('Info', 'FAQ page coming soon!');
+          Get.to(() => FAQ());
         },
       ),
       DrawerOption(

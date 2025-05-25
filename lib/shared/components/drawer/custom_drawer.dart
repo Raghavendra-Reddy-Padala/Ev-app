@@ -44,15 +44,17 @@ class CustomDrawer extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildCreateGroupCard(),
+                       _buildCreateGroupCard(),
                       SizedBox(height: 12.h),
-                      _buildInviteFriendsCard(),
-                      SizedBox(height: 20.h),
+                     
                       _buildSectionTitle('Menu'),
                       SizedBox(height: 8.h),
                       ...options
                           .map((option) => _buildOptionItem(option))
-                          .toList(),
+                          ,
+                      SizedBox(height: 20.h),
+                      
+                      _buildInviteFriendsCard(),
                       SizedBox(height: 20.h),
                     ],
                   ),
