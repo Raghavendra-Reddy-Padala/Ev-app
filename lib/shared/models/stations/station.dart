@@ -31,7 +31,7 @@ class Station {
   final int capacity;
   final int currentCapacity;
   final SubscriptionIds subscriptionIds;
-  final double? distance; // Optional since it might not be in the response
+  final double? distance;
 
   Station({
     required this.tableName,
@@ -46,17 +46,25 @@ class Station {
   });
 
   factory Station.fromJson(Map<String, dynamic> json) {
-    return Station(
-      tableName: json['TableName'] ?? '',
-      id: json['id'],
-      name: json['name'],
-      locationLatitude: json['location_latitude'],
-      locationLongitude: json['location_longitude'],
-      capacity: json['capacity'],
-      currentCapacity: json['current_capacity'],
-      subscriptionIds: SubscriptionIds.fromJson(json['subscription_ids']),
-      distance: json['distance']?.toDouble(),
-    );
+    try {
+      return Station(
+        tableName: json['TableName']?.toString() ?? '',
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        locationLatitude: json['location_latitude']?.toString() ?? '0',
+        locationLongitude: json['location_longitude']?.toString() ?? '0',
+        capacity: int.tryParse(json['capacity']?.toString() ?? '0') ?? 0,
+        currentCapacity: int.tryParse(json['current_capacity']?.toString() ?? '0') ?? 0,
+        subscriptionIds: json['subscription_ids'] != null 
+            ? SubscriptionIds.fromJson(json['subscription_ids'] as Map<String, dynamic>)
+            : SubscriptionIds(subscriptionId: [], b2bId: []),
+        distance: json['distance']?.toDouble(),
+      );
+    } catch (e) {
+      print('Error parsing Station from JSON: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toMap() {

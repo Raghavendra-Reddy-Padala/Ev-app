@@ -22,17 +22,23 @@ class Bike {
   });
 
   factory Bike.fromJson(Map<String, dynamic> map) {
-    return Bike(
-      id: map['id'] ?? '',
-      frameNumber: map['frame_number'] ?? '',
-      name: map['name'] ?? '',
-      stationId: map['station_id'] ?? '',
-      topSpeed: map['top_speed'] ?? 0,
-      range: map['range'] ?? 0,
-      timeToStation: map['time_to_station'] ?? 0,
-      bikeType: map['bike_type'] ?? '',
-      images: map['images'] != null ? List<String>.from(map['images']) : null,
-    );
+    try {
+      return Bike(
+        id: map['id']?.toString() ?? '',
+        frameNumber: map['frame_number']?.toString() ?? '',
+        name: map['name']?.toString() ?? '',
+        stationId: map['station_id']?.toString() ?? '',
+        topSpeed: int.tryParse(map['top_speed']?.toString() ?? '0') ?? 0,
+        range: int.tryParse(map['range']?.toString() ?? '0') ?? 0,
+        timeToStation: int.tryParse(map['time_to_station']?.toString() ?? '0') ?? 0,
+        bikeType: map['bike_type']?.toString() ?? '',
+        images: map['images'] != null ? List<String>.from(map['images']) : null,
+      );
+    } catch (e) {
+      print('Error parsing Bike from JSON: $e');
+      print('JSON data: $map');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -50,10 +56,10 @@ class Bike {
   }
 }
 
-// Single bike response model for your current API
+// Updated response model to handle both single bike and multiple bikes
 class BikeResponseModel {
   bool success;
-  Bike data;
+  List<Bike> data; // Changed from single Bike to List<Bike>
   String message;
   dynamic error;
 
@@ -65,36 +71,41 @@ class BikeResponseModel {
   });
 
   factory BikeResponseModel.fromMap(Map<String, dynamic> map) {
-    return BikeResponseModel(
-      success: map['success'] ?? false,
-      data: Bike.fromJson(map['data']),
-      message: map['message'] ?? '',
-      error: map['error'],
-    );
-  }
-}
+    try {
+      List<Bike> bikesList = [];
+      
+      // Handle both single bike and multiple bikes
+      if (map['data'] is List) {
+        // Multiple bikes (your current API response)
+        final List<dynamic> bikesData = map['data'];
+        print('Found ${bikesData.length} bikes in response');
+        
+        for (var bikeJson in bikesData) {
+          try {
+            final bike = Bike.fromJson(bikeJson as Map<String, dynamic>);
+            bikesList.add(bike);
+            print('Parsed bike: ${bike.name} (${bike.id})');
+          } catch (e) {
+            print('Error parsing individual bike: $e');
+            print('Bike data: $bikeJson');
+          }
+        }
+      } else if (map['data'] is Map<String, dynamic>) {
+        // Single bike
+        bikesList = [Bike.fromJson(map['data'])];
+      }
 
-// Multiple bikes response model (for future use)
-class BikesResponseModel {
-  bool success;
-  List<Bike> data;
-  String message;
-  dynamic error;
-
-  BikesResponseModel({
-    required this.success,
-    required this.data,
-    required this.message,
-    this.error,
-  });
-
-  factory BikesResponseModel.fromMap(Map<String, dynamic> map) {
-    return BikesResponseModel(
-      success: map['success'] ?? false,
-      data: List<Bike>.from(map['data']?.map((x) => Bike.fromJson(x)) ?? []),
-      message: map['message'] ?? '',
-      error: map['error'],
-    );
+      return BikeResponseModel(
+        success: map['success'] ?? false,
+        data: bikesList,
+        message: map['message'] ?? '',
+        error: map['error'],
+      );
+    } catch (e) {
+      print('Error parsing BikeResponseModel: $e');
+      print('Map data: $map');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toMap() {

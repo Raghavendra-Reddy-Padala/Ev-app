@@ -140,7 +140,7 @@ class GroupCard extends StatelessWidget {
   Widget _buildJoinButton(GroupController groupController, bool isCreator) {
     return Obx(() {
       final bool isJoined = groupController.joined_groups
-          .any((joined) => joined.id.toString() == group.id);
+          .any((joined) => joined.toString() == group.id);
 
       if (isCreator) {
         return AppButton(

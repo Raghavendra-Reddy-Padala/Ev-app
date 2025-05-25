@@ -12,60 +12,74 @@ class BikeController extends BaseController {
   final RxList<Bike> bikes = <Bike>[].obs;
   final Rx<Bike?> bikeData = Rx<Bike?>(null);
   final LocalStorage localStorage = Get.find<LocalStorage>();
-
-  Future<void> fetchBikesByStationId(String stationId) async {
-    String? authToken = localStorage.getToken();
-    if (authToken == null) {
-      print('Auth token is null');
-    }
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      final response = await apiService.get(
-        endpoint: '${ApiConstants.bikesByStation}/$stationId',
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'X-Karma-App': 'dafjcnalnsjn',
-        },
-      );
-      Map<String, dynamic> responseData;
-
-      if (response is Map<String, dynamic>) {
-        responseData = response;
-      } else if (response.runtimeType.toString().contains('Response')) {
-        if (response.statusCode == 200) {
-          responseData = response.data is Map<String, dynamic>
-              ? response.data
-              : response.data;
-        } else {
-          errorMessage.value = 'HTTP Error: ${response.statusCode}';
-          bikes.value = [];
-          return;
-        }
-      } else {
-        throw Exception('Unknown response type: ${response.runtimeType}');
-      }
-
-      final BikeResponseModel bikeResponse =
-          BikeResponseModel.fromMap(responseData);
-
-      if (bikeResponse.success) {
-        bikes.value = [bikeResponse.data];
-      } else {
-        errorMessage.value = bikeResponse.message.isNotEmpty
-            ? bikeResponse.message
-            : 'Failed to fetch bikes';
-        bikes.value = [];
-      }
-    } catch (e) {
-      AppLogger.e('Error fetching bikes: $e');
-      errorMessage.value = 'Error fetching bikes: $e';
-      bikes.value = [];
-    } finally {
-      isLoading.value = false;
-    }
+Future<void> fetchBikesByStationId(String stationId) async {
+  String? authToken = localStorage.getToken();
+  if (authToken == null) {
+    print('Auth token is null');
   }
+  
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    final response = await apiService.get(
+      endpoint: '${ApiConstants.bikesByStation}/$stationId',
+      headers: {
+        'Authorization': 'Bearer $authToken',
+        'X-Karma-App': 'dafjcnalnsjn',
+      },
+    );
+
+    print('Raw response: $response');
+    print('Response type: ${response.runtimeType}');
+
+    Map<String, dynamic> responseData;
+
+    if (response is Map<String, dynamic>) {
+      responseData = response;
+    } else if (response.runtimeType.toString().contains('Response')) {
+      if (response.statusCode == 200) {
+        responseData = response.data is Map<String, dynamic>
+            ? response.data
+            : response.data;
+      } else {
+        errorMessage.value = 'HTTP Error: ${response.statusCode}';
+        bikes.value = [];
+        return;
+      }
+    } else {
+      throw Exception('Unknown response type: ${response.runtimeType}');
+    }
+
+    print('Processing response data: $responseData');
+
+    final BikeResponseModel bikeResponse = BikeResponseModel.fromMap(responseData);
+
+    if (bikeResponse.success) {
+      bikes.value = bikeResponse.data; // Now this is already a List<Bike>
+      print('Successfully loaded ${bikes.value.length} bikes');
+      
+      // Debug: Print first bike details
+      if (bikes.value.isNotEmpty) {
+        final firstBike = bikes.value.first;
+        print('First bike: ${firstBike.name} - ${firstBike.id}');
+      }
+    } else {
+      errorMessage.value = bikeResponse.message.isNotEmpty
+          ? bikeResponse.message
+          : 'Failed to fetch bikes';
+      bikes.value = [];
+      print('API returned success: false, message: ${bikeResponse.message}');
+    }
+  } catch (e) {
+    AppLogger.e('Error fetching bikes: $e');
+    print('Stack trace: ${StackTrace.current}');
+    errorMessage.value = 'Error fetching bikes: $e';
+    bikes.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+}
 
   Future<void> fetchBikesData() async {
     try {
@@ -83,7 +97,7 @@ class BikeController extends BaseController {
             },
           );
           if (response != null) {
-            final bikeResponse = BikesResponseModel.fromMap(response.data);
+    final BikeResponseModel bikeResponse = BikeResponseModel.fromMap(response.data);
             bikes.assignAll(bikeResponse.data);
             await saveToLocalStorage(bikeResponse.data);
             return true;
@@ -92,7 +106,7 @@ class BikeController extends BaseController {
         },
         dummyData: () {
           final dummyData = DummyDataService.getBikesResponse('123');
-          final bikeResponse = BikesResponseModel.fromMap(dummyData);
+          final bikeResponse = BikeResponseModel.fromMap(dummyData);
           bikes.assignAll(bikeResponse.data);
           saveToLocalStorage(bikeResponse.data);
           return true;

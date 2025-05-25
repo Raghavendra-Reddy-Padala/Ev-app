@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import '../../constants/colors.dart';
 import '../buttons/app_button.dart';
 import '../pickers/image_picker.dart';
@@ -258,6 +259,7 @@ class CustomDrawer extends StatelessWidget {
   }
 
   Widget _buildInviteFriendsCard() {
+    final contoller = Get.find<ProfileController>();
     return Container(
       decoration: BoxDecoration(
         color: AppColors.accent1,
@@ -273,7 +275,7 @@ class CustomDrawer extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onInviteFriends,
+          onTap: contoller.shareReferralCode,
           borderRadius: BorderRadius.circular(16.r),
           child: Padding(
             padding: EdgeInsets.all(16.w),
