@@ -53,7 +53,7 @@ Widget amountBanner(int balance) {
 class WalletTopup extends StatefulWidget {
   final double balance;
 
-  WalletTopup({super.key, required this.balance});
+  const WalletTopup({super.key, required this.balance});
 
   @override
   State<WalletTopup> createState() => _WalletTopupState();
@@ -63,8 +63,20 @@ class _WalletTopupState extends State<WalletTopup> {
   final TextEditingController _amountController = TextEditingController();
   final WalletController controller = Get.find<WalletController>();
   final _focusNode = FocusNode();
+  bool _isLoading = false;
 
   void _proceedWithTopUp() {
+    if (_amountController.text.isEmpty) {
+      Get.snackbar("Error", "Please enter an amount");
+      return;
+    }
+
+    final amount = double.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      Get.snackbar("Error", "Please enter a valid amount");
+      return;
+    }
+
     _focusNode.unfocus();
     showDialog(
       context: context,
@@ -76,42 +88,75 @@ class _WalletTopupState extends State<WalletTopup> {
           actions: [
             TextButton(
               onPressed: () {
-                Get.back();
+                Navigator.of(context).pop();
               },
               child: const Text("Cancel"),
             ),
             TextButton(
-                child: const Text("Confirm"),
-                onPressed: () async {
-                  final String? response =
-                      await controller.topUpWallet(_amountController.text);
-                  String url =
-                      "https://payments.avidia.in/payments/$response";
-                  Get.back();
-                  Get.to(paymentWeb(url: url));
-                }),
+              child: const Text("Confirm"),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _processTopUp();
+              },
+            ),
           ],
         );
       },
     );
   }
 
+  Future<void> _processTopUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final String? response = await controller.topUpWallet(_amountController.text);
+      
+      if (response != null && response.isNotEmpty) {
+        String url = "https://payments.avidia.in/payments/$response";
+        print("Payment URL: $url");
+        
+        // Navigate to payment web view
+        Get.to(() => paymentWeb(url: url));
+      } else {
+        Get.snackbar("Error", "Failed to initiate payment");
+      }
+    } catch (e) {
+      print("Top-up error: $e");
+      Get.snackbar("Error", "Failed to process top-up: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final WalletController controller = Get.find<WalletController>();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leadingWidth: 55.0,
         titleSpacing: 30.0,
-        title: Text('Wallet', style: AppTextThemes.bodyMedium().copyWith(
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        )),
+        title: Text(
+          'Wallet', 
+          style: AppTextThemes.bodyMedium().copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          )
+        ),
         leading: IconButton(
           padding: EdgeInsets.only(left: 20.w),
-          icon: Image.asset('assets/images/back_green.png'),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Get.back();
           },
@@ -122,7 +167,9 @@ class _WalletTopupState extends State<WalletTopup> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Obx(() => amountBanner(controller.walletData.value?.balance.toInt() ?? 0) ),
+            SizedBox(height: 20.h),
+            Obx(() => amountBanner(controller.walletData.value?.balance.toInt() ?? 0)),
+            SizedBox(height: 20.h),
             Text(
               'Top - Up',
               style: GoogleFonts.poppins(
@@ -150,22 +197,43 @@ class _WalletTopupState extends State<WalletTopup> {
                   color: const Color.fromRGBO(130, 130, 130, 1),
                   fontWeight: FontWeight.w600,
                 ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
               ),
             ),
-
-            SizedBox(height: 10.h),
+            SizedBox(height: 20.h),
             ElevatedButton(
-              onPressed:
-                  _amountController.text == "" ? null : _proceedWithTopUp,
+              onPressed: (_amountController.text.isEmpty || _isLoading) 
+                  ? null 
+                  : _proceedWithTopUp,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 minimumSize: const Size(double.infinity, 48.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
-              child: Text("Proceed",
-                  style: AppTextThemes.bodyMedium().copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  )),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      "Proceed",
+                      style: AppTextThemes.bodyMedium().copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
             SizedBox(height: 10.h),
           ],

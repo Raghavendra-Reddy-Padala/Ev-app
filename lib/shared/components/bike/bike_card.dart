@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/colors.dart';
 import '../../constants/constants.dart';
 import '../../models/bike/bike_model.dart';
-import '../buttons/app_button.dart';
 
 class BikeCard extends StatelessWidget {
   final Bike bike;
@@ -19,158 +18,218 @@ class BikeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(bottom: 10.h),
-      decoration: BoxDecoration(
-        color: AppColors.accent1,
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              bike.name,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            _BikeInfoRow(bike: bike),
-            SizedBox(height: 16.h),
-            _BikeFeatures(bike: bike),
-            SizedBox(height: 16.h),
-            AppButton(
-              text: "Select Plan",
-              onPressed: onSelectPlan,
-              type: ButtonType.primary,
-              fullWidth: true,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BikeInfoRow extends StatelessWidget {
-  final Bike bike;
-
-  const _BikeInfoRow({required this.bike});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Frame Number",
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              bike.frameNumber,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(
-          width: 65.w,
-          height: 65.h,
-          child: Image.asset(Constants.bike),
-        ),
-      ],
-    );
-  }
-}
-
-class _BikeFeatures extends StatelessWidget {
-  final Bike bike;
-
-  const _BikeFeatures({required this.bike});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
+      margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
         children: [
-          _FeatureItem(
-            label: "Top Speed",
-            value: "${bike.topSpeed} km/h",
+          // Header section with light green background
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5F0), // Light green background
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12.r),
+                topRight: Radius.circular(12.r),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Plan Details text
+                Text(
+                  "Plan Details",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                // Plan type and level row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _getPlanType(),
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      _getPlanLevel(),
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          _VerticalDivider(),
-          _FeatureItem(
-            label: "Range",
-            value: "${bike.range} km",
-          ),
-          _VerticalDivider(),
-          _FeatureItem(
-            label: "Time",
-            value: "${bike.timeToStation} hrs",
+          
+          // Content section
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Bike image
+                    Container(
+                      width: 60.w,
+                      height: 60.h,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Image.network(
+                        "https://toppng.com/uploads/preview/cycle-hd-images-11549761022izaeyhmkgm.png",
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    
+                    // Location info
+                    Expanded(
+                      child: _InfoItem(
+                        icon: Icons.location_on_outlined,
+                        iconColor: AppColors.primary,
+                        label: "Location",
+                        value: "ORR Track",
+                      ),
+                    ),
+                    
+                    // Divider line
+                    Container(
+                      width: 1,
+                      height: 40.h,
+                      color: Colors.grey[300],
+                      margin: EdgeInsets.symmetric(horizontal: 12.w),
+                    ),
+                    
+                    // Time info
+                    Expanded(
+                      child: _InfoItem(
+                        icon: Icons.access_time,
+                        iconColor: AppColors.primary,
+                        label: "Time",
+                        value: "${bike.timeToStation} hr${bike.timeToStation > 1 ? 's' : ''}",
+                      ),
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: 20.h),
+                
+                // Select a Plan button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton(
+                    onPressed: onSelectPlan,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Select a Plan",
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+
+  String _getPlanType() {
+    if (bike.bikeType.toLowerCase().contains('electric')) {
+      return 'Electric & Manual';
+    } else {
+      return 'Manual';
+    }
+  }
+
+  String _getPlanLevel() {
+    if (bike.topSpeed >= 40 && bike.range >= 100) {
+      return 'Premium';
+    } else {
+      return 'Super';
+    }
+  }
 }
 
-class _FeatureItem extends StatelessWidget {
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
   final String label;
   final String value;
 
-  const _FeatureItem({required this.label, required this.value});
+  const _InfoItem({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: AppColors.primary,
-          ),
+        Row(
+          children: [
+            Icon(
+              icon,
+              size: 16.sp,
+              color: iconColor,
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: iconColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         SizedBox(height: 4.h),
         Text(
           value,
           style: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40.h,
-      width: 1.w,
-      color: AppColors.primary.withOpacity(0.3),
     );
   }
 }

@@ -56,92 +56,129 @@ class StationController extends BaseController {
       handleError(e);
     }
   }
+Future<void> fetchAllStations() async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
 
-  Future<void> fetchAllStations() async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+    await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = localStorage.getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
+        final response = await apiService.get(
+          endpoint: 'stations/',
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+            'X-Karma-App': 'dafjcnalnsjn',
+          },
+        );
 
-      await useApiOrDummy(
-        apiCall: () async {
-          final response = await apiService.get(
-            endpoint: '/v1/stations/get',
-            headers: {
-              'Authentication': '',
-            },
-          );
-
-          if (response != null) {
-            final stationResponse =
-                GetNearbyStationsResponse.fromJson(response.data);
-            stations.assignAll(stationResponse.stations);
-            filteredStations.assignAll(stationResponse.stations);
+        if (response != null) {
+          print('Response data: ${response}');
+          
+          // The response itself is the parsed JSON Map, not response.data
+          // Use GetMultipleStationsResponse since the API returns an array
+          final stationResponse = GetMultipleStationsResponse.fromJson(response);
+          if (stationResponse.success) {
+            stations.clear();
+            stations.addAll(stationResponse.stations);
+            filteredStations.assignAll(stations);
+            nearbyStations.assignAll(stations); // Also update nearbyStations
             _updateMarkers();
             return true;
+          } else {
+            errorMessage.value = stationResponse.message;
+            return false;
           }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse = GetNearbyStationsResponse.fromJson(dummyData);
-          stations.assignAll(stationResponse.stations);
-          filteredStations.assignAll(stationResponse.stations);
+        }
+        return false;
+      },
+      dummyData: () {
+        final dummyData = DummyDataService.getStationsResponse();
+        final stationResponse = GetMultipleStationsResponse.fromJson(dummyData);
+        stations.assignAll(stationResponse.stations);
+        filteredStations.assignAll(stationResponse.stations);
+        nearbyStations.assignAll(stationResponse.stations);
+        _updateMarkers();
+        return true;
+      },
+    );
+  } catch (e) {
+    print('Error in fetchAllStations: $e');
+    handleError(e);
+  } finally {
+    isLoading.value = false;
+  }
+}
+Future<void> fetchNearbyStations(double lat, double lon) async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = localStorage.getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
+
+        final response = await apiService.get(
+          endpoint: 'stations/get_nearby?lat=$lat&lon=$lon&limit=6',
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+            'X-Karma-App': 'dafjcnalnsjn',
+          },
+        );
+
+        if (response != null) {
+          print('Nearby stations response: ${response}');
+          
+          // Check if response['data'] is a list or single object
+          if (response['data'] is List) {
+            // Handle array of stations
+            final stationsList = (response['data'] as List)
+                .map((stationJson) => Station.fromJson(stationJson))
+                .toList();
+            stations.assignAll(stationsList);
+            nearbyStations.assignAll(stationsList);
+            filteredStations.assignAll(stationsList);
+          } else {
+            // Handle single station response
+            final stationResponse = GetStationResponse.fromJson(response);
+            if (stationResponse.success) {
+              stations.clear();
+              stations.add(stationResponse.station);
+              nearbyStations.clear();
+              nearbyStations.add(stationResponse.station);
+              filteredStations.assignAll(stations);
+            }
+          }
           _updateMarkers();
           return true;
-        },
-      );
-    } catch (e) {
-      handleError(e);
-    } finally {
-      isLoading.value = false;
-    }
+        }
+        return false;
+      },
+      dummyData: () {
+        final dummyData = DummyDataService.getStationsResponse();
+        final stationResponse = GetMultipleStationsResponse.fromJson(dummyData);
+        stations.assignAll(stationResponse.stations);
+        nearbyStations.assignAll(stationResponse.stations);
+        filteredStations.assignAll(stationResponse.stations);
+        _updateMarkers();
+        return true;
+      },
+    );
+  } catch (e) {
+    print('Error in fetchNearbyStations: $e');
+    handleError(e);
+  } finally {
+    isLoading.value = false;
   }
-
-  Future<void> fetchNearbyStations(double lat, double lon) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      await useApiOrDummy(
-        apiCall: () async {
-          final response = await apiService.get(
-            endpoint: '/v1/stations/get_nearby?lat=$lat&lon=$lon&limit=6',
-            headers: {
-              'Authentication': '',
-            },
-          );
-          if (response.success) {
-            nearbyStations.value = response.stations;
-          }
-
-          if (response != null) {
-            final stationResponse =
-                GetNearbyStationsResponse.fromJson(response.data);
-            stations.assignAll(stationResponse.stations);
-            nearbyStations.value = response.stations;
-            filteredStations.assignAll(stationResponse.stations);
-            _updateMarkers();
-            return true;
-          }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse = GetNearbyStationsResponse.fromJson(dummyData);
-          stations.assignAll(stationResponse.stations);
-          nearbyStations.value = stationResponse.stations;
-          filteredStations.assignAll(stationResponse.stations);
-          _updateMarkers();
-          return true;
-        },
-      );
-    } catch (e) {
-      handleError(e);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
+}
   void _updateMarkers() {
     final newMarkers = stations.map((station) {
       return Marker(

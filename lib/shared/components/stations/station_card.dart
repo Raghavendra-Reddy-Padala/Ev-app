@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../constants/colors.dart';
-import '../../constants/constants.dart';
 import '../../models/stations/station.dart';
 
 class StationCard extends StatelessWidget {
@@ -23,50 +21,57 @@ class StationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(10.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient:  LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.green,
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _DistanceDisplay(distance: distance),
-                _StationInfo(
-                  name: station.name,
-                  currentCapacity: station.currentCapacity,
-                  totalCapacity: station.capacity,
-                ),
-                GestureDetector(
-                  onTap: onGoToLocation ?? onTap,
-                  child: Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 24.w,
-                      ),
-                    ),
-                  ),
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00B894).withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(5.w),
+              child: Row(
+                children: [
+                  _LocationIcon(distance: distance),
+                  Container(
+                    width: 1,
+                    height: 60.h,
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
+                  ),
+                  Expanded(
+                    child: _StationInfo(
+                      name: station.name,
+                      currentCapacity: station.currentCapacity,
+                      totalCapacity: station.capacity,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 60.h,
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
+                  ),
+                  _ActionButton(onTap: onTap),
+                ],
+              ),
             ),
           ),
         ),
@@ -75,42 +80,38 @@ class StationCard extends StatelessWidget {
   }
 }
 
-class _DistanceDisplay extends StatelessWidget {
+class _LocationIcon extends StatelessWidget {
   final double distance;
 
-  const _DistanceDisplay({required this.distance});
+  const _LocationIcon({required this.distance});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 70.w,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            Constants.distance,
-            width: 24.w,
-            height: 24.w,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.location_on,
+            color: Colors.white,
+            size: 24.w,
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          "${distance.toStringAsFixed(0)} kms",
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
             color: Colors.white,
           ),
-          SizedBox(height: 4.h),
-          Text(
-            "Distance",
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            "${distance.toStringAsFixed(1)} km",
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -128,74 +129,120 @@ class _StationInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            SizedBox(height: 8.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _CapacityIndicator(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: _InfoBox(
                   icon: Icons.electric_bike,
                   count: totalCapacity,
                 ),
-                SizedBox(width: 16.w),
-                _CapacityIndicator(
-                  icon: Icons.directions_bike_sharp,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _InfoBox(
+                  icon: Icons.directions_bike,
                   count: currentCapacity,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _CapacityIndicator extends StatelessWidget {
+class _InfoBox extends StatelessWidget {
   final IconData icon;
   final int count;
 
-  const _CapacityIndicator({
+  const _InfoBox({
     required this.icon,
     required this.count,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 18.w,
-        ),
-        SizedBox(width: 4.w),
-        Text(
-          "$count",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 18.w,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                "$count",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.sp,
+                ),
+              ),
+            ],
+          ),
+          
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const _ActionButton({this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(50.r),
+          child: Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Icon(
+              Icons.arrow_forward_ios,
+              color: const Color(0xFF00B894),
+              size: 16.w,
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

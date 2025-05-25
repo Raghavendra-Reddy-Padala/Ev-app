@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
+import 'package:mjollnir/features/account/views/profile_main_view.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
+import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
@@ -37,6 +39,109 @@ class _HomeMainViewState extends State<HomeMainView> {
       AppLogger.i('Error initializing location: $e');
     }
   }
+  
+  void _handleCreateGroup() {
+    showDialog(
+      context: context,
+      builder: (context) => CreateGroupDialog(
+        onSubmit: (name, description, image) {
+          // Handle group creation logic here
+          Get.snackbar(
+            'Success',
+            'Group "$name" created successfully!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleInviteFriends() {
+    // Add your invite friends logic here
+    Get.snackbar(
+      'Feature',
+      'Invite friends feature coming soon!',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+    );
+  }
+  List<DrawerOption> _getDrawerOptions() {
+    return [
+    
+      DrawerOption(
+        title: 'Subscriptions',
+        icon: Icons.subscriptions,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => const Subscriptions());
+          // Temporary placeholder
+          Get.snackbar('Info', 'Subscriptions page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'Issues',
+        icon: Icons.report_problem,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => const Issues());
+          // Temporary placeholder
+          Get.snackbar('Info', 'Issues page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'FAQ',
+        icon: Icons.help_outline,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => FAQ());
+          // Temporary placeholder
+          Get.snackbar('Info', 'FAQ page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'Activity',
+        icon: Icons.timeline,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => const Activity());
+          // Temporary placeholder
+          Get.snackbar('Info', 'Activity page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'My Trips',
+        icon: Icons.trip_origin,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => const MyTrips());
+          // Temporary placeholder
+          Get.snackbar('Info', 'My Trips page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'Groups',
+        icon: Icons.group,
+        onTap: () {
+          Navigator.pop(context);
+          // Get.to(() => const GroupView());
+          // Temporary placeholder
+          Get.snackbar('Info', 'Groups page coming soon!');
+        },
+      ),
+      DrawerOption(
+        title: 'Settings',
+        icon: Icons.settings,
+        onTap: () {
+          Navigator.pop(context);
+          Get.snackbar('Info', 'Settings page coming soon!');
+        },
+      ),
+    ];
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +149,10 @@ class _HomeMainViewState extends State<HomeMainView> {
     locationController.fetchUserLocation();
     return Scaffold(
       key: _scaffoldKey,
-      drawer:  CustomDrawer(
-        options: [
-        ],
-        onCreateGroup: () {},
-        onInviteFriends: () {},
-
-        
+    drawer: CustomDrawer(
+        options: _getDrawerOptions(),
+        onCreateGroup: _handleCreateGroup,
+        onInviteFriends: _handleInviteFriends,
       ),
       body: SafeArea(
         child: Stack(
@@ -58,7 +160,7 @@ class _HomeMainViewState extends State<HomeMainView> {
             const MapsView(),
              Positioned(
               top: 16.0,
-              left: 16.0,
+              left: 35.0,
               right: 16.0,
               child: CustomSearchBar(
                 controller: TextEditingController(),
@@ -70,7 +172,7 @@ class _HomeMainViewState extends State<HomeMainView> {
             ),
             Positioned(
               top: 20.0,
-              left: 15.0,
+              left: 5.0,
               child: IconButton(
                 icon: Icon(Icons.menu, size: 30.w),
                 onPressed: () {
@@ -79,7 +181,7 @@ class _HomeMainViewState extends State<HomeMainView> {
                 color: Theme.of(context).iconTheme.color,
               ),
             ),
-            // const StationsList(),
+            const StationsList(),
             Positioned(
               right: 5,
               bottom: 20,
