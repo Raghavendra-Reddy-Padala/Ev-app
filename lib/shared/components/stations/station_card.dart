@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mjollnir/core/navigation/navigation_service.dart';
-import 'package:mjollnir/features/home/views/stationbikesview.dart';
-
 import '../../constants/colors.dart';
-import '../../constants/constants.dart';
 import '../../models/stations/station.dart';
 
 class StationCard extends StatelessWidget {
@@ -21,12 +17,10 @@ class StationCard extends StatelessWidget {
     this.onGoToLocation,
   });
 
- 
-
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -34,52 +28,48 @@ class StationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              gradient:  LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
                 colors: [
                   AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
+                  AppColors.green,
                 ],
               ),
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 8,
+                  color: const Color(0xFF00B894).withOpacity(0.3),
+                  blurRadius: 6,
                   offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
                 ),
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
+              padding: EdgeInsets.all(5.w),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      _DistanceDisplay(distance: distance),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: _StationInfo(
-                          name: station.name,
-                          currentCapacity: station.currentCapacity,
-                          totalCapacity: station.capacity,
-                        ),
-                      ),
-                      _ActionButton(onTap: onTap 
-                      ),
-                    ],
+                  _LocationIcon(distance: distance),
+                  Container(
+                    width: 1,
+                    height: 60.h,
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
                   ),
-                  // SizedBox(height: 12.h),
-                  // _CapacityBar(
-                  //   current: station.currentCapacity,
-                  //   total: station.capacity,
-                  // ),
+                  Expanded(
+                    child: _StationInfo(
+                      name: station.name,
+                      currentCapacity: station.currentCapacity,
+                      totalCapacity: station.capacity,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 60.h,
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
+                  ),
+                  _ActionButton(onTap: onTap),
                 ],
               ),
             ),
@@ -90,52 +80,38 @@ class StationCard extends StatelessWidget {
   }
 }
 
-class _DistanceDisplay extends StatelessWidget {
+class _LocationIcon extends StatelessWidget {
   final double distance;
 
-  const _DistanceDisplay({required this.distance});
+  const _LocationIcon({required this.distance});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.location_on,
-              color: Colors.white,
-              size: 20.w,
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
           ),
-          SizedBox(height: 8.h),
-          Text(
-            "${distance.toStringAsFixed(1)}km",
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          child: Icon(
+            Icons.location_on,
+            color: Colors.white,
+            size: 24.w,
           ),
-          Text(
-            "away",
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: Colors.white.withOpacity(0.8),
-            ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          "${distance.toStringAsFixed(0)} kms",
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -153,100 +129,87 @@ class _StationInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(height: 8.h),
-        Row(
-          children: [
-            _CapacityChip(
-              icon: Icons.electric_bike,
-              label: "Total",
-              count: totalCapacity,
-              color: Colors.white.withOpacity(0.9),
-            ),
-            SizedBox(width: 12.w),
-            _CapacityChip(
-              icon: Icons.directions_bike,
-              label: "Available",
-              count: currentCapacity,
-              color: _getCapacityColor(),
-            ),
-          ],
-        ),
-      ],
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: _InfoBox(
+                  icon: Icons.electric_bike,
+                  count: totalCapacity,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _InfoBox(
+                  icon: Icons.directions_bike,
+                  count: currentCapacity,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
-  }
-
-  Color _getCapacityColor() {
-    final ratio = currentCapacity / totalCapacity;
-    if (ratio > 0.7) return Colors.greenAccent;
-    if (ratio > 0.3) return Colors.orangeAccent;
-    return Colors.redAccent;
   }
 }
 
-class _CapacityChip extends StatelessWidget {
+class _InfoBox extends StatelessWidget {
   final IconData icon;
-  final String label;
   final int count;
-  final Color color;
 
-  const _CapacityChip({
+  const _InfoBox({
     required this.icon,
-    required this.label,
     required this.count,
-    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 16.w,
-          ),
-          SizedBox(width: 4.w),
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 18.w,
+              ),
+              SizedBox(width: 6.w),
               Text(
                 "$count",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 9.sp,
+                  fontSize: 16.sp,
                 ),
               ),
             ],
           ),
+          
         ],
       ),
     );
@@ -262,12 +225,8 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -278,8 +237,8 @@ class _ActionButton extends StatelessWidget {
             padding: EdgeInsets.all(12.w),
             child: Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white,
-              size: 20.w,
+              color: const Color(0xFF00B894),
+              size: 16.w,
             ),
           ),
         ),

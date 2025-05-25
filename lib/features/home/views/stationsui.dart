@@ -38,7 +38,7 @@ class StationsList extends StatelessWidget {
       return DraggableScrollableSheet(
         initialChildSize: 0.2,
         minChildSize: 0.2,
-        maxChildSize: 0.49,
+        maxChildSize: 0.39,
         builder: (context, scrollController) {
           return Container(
             decoration: BoxDecoration(

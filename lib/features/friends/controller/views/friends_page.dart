@@ -1,3 +1,5 @@
+import 'package:bolt_ui_kit/theme/text_themes.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -5,7 +7,12 @@ import 'package:mjollnir/core/theme/app_theme.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/account/controllers/user_controller.dart';
 import 'package:mjollnir/features/friends/controller/groups_controller.dart';
+import 'package:mjollnir/features/friends/controller/views/clubs.dart';
+import 'package:mjollnir/features/friends/controller/views/leaderboard.dart';
+import 'package:mjollnir/shared/components/friends/group_card.dart';
+import 'package:mjollnir/shared/components/search/simplfied_search_field.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
+import 'package:mjollnir/shared/search/custom_search_controller.dart';
 
 class FriendsPage extends StatelessWidget {
   FriendsPage({super.key});
@@ -43,7 +50,7 @@ class FriendsPage extends StatelessWidget {
     groupController.getAlreadyJoinedGroups();
     final tabControllerX = Get.put(TabControllerX(), permanent: true);
     userController.getUsers();
-    groupController.getGroups();
+    groupController.fetchGroups();
     return RefreshIndicator(
       onRefresh: () async {
         await _refreshData(userController);
@@ -222,6 +229,86 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CarouselGetXController extends GetxController {
+  final RxInt _currentIndex = 0.obs;
+  final CarouselController carouselController = CarouselController();
+
+  int get currentIndex => _currentIndex.value;
+
+  void setCurrentIndex(int index) {
+    _currentIndex.value = index;
+  }
+}
+
+class CarouselWithIndicator extends StatelessWidget {
+  final List<String> imgList;
+
+  CarouselWithIndicator({super.key, required this.imgList});
+  
+  @override
+  Widget build(BuildContext context) {
+    final CarouselGetXController controller = Get.put(CarouselGetXController());
+
+    return Column(
+      children: [
+        CarouselSlider(
+          options: CarouselOptions(
+            height: 200.w,
+            autoPlay: true,
+            enlargeCenterPage: true,
+            aspectRatio: 16 / 9,
+            viewportFraction: 1,
+            autoPlayInterval: const Duration(seconds: 3),
+            onPageChanged: (index, reason) {
+              controller.setCurrentIndex(index);
+            },
+          ),
+          items: imgList
+              .map((item) => Container(
+                    height: 200.w,
+                    margin: EdgeInsets.all(20.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: Image.asset(
+                        item,
+                        fit: BoxFit.fill,
+                        width:ScreenUtil().screenWidth,
+                      ),
+                    ),
+                  ))
+              .toList(),
+        ),
+        Obx(() => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: imgList.asMap().entries.map((entry) {
+                return GestureDetector(
+                  child: Container(
+                    width:5.w,
+                    height:5.w,
+                    margin: EdgeInsets.symmetric(horizontal:4.h),
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: controller.currentIndex == entry.key
+                            ? Theme.of(context).brightness == Brightness.light
+                                ? Colors.black
+                                : const Color.fromRGBO(216, 216, 216,
+                                    0.66)
+                            : Theme.of(context).brightness == Brightness.light
+                                ? const Color.fromRGBO(216, 216, 216,
+                                    0.66)
+                                : Colors
+                                    .black
+
+                        ),
+                  ),
+                );
+              }).toList(),
+            )),
+      ],
     );
   }
 }

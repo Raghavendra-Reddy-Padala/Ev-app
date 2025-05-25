@@ -30,10 +30,11 @@ class WalletController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: 'wallet/get',
+            endpoint: 'wallet/my',
             headers: {
               'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/json',
+          'X-Karma-App': 'dafjcnalnsjn',
+
             },
           );
 
@@ -75,7 +76,7 @@ class WalletController extends BaseController {
             endpoint: 'transactions/getAll',
             headers: {
               'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn',
             },
           );
 
@@ -116,6 +117,8 @@ class WalletController extends BaseController {
           final response =
               await apiService.post(endpoint: 'wallet/topup', headers: {
             'Authorization': 'Bearer $authToken',
+                          'X-Karma-App': 'dafjcnalnsjn',
+
           }, body: {
             "balance": amount
           });

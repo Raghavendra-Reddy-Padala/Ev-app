@@ -1,27 +1,33 @@
 class PlanResponse {
   final bool success;
-  final PlanData data;
+  final List<PlanData> data; // Changed from PlanData to List<PlanData>
   final String message;
+  final String? error;
 
   PlanResponse({
     required this.success,
     required this.data,
     required this.message,
+    this.error,
   });
 
   factory PlanResponse.fromJson(Map<String, dynamic> json) {
     return PlanResponse(
       success: json['success'] ?? false,
-      data: PlanData.fromJson(json['data'] ?? {}),
+      data: (json['data'] as List<dynamic>)
+          .map((item) => PlanData.fromJson(item as Map<String, dynamic>))
+          .toList(), // Parse the array of plans
       message: json['message'] ?? '',
+      error: json['error'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'success': success,
-      'data': data.toJson(),
+      'data': data.map((plan) => plan.toJson()).toList(),
       'message': message,
+      'error': error,
     };
   }
 }
@@ -32,7 +38,8 @@ class PlanData {
   final double monthlyFee;
   final double discount;
   final String name;
-  final String bikeId;
+  final String stationId; // Added stationId field
+  final String bikeType; // Added bikeType field
   final String type;
   final double securityDeposit;
 
@@ -42,7 +49,8 @@ class PlanData {
     required this.monthlyFee,
     required this.discount,
     required this.name,
-    required this.bikeId,
+    required this.stationId,
+    required this.bikeType,
     required this.type,
     required this.securityDeposit,
   });
@@ -54,7 +62,8 @@ class PlanData {
       monthlyFee: (json['monthly_fee'] ?? 0.0).toDouble(),
       discount: (json['discount'] ?? 0.0).toDouble(),
       name: json['name'] ?? '',
-      bikeId: json['bike_id'] ?? '',
+      stationId: json['station_id'] ?? '', // Parse stationId
+      bikeType: json['bike_type'] ?? '', // Parse bikeType
       type: json['type'] ?? '',
       securityDeposit: (json['security_deposit'] ?? 0.0).toDouble(),
     );
@@ -67,7 +76,8 @@ class PlanData {
       'monthly_fee': monthlyFee,
       'discount': discount,
       'name': name,
-      'bike_id': bikeId,
+      'station_id': stationId,
+      'bike_type': bikeType,
       'type': type,
       'security_deposit': securityDeposit,
     };
