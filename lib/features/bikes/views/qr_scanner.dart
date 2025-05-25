@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/navigation/navigation_service.dart';
 import '../../../../shared/components/buttons/app_button.dart';
-import '../../../../shared/components/header/header.dart';
 import '../../../../shared/constants/colors.dart';
 import '../../main_page_controller.dart';
 import '../controller/qr_controller.dart';
@@ -20,7 +18,6 @@ class QrScannerView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const Header(heading: "Scan QR Code"),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(20.w),
@@ -49,7 +46,7 @@ class _QrInstructions extends StatelessWidget {
         Text(
           "Scan your code",
           style: TextStyle(
-            fontSize: 24.sp,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w700,
             color: Colors.black,
           ),
@@ -58,7 +55,7 @@ class _QrInstructions extends StatelessWidget {
         Text(
           "There's a QR code affixed to rent your bike",
           style: TextStyle(
-            fontSize: 16.sp,
+            fontSize: 14.sp,
             color: Colors.grey,
           ),
           textAlign: TextAlign.center,
@@ -116,9 +113,7 @@ class _ActionButtons extends StatelessWidget {
   }
 
   void _scanQrCode(BuildContext context) {
-    NavigationService.pushTo(
-      QrCameraView(onScan: controller.processQrCode),
-    );
+    Get.to(QrCameraView(onScan: controller.processQrCode));
   }
 }
 
@@ -149,8 +144,8 @@ class _DemoButton extends StatelessWidget {
         child: Text(
           "Riding your own bike?",
           style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w800,
             color: AppColors.primary,
             decoration: TextDecoration.underline,
             decorationColor: AppColors.primary,

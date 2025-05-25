@@ -177,19 +177,19 @@ class EndTrip {
 class StartTrip {
   final String bikeId;
   final String stationId;
-  final DateTime startTimestamp;
+  //final DateTime startTimestamp;
 
   StartTrip({
     required this.bikeId,
     required this.stationId,
-    required this.startTimestamp,
+    //required this.startTimestamp,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'bike_id': bikeId,
       'station_id': stationId,
-      'start_timestamp': startTimestamp.toIso8601String(),
+      //'start_timestamp': startTimestamp.toIso8601String(),
     };
   }
 
@@ -197,14 +197,14 @@ class StartTrip {
     return StartTrip(
       bikeId: json['bike_id'],
       stationId: json['station_id'],
-      startTimestamp: DateTime.parse(json['start_timestamp']),
+      // startTimestamp: DateTime.parse(json['start_timestamp']),
     );
   }
 
-  String getFormattedStartTimestamp() {
-    final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
-    return formatter.format(startTimestamp);
-  }
+  // String getFormattedStartTimestamp() {
+  //   final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+  //   return formatter.format(startTimestamp);
+  // }
 }
 
 class EndTripModel {

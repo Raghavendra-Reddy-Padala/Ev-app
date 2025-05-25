@@ -19,8 +19,10 @@ class ApiConstants {
   static const String stationsGet = 'stations/get';
   static const String stationsGetNearby = 'stations/get_nearby';
 
-  static const String bikesByStation = 'bikes/get/station';
+  static const String bikesByStation = 'bikes/station';
   static const String bikesStatus = 'metal/status';
+  static const String getBikes = 'bikes/get';
+  static const String bikesById = 'bikes/get';
 
   static const String tripsStart = 'trips/start';
   static const String tripsEnd = 'trips/end';
@@ -46,4 +48,6 @@ class ApiConstants {
   static const String referralCode = 'user/invite_code';
   static const String referralBenefits = 'user/referral_benefits';
   static const String activityGraph = 'analytics/activity_graph';
+
+  static const String toggleBike = 'metal/toggle';
 }

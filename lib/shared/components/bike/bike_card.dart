@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/colors.dart';
-import '../../constants/constants.dart';
 import '../../models/bike/bike_model.dart';
 
 class BikeCard extends StatelessWidget {
@@ -81,7 +80,7 @@ class BikeCard extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Content section
           Padding(
             padding: EdgeInsets.all(16.w),
@@ -103,7 +102,7 @@ class BikeCard extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 16.w),
-                    
+
                     // Location info
                     Expanded(
                       child: _InfoItem(
@@ -113,7 +112,7 @@ class BikeCard extends StatelessWidget {
                         value: "ORR Track",
                       ),
                     ),
-                    
+
                     // Divider line
                     Container(
                       width: 1,
@@ -121,21 +120,22 @@ class BikeCard extends StatelessWidget {
                       color: Colors.grey[300],
                       margin: EdgeInsets.symmetric(horizontal: 12.w),
                     ),
-                    
+
                     // Time info
                     Expanded(
                       child: _InfoItem(
                         icon: Icons.access_time,
                         iconColor: AppColors.primary,
                         label: "Time",
-                        value: "${bike.timeToStation} hr${bike.timeToStation > 1 ? 's' : ''}",
+                        value:
+                            "${bike.timeToStation} hr${bike.timeToStation > 1 ? 's' : ''}",
                       ),
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 20.h),
-                
+
                 // Select a Plan button
                 SizedBox(
                   width: double.infinity,
