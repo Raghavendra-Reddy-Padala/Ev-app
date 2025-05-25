@@ -5,6 +5,8 @@ import 'package:mjollnir/features/authentication/controller/loc_controller.dart'
 import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
 import 'package:mjollnir/features/bikes/controller/qr_controller.dart';
 import 'package:mjollnir/features/bikes/controller/trips_control_service.dart';
+import 'package:mjollnir/features/friends/controller/follow_controller.dart';
+import 'package:mjollnir/shared/subscriptions/subscription_controller.dart';
 
 import '../../features/account/controllers/user_controller.dart';
 import '../../features/bikes/controller/bike_controller.dart';
@@ -32,4 +34,6 @@ Future<void> setupDependencies() async {
   Get.put(TripControlService());
   Get.put(QrScannerController());
   Get.put(StationController());
+  Get.put(SubscriptionController());
+  Get.put(FollowController());
 }

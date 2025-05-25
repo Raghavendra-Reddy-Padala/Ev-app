@@ -1,6 +1,8 @@
+import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/shared/models/user/user_model.dart';
 import '../../../features/account/controllers/user_controller.dart';
 import '../../../features/friends/controller/groups_controller.dart';
 import '../../constants/colors.dart';
@@ -227,10 +229,96 @@ class _StatItem extends StatelessWidget {
   }
 }
 
+
 class FilterController extends GetxController {
   final RxString selectedValue = 'Pts'.obs;
-
   void changeFilter(String value) {
     selectedValue.value = value;
+  }
+  List<User> sortUsers(List<User> users) {
+    users.sort((a, b) => b.points.compareTo(a.points));
+    return users;
+  }
+  List<Group> sortGroups(List<Group> groups) {
+    switch (selectedValue.value) {
+      case 'Pts':
+        groups.sort((a, b) => (b.aggregatedData?.totalPoints ?? b.totalTrips)
+            .compareTo(a.aggregatedData?.totalPoints ?? 0));
+        break;
+      case 'Km':
+        groups.sort((a, b) => (b.aggregatedData?.totalKm ?? b.totalDistance)
+            .compareTo(a.aggregatedData?.totalKm ?? 0));
+        break;
+      case 'Carbon':
+        groups.sort((a, b) => (b.aggregatedData?.totalCarbon ?? (b.averageSpeed/1000))
+            .compareTo(a.aggregatedData?.totalCarbon ?? 0));
+        break;
+    }
+    return groups;
+  }
+}
+
+class CustomDropdown extends StatelessWidget {
+  final List<String> items;
+  final FilterController controller;
+
+  const CustomDropdown({
+    super.key,
+    required this.items,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(left:20.w,right:20.w,bottom: 10.w),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          Text('Filter', style: AppTextThemes.bodySmall()),
+          const Spacer(),
+          Container(
+            height: 30.w,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black
+                    : Colors.white,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Obx(
+                  () => DropdownButton<String>(
+                underline: const SizedBox(),
+                borderRadius: BorderRadius.circular(10),
+                icon: const Icon(Icons.keyboard_arrow_down),
+                style: AppTextThemes.bodySmall().copyWith(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: controller.selectedValue.value,
+                items: items.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(
+                      value,
+                      style: AppTextThemes.bodySmall().copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) => controller.changeFilter(value!),
+              ),
+            ),
+          ),
+          SizedBox(width: ScreenUtil().screenWidth * 0.04),
+        ],
+      ),
+    );
   }
 }

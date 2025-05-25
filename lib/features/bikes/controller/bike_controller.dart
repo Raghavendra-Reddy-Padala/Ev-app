@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/core/utils/logger.dart';
 import 'dart:convert';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
@@ -11,39 +12,62 @@ class BikeController extends BaseController {
   final Rx<Bike?> bikeData = Rx<Bike?>(null);
   final LocalStorage localStorage = Get.find<LocalStorage>();
 
-  Future<void> fetchBikesByStationId(String stationId, String authToken) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
-      bikes.clear();
-      await useApiOrDummy(
-        apiCall: () async {
-          final response = await apiService.get(
-            endpoint: '/v1/bikes/get/station/$stationId',
+
+Future<void> fetchBikesByStationId(String stationId) async {
+   String? authToken = localStorage.getToken();
+    if (authToken == null) {
+      print('Auth token is null');
+      print(authToken);
+      authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWdlIjoiIiwiZW1haWwiOiIiLCJlbXBsb3llZV9pZCI6IiIsImV4cCI6MTc1MDY4NzM4OSwiZ2VuZGVyIjoiIiwibmFtZSI6IiIsInBob25lIjoiKzkxOTAzMjMyMzA5NSIsInVpZCI6ImdfOXhrdDRlZDEifQ.f7jgx7J0OHHBRq6UbK6s5s53xgdV5qCW5wpmPzQZntY';
+    }
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    
+final response = await apiService.get(
+            endpoint: 'bikes/station/station_42',
             headers: {
               'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn',
             },
-          );
-          if (response != null) {
-            final bikeResponse = BikesResponseModel.fromMap(response.data);
-            bikes.assignAll(bikeResponse.data);
-            return true;
-          }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getBikesResponse(stationId);
-          final bikeResponse = BikesResponseModel.fromMap(dummyData);
-          bikes.assignAll(bikeResponse.data);
-          return true;
-        },
-      );
-    } catch (e) {
-      print('Error fetching bikes: $e');
-    } finally {
-      isLoading.value = false;
+          );      
+    Map<String, dynamic> responseData;
+    
+    if (response is Map<String, dynamic>) {
+      responseData = response;
+    } else if (response.runtimeType.toString().contains('Response')) {
+      if (response.statusCode == 200) {
+        responseData = response.data is Map<String, dynamic> 
+            ? response.data 
+            : response.data;
+      } else {
+        errorMessage.value = 'HTTP Error: ${response.statusCode}';
+        bikes.value = [];
+        return;
+      }
+    } else {
+      throw Exception('Unknown response type: ${response.runtimeType}');
     }
+    
+    final BikeResponseModel bikeResponse = BikeResponseModel.fromMap(responseData);
+    
+    if (bikeResponse.success) {
+      bikes.value = [bikeResponse.data];
+    } else {
+      errorMessage.value = bikeResponse.message.isNotEmpty 
+          ? bikeResponse.message 
+          : 'Failed to fetch bikes';
+      bikes.value = [];
+    }
+  } catch (e) {
+    AppLogger.e('Error fetching bikes: $e');
+    errorMessage.value = 'Error fetching bikes: $e';
+    bikes.value = [];
+  } finally {
+    isLoading.value = false;
   }
+}
+
 
   Future<void> fetchBikesData() async {
     try {
