@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/views/profile_main_view.dart';
 import 'package:mjollnir/features/bikes/views/qr_scanner.dart';
-import 'package:mjollnir/features/friends/controller/views/friends_page.dart';
+import 'package:mjollnir/features/friends/views/friends_page.dart';
 import 'package:mjollnir/features/home/views/home_main_view.dart';
 import 'package:mjollnir/features/wallet/views/walletpage.dart';
 import 'package:mjollnir/shared/constants/colors.dart';

@@ -14,7 +14,8 @@ class Subscriptions extends StatefulWidget {
 }
 
 class _SubscriptionsState extends State<Subscriptions> {
-  final SubscriptionController subscriptionController = Get.find<SubscriptionController>();
+  final SubscriptionController subscriptionController =
+      Get.find<SubscriptionController>();
 
   @override
   void initState() {
@@ -45,7 +46,8 @@ class _UI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final SubscriptionController subscriptionController = Get.find<SubscriptionController>();
+    final SubscriptionController subscriptionController =
+        Get.find<SubscriptionController>();
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -60,8 +62,6 @@ class _UI extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             }
-
-            // Check for error message
             if (subscriptionController.errorMessage.value.isNotEmpty) {
               return Center(
                 child: Column(
@@ -73,7 +73,8 @@ class _UI extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
-                      onPressed: () => subscriptionController.fetchUserSubscriptions(),
+                      onPressed: () =>
+                          subscriptionController.fetchUserSubscriptions(),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -93,7 +94,8 @@ class _UI extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
-                      onPressed: () => subscriptionController.fetchUserSubscriptions(),
+                      onPressed: () =>
+                          subscriptionController.fetchUserSubscriptions(),
                       child: const Text('Refresh'),
                     ),
                   ],

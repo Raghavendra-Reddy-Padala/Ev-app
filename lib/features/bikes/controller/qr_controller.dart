@@ -34,30 +34,24 @@ class QrScannerController extends BaseController {
 
       scannedDeviceId.value = deviceId;
 
-      // Encode device ID
       final encodedDeviceId = base64Encode(utf8.encode(deviceId));
 
-      // Toggle device
       final toggleSuccess = await _toggleDevice(encodedDeviceId);
       if (!toggleSuccess) {
         errorMessage.value = 'Failed to activate bike';
         return false;
       }
 
-      // Fetch bike data
       await bikeController.fetchBikeData(deviceId);
 
-      // Start trip
       final startTripData = StartTrip(
         bikeId: deviceId,
         stationId: bikeController.bikeData.value?.stationId ?? "0",
-        //startTimestamp: DateTime.now(),
       );
 
       final tripStarted = await tripControlService.startTrip(startTripData);
 
       if (tripStarted) {
-        // Store encoded ID for battery monitoring
         bikeMetricsController.bikeEncoded.value = encodedDeviceId;
         await localStorage.setString('encodedId', encodedDeviceId);
         await localStorage.setString('deviceId', deviceId);

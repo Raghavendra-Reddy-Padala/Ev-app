@@ -34,42 +34,44 @@ class _UIState extends State<_UI> {
   Widget build(BuildContext context) {
     final WalletController controller = Get.find<WalletController>();
     controller.fetchWalletBalance();
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Wallet',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(20.w),
           child: Column(
             children: [
-              // Header
-              Text(
-                "Wallet", 
-                style: AppTextThemes.bodyLarge().copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                )
-              ),
-              SizedBox(height: 30.h),
-              
               // Balance Card
               Obx(() => _buildBalanceCard(controller)),
-              
+
               SizedBox(height: 20.h),
-              
+
               // Quick Amount Buttons
               _buildQuickAmountButtons(controller),
-              
+
               SizedBox(height: 20.h),
-              
+
               // Action Buttons
               _buildActionButtons(controller),
-              
+
               SizedBox(height: 30.h),
-              
+
               // Transactions Section
               _buildTransactionsSection(),
-              
+
               Spacer(),
             ],
           ),
@@ -112,7 +114,7 @@ class _UIState extends State<_UI> {
 
   Widget _buildQuickAmountButtons(WalletController controller) {
     final amounts = ['50', '100', '200', '300'];
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: amounts.map((amount) {
@@ -122,14 +124,15 @@ class _UIState extends State<_UI> {
             setState(() {
               selectedAmount = amount;
             });
-            
+
             // Show confirmation dialog
             bool? confirmed = await showDialog<bool>(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: Text("Confirm Top-up"),
-                  content: Text("Do you want to top-up ₹$amount to your wallet?"),
+                  content:
+                      Text("Do you want to top-up ₹$amount to your wallet?"),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -143,7 +146,7 @@ class _UIState extends State<_UI> {
                 );
               },
             );
-            
+
             if (confirmed == true) {
               try {
                 final String? response = await controller.topUpWallet(amount);
@@ -157,7 +160,7 @@ class _UIState extends State<_UI> {
                 Get.snackbar("Error", "Failed to initiate top-up: $e");
               }
             }
-            
+
             // Reset selection after a delay
             Future.delayed(Duration(milliseconds: 500), () {
               if (mounted) {
@@ -197,7 +200,8 @@ class _UIState extends State<_UI> {
         Expanded(
           child: GestureDetector(
             onTap: () {
-              Get.to(() => WalletTopup(balance: controller.walletData.value?.balance ?? 0.0));
+              Get.to(() => WalletTopup(
+                  balance: controller.walletData.value?.balance ?? 0.0));
             },
             child: Container(
               height: 50.h,
@@ -218,9 +222,7 @@ class _UIState extends State<_UI> {
             ),
           ),
         ),
-        
         SizedBox(width: 15.w),
-        
         Expanded(
           child: GestureDetector(
             onTap: () {
@@ -260,7 +262,7 @@ class _UIState extends State<_UI> {
         width: double.infinity,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8F9F1), 
+          color: const Color(0xFFE8F9F1),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(

@@ -31,7 +31,7 @@ class ApiConstants {
   static const String tripsSummary = 'trips/summary';
   static const String userTrips = 'trips/user';
 
-  static const String groupsGetAll = 'groups/getAll';
+  static const String groupsGetAll = 'groups';
   static const String groupsCreate = 'groups/create';
   static const String groupsJoin = 'groups/join';
   static const String groupsMembers = 'groups/members';
@@ -51,6 +51,6 @@ class ApiConstants {
 
   static const String toggleBike = 'metal/toggle';
 
-    static const String subscriptions = 'subscriptions';
+  static const String subscriptions = 'subscriptions';
   static const String userSubscription = 'user_subscription/';
 }

@@ -14,6 +14,8 @@ import 'package:mjollnir/features/menubar/subscriptions.dart';
 import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
+import '../../menubar/activity.dart';
+
 class HomeMainView extends StatefulWidget {
   const HomeMainView({super.key});
 
@@ -99,9 +101,9 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.timeline,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => const Activity());
+          Get.to(() => const ActivityMainView());
           // Temporary placeholder
-          Get.snackbar('Info', 'Activity page coming soon!');
+          // Get.snackbar('Info', 'Activity page coming soon!');
         },
       ),
       DrawerOption(

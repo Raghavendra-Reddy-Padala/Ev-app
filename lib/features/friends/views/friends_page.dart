@@ -3,12 +3,11 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:mjollnir/core/theme/app_theme.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/account/controllers/user_controller.dart';
 import 'package:mjollnir/features/friends/controller/groups_controller.dart';
-import 'package:mjollnir/features/friends/controller/views/clubs.dart';
-import 'package:mjollnir/features/friends/controller/views/leaderboard.dart';
+import 'package:mjollnir/features/friends/views/clubs.dart';
+import 'package:mjollnir/features/friends/views/leaderboard.dart';
 import 'package:mjollnir/shared/components/friends/group_card.dart';
 import 'package:mjollnir/shared/components/search/simplfied_search_field.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
@@ -31,7 +30,7 @@ class FriendsPage extends StatelessWidget {
     searchController.search(
       value,
       userController.getAllUsers.value?.data ?? [],
-      groupController.allGroups ?? [],
+      groupController.allGroups,
     );
   }
 
@@ -170,9 +169,6 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
               ),
             ),
           ),
-          SizedBox(
-            height: 7.w,
-          ),
           Obx(() {
             final availableItems = tabControllerX.selectedIndex.value == 0
                 ? const ['Pts']
@@ -248,7 +244,7 @@ class CarouselWithIndicator extends StatelessWidget {
   final List<String> imgList;
 
   CarouselWithIndicator({super.key, required this.imgList});
-  
+
   @override
   Widget build(BuildContext context) {
     final CarouselGetXController controller = Get.put(CarouselGetXController());
@@ -276,7 +272,7 @@ class CarouselWithIndicator extends StatelessWidget {
                       child: Image.asset(
                         item,
                         fit: BoxFit.fill,
-                        width:ScreenUtil().screenWidth,
+                        width: ScreenUtil().screenWidth,
                       ),
                     ),
                   ))
@@ -287,23 +283,18 @@ class CarouselWithIndicator extends StatelessWidget {
               children: imgList.asMap().entries.map((entry) {
                 return GestureDetector(
                   child: Container(
-                    width:5.w,
-                    height:5.w,
-                    margin: EdgeInsets.symmetric(horizontal:4.h),
+                    width: 5.w,
+                    height: 5.w,
+                    margin: EdgeInsets.symmetric(horizontal: 4.h),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: controller.currentIndex == entry.key
                             ? Theme.of(context).brightness == Brightness.light
                                 ? Colors.black
-                                : const Color.fromRGBO(216, 216, 216,
-                                    0.66)
+                                : const Color.fromRGBO(216, 216, 216, 0.66)
                             : Theme.of(context).brightness == Brightness.light
-                                ? const Color.fromRGBO(216, 216, 216,
-                                    0.66)
-                                : Colors
-                                    .black
-
-                        ),
+                                ? const Color.fromRGBO(216, 216, 216, 0.66)
+                                : Colors.black),
                   ),
                 );
               }).toList(),

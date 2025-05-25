@@ -75,12 +75,12 @@ class UserController extends BaseController {
             endpoint: ApiConstants.userGetAll,
             headers: {
               'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn'
             },
           );
 
           if (response != null) {
-            final usersResponse = GetAllUsersResponse.fromJson(response.data);
+            final usersResponse = GetAllUsersResponse.fromJson(response);
             users.assignAll(usersResponse.data);
             getAllUsers.value = usersResponse;
 

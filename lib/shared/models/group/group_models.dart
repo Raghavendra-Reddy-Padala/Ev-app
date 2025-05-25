@@ -1,9 +1,8 @@
-
 class Group {
   String id;
   String name;
   String description;
-  DateTime createdAt;
+  DateTime? createdAt; // Made nullable
   String createdBy;
   int memberCount;
   bool isMember;
@@ -18,7 +17,7 @@ class Group {
     required this.id,
     required this.name,
     required this.description,
-    required this.createdAt,
+    this.createdAt, // Made nullable
     required this.createdBy,
     required this.memberCount,
     required this.isMember,
@@ -35,17 +34,24 @@ class Group {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt:
+          json['created_at'] != null && json['created_at'].toString().isNotEmpty
+              ? DateTime.tryParse(json['created_at'])
+              : null,
       createdBy: json['created_by'],
       memberCount: json['member_count'] ?? 0,
       isMember: json['is_member'] ?? false,
       isCreator: json['is_creator'] ?? false,
       lastActivity: json['last_activity'] ?? '',
-      totalDistance: json['total_distance'] != null ? (json['total_distance'] as num).toDouble() : 0.0,
+      totalDistance: json['total_distance'] != null
+          ? (json['total_distance'] as num).toDouble()
+          : 0.0,
       totalTrips: json['total_trips'] ?? 0,
-      averageSpeed: json['average_speed'] != null ? (json['average_speed'] as num).toDouble() : 0.0,
-      aggregatedData: json['aggregated_data'] != null 
-          ? AggregatedData.fromJson(json['aggregated_data']) 
+      averageSpeed: json['average_speed'] != null
+          ? (json['average_speed'] as num).toDouble()
+          : 0.0,
+      aggregatedData: json['aggregated_data'] != null
+          ? AggregatedData.fromJson(json['aggregated_data'])
           : null,
     );
   }
@@ -55,7 +61,7 @@ class Group {
       'id': id,
       'name': name,
       'description': description,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
       'member_count': memberCount,
       'is_member': isMember,
@@ -140,6 +146,7 @@ class GetAllGroupsResponse {
   }
 }
 
+// Rest of your models remain the same
 class GroupAggregateModel {
   final AggregatedData? aggregateData;
   final bool success;
@@ -201,26 +208,28 @@ class MemberDetails {
   double kmTraveled;
   String avatar;
 
-  MemberDetails(
-      {required this.uid,
-      required this.firstName,
-      required this.lastName,
-      required this.email,
-      required this.carbonFootprint,
-      required this.points,
-      required this.kmTraveled,
-      required this.avatar});
+  MemberDetails({
+    required this.uid,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.carbonFootprint,
+    required this.points,
+    required this.kmTraveled,
+    required this.avatar,
+  });
 
   factory MemberDetails.fromJson(Map<String, dynamic> json) {
     return MemberDetails(
-        uid: json['uid'],
-        firstName: json['first_name'],
-        lastName: json['last_name'],
-        email: json['email'],
-        carbonFootprint: (json['carbon_footprint'] ?? 0).toDouble(),
-        points: json['points'] ?? 0,
-        kmTraveled: (json['km_traveled'] ?? 0).toDouble(),
-        avatar: json['avatar']);
+      uid: json['uid'],
+      firstName: json['first_name'],
+      lastName: json['last_name'],
+      email: json['email'],
+      carbonFootprint: (json['carbon_footprint'] ?? 0).toDouble(),
+      points: json['points'] ?? 0,
+      kmTraveled: (json['km_traveled'] ?? 0).toDouble(),
+      avatar: json['avatar'],
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -232,7 +241,7 @@ class MemberDetails {
       'carbon_footprint': carbonFootprint,
       'points': points,
       'km_traveled': kmTraveled,
-      'avatar': avatar
+      'avatar': avatar,
     };
   }
 }
