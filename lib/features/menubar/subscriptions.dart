@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
-import 'package:mjollnir/shared/components/profile/subscription_widget.dart';
 import 'package:mjollnir/shared/subscriptions/subscription_controller.dart';
+
+import '../../shared/components/subscriptions/subscriptions_widget.dart';
 
 class Subscriptions extends StatefulWidget {
   const Subscriptions({super.key});

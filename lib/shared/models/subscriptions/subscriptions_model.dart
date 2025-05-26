@@ -233,3 +233,41 @@ class UserSubscription {
     };
   }
 }
+
+class UserSubscriptionData extends PlanData {
+  final String startDate;
+  final String endDate;
+  final String subscriptionStatus;
+
+  UserSubscriptionData({
+    required super.tableName,
+    required super.id,
+    required super.monthlyFee,
+    required super.discount,
+    required super.name,
+    required super.stationId,
+    required super.bikeType,
+    required super.type,
+    required super.securityDeposit,
+    required this.startDate,
+    required this.endDate,
+    required this.subscriptionStatus,
+  });
+
+  factory UserSubscriptionData.fromJson(Map<String, dynamic> json) {
+    return UserSubscriptionData(
+      tableName: json['TableName'] ?? '',
+      id: json['id'] ?? '',
+      monthlyFee: (json['monthly_fee'] ?? 0.0).toDouble(),
+      discount: (json['discount'] ?? 0.0).toDouble(), // Fixed typo here
+      name: json['name'] ?? '',
+      stationId: json['station_id'] ?? '',
+      bikeType: json['bike_type'] ?? '',
+      type: json['type'] ?? '',
+      securityDeposit: (json['security_deposit'] ?? 0.0).toDouble(),
+      startDate: json['start_date'] ?? '',
+      endDate: json['end_date'] ?? '',
+      subscriptionStatus: json['status'] ?? '',
+    );
+  }
+}

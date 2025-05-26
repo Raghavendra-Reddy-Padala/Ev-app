@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/friends/controller/groups_controller.dart';
 import 'package:mjollnir/shared/components/groups/usergrouocomponent.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
-import 'package:mjollnir/shared/constants/colors.dart';
 
 class GroupView extends StatelessWidget {
   const GroupView({super.key});
@@ -104,8 +103,8 @@ class GroupView extends StatelessWidget {
                           children: List.generate(
                             groupController.userGroups.value.length,
                             (index) {
-                              var club = groupController
-                                      .joinedGroups.value?[index];
+                              var club =
+                                  groupController.joinedGroups.value?[index];
                               return SizedBox(
                                 width: 160.w,
                                 height: 80.h,

@@ -42,7 +42,7 @@ class ApiConstants {
   static const String transactionsGetAll = 'transactions/getAll';
 
   static const String subscriptionsCreate = 'subscriptions/create';
-  static const String userSubscriptions = 'user_subscription/get';
+  static const String userSubscriptions = 'user_subscription';
   static const String faq = 'faqs';
 
   static const String referralCode = 'user/invite_code';
