@@ -5,75 +5,171 @@ import 'package:get/get.dart';
 
 import '../../../features/account/controllers/user_controller.dart';
 import '../../../features/friends/controller/groups_controller.dart';
+import '../../../features/menubar/group_detailed_page.dart';
 import '../../constants/colors.dart';
 import '../../models/group/group_models.dart';
 import '../friends/group_card.dart';
 
 class ClubComponent extends StatelessWidget {
-  final Group club;
+  final AllGroup? allGroup;
+  final GroupData? groupData;
 
   const ClubComponent({
-    required this.club,
+    this.allGroup,
+    this.groupData,
     super.key,
-  });
+  }) : assert(
+          (allGroup != null) != (groupData != null),
+          'Either allGroup or groupData must be provided, but not both',
+        );
+
+  // Helper method to get unified data
+  _UnifiedGroupData get _data {
+    if (allGroup != null) {
+      return _UnifiedGroupData.fromAllGroup(allGroup!);
+    } else {
+      final groupController = Get.find<GroupController>();
+      final groupDetails = groupController.userGroupDetails[groupData!.id];
+      return _UnifiedGroupData.fromGroupData(groupData!, groupDetails);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.15),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => GroupDetailPage(
+              allGroup: allGroup,
+              groupData: groupData,
+            ));
+      },
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.15),
+            width: 1,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(12.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header Section
-            Expanded(
-              flex: 3,
-              child: ClubHeader(club: club),
-            ),
-
-            // Stats Section
-            Expanded(
-              flex: 3,
-              child: StatsRow(club: club),
-            ),
-
-            // Button Section
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: JoinButton(club: club),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(12.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Section
+              Expanded(
+                flex: 3,
+                child: ClubHeader(data: _data),
+              ),
+
+              // Stats Section
+              Expanded(
+                flex: 3,
+                child: StatsRow(data: _data),
+              ),
+
+              // Button Section
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: JoinButton(
+                    data: _data,
+                    isUserGroup: groupData != null,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+// Unified data class to handle both AllGroup and GroupData
+class _UnifiedGroupData {
+  final String id;
+  final String name;
+  final String description;
+  final String createdBy;
+  final int memberCount;
+  final bool isMember;
+  final bool isCreator;
+  final String lastActivity;
+  final double totalDistance;
+  final int totalTrips;
+  final double averageSpeed;
+  final AggregatedData? aggregatedData;
+
+  _UnifiedGroupData({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.createdBy,
+    required this.memberCount,
+    required this.isMember,
+    required this.isCreator,
+    required this.lastActivity,
+    required this.totalDistance,
+    required this.totalTrips,
+    required this.averageSpeed,
+    this.aggregatedData,
+  });
+
+  factory _UnifiedGroupData.fromAllGroup(AllGroup group) {
+    return _UnifiedGroupData(
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      createdBy: group.createdBy,
+      memberCount: group.memberCount,
+      isMember: group.isMember,
+      isCreator: group.isCreator,
+      lastActivity: group.lastActivity,
+      totalDistance: group.totalDistance,
+      totalTrips: group.totalTrips,
+      averageSpeed: group.averageSpeed,
+      aggregatedData: group.aggregatedData,
+    );
+  }
+
+  factory _UnifiedGroupData.fromGroupData(
+      GroupData group, GroupDetails? details) {
+    final userId = Get.find<UserController>().userData.value?.data.uid;
+
+    return _UnifiedGroupData(
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      createdBy: group.createdBy,
+      memberCount: 0, // Default values since GroupData doesn't have these
+      isMember: true, // Assuming user is member of their groups
+      isCreator: group.createdBy == userId,
+      lastActivity: group.createdAt,
+      totalDistance: 0.0, // Default values
+      totalTrips: 0,
+      averageSpeed: 0.0,
+      aggregatedData: details?.aggregatedData,
+    );
+  }
+}
+
 class ClubHeader extends StatelessWidget {
-  final Group club;
+  final _UnifiedGroupData data;
 
   const ClubHeader({
-    required this.club,
+    required this.data,
     super.key,
   });
 
@@ -110,7 +206,7 @@ class ClubHeader extends StatelessWidget {
             children: [
               // Club Name
               Text(
-                club.name,
+                data.name,
                 style: AppTextThemes.bodyMedium().copyWith(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
@@ -125,7 +221,7 @@ class ClubHeader extends StatelessWidget {
 
               // Club Description
               Text(
-                club.description,
+                data.description,
                 style: AppTextThemes.bodySmall().copyWith(
                   fontSize: 10.sp,
                   fontWeight: FontWeight.w400,
@@ -144,10 +240,10 @@ class ClubHeader extends StatelessWidget {
 }
 
 class StatsRow extends StatelessWidget {
-  final Group club;
+  final _UnifiedGroupData data;
 
   const StatsRow({
-    required this.club,
+    required this.data,
     super.key,
   });
 
@@ -175,7 +271,7 @@ class StatsRow extends StatelessWidget {
             Expanded(
               child: _StatItem(
                 label: 'Pts',
-                value: (club.aggregatedData?.totalPoints ?? club.totalTrips)
+                value: (data.aggregatedData?.totalPoints ?? data.totalTrips)
                     .toString(),
                 isHighlighted: currentFilter == 'Pts',
               ),
@@ -188,7 +284,7 @@ class StatsRow extends StatelessWidget {
             Expanded(
               child: _StatItem(
                 label: 'Km',
-                value: (club.aggregatedData?.totalKm ?? club.totalDistance)
+                value: (data.aggregatedData?.totalKm ?? data.totalDistance)
                     .toStringAsFixed(1),
                 isHighlighted: currentFilter == 'Km',
               ),
@@ -201,8 +297,8 @@ class StatsRow extends StatelessWidget {
             Expanded(
               child: _StatItem(
                 label: 'Speed',
-                value: (club.aggregatedData?.totalCarbon ??
-                        (club.averageSpeed / 1000))
+                value: (data.aggregatedData?.totalCarbon ??
+                        (data.averageSpeed / 1000))
                     .toStringAsFixed(1),
                 isHighlighted: currentFilter == 'Carbon',
               ),
@@ -259,10 +355,12 @@ class _StatItem extends StatelessWidget {
 }
 
 class JoinButton extends StatelessWidget {
-  final Group club;
+  final _UnifiedGroupData data;
+  final bool isUserGroup;
 
   const JoinButton({
-    required this.club,
+    required this.data,
+    required this.isUserGroup,
     super.key,
   });
 
@@ -270,18 +368,18 @@ class JoinButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final groupController = Get.find<GroupController>();
     final userId = Get.find<UserController>().userData.value?.data.uid;
-    final isCreator = club.createdBy == userId;
+    final isCreator = data.createdBy == userId;
 
     return Obx(() {
       final isJoined = groupController.joined_groups
-          .any((joined) => joined.id.toString() == club.id);
+          .any((joined) => joined.id.toString() == data.id);
 
       Color backgroundColor;
       Color textColor;
       String buttonText;
       bool isEnabled;
 
-      if (isCreator) {
+      if (isUserGroup || isCreator) {
         backgroundColor = AppColors.primary.withOpacity(0.15);
         textColor = AppColors.primary;
         buttonText = 'My Club';
@@ -304,7 +402,7 @@ class JoinButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: isEnabled
               ? () async {
-                  await groupController.joinGroup(club.id);
+                  await groupController.joinGroup(data.id);
                   groupController.getAlreadyJoinedGroups();
                 }
               : null,
@@ -318,7 +416,7 @@ class JoinButton extends StatelessWidget {
               side: BorderSide(
                 color: isEnabled
                     ? Colors.transparent
-                    : (isCreator
+                    : (isCreator || isUserGroup
                         ? AppColors.primary.withOpacity(0.3)
                         : Colors.green.withOpacity(0.3)),
                 width: 1,

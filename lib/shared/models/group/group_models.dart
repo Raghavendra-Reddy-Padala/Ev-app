@@ -1,8 +1,8 @@
-class Group {
+class AllGroup {
   String id;
   String name;
   String description;
-  DateTime? createdAt; // Made nullable
+  DateTime? createdAt;
   String createdBy;
   int memberCount;
   bool isMember;
@@ -13,7 +13,7 @@ class Group {
   double averageSpeed;
   AggregatedData? aggregatedData;
 
-  Group({
+  AllGroup({
     required this.id,
     required this.name,
     required this.description,
@@ -29,8 +29,8 @@ class Group {
     this.aggregatedData,
   });
 
-  factory Group.fromJson(Map<String, dynamic> json) {
-    return Group(
+  factory AllGroup.fromJson(Map<String, dynamic> json) {
+    return AllGroup(
       id: json['id'],
       name: json['name'],
       description: json['description'],
@@ -111,7 +111,7 @@ class AggregatedData {
 }
 
 class GetAllGroupsResponse {
-  List<Group> groups;
+  List<AllGroup> groups;
   bool success;
   String? message;
 
@@ -122,11 +122,11 @@ class GetAllGroupsResponse {
   });
 
   factory GetAllGroupsResponse.fromJson(Map<String, dynamic> json) {
-    List<Group> groupsList = [];
+    List<AllGroup> groupsList = [];
 
     if (json['groups'] != null && json['groups'] is List) {
       groupsList = (json['groups'] as List)
-          .map((groupJson) => Group.fromJson(groupJson))
+          .map((groupJson) => AllGroup.fromJson(groupJson))
           .toList();
     }
 
@@ -146,7 +146,6 @@ class GetAllGroupsResponse {
   }
 }
 
-// Rest of your models remain the same
 class GroupAggregateModel {
   final AggregatedData? aggregateData;
   final bool success;
@@ -303,28 +302,59 @@ class Member {
   }
 }
 
-class JoinedGroup {
-  final int id;
+class GroupsResponse {
+  final bool success;
+  final List<GroupData> data;
+  final String message;
+
+  GroupsResponse({
+    required this.success,
+    required this.data,
+    required this.message,
+  });
+
+  factory GroupsResponse.fromJson(Map<String, dynamic> json) {
+    return GroupsResponse(
+      success: json['success'] ?? false,
+      data: (json['data'] as List<dynamic>?)
+              ?.map((e) => GroupData.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      message: json['message'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'data': data.map((e) => e.toJson()).toList(),
+      'message': message,
+    };
+  }
+}
+
+class GroupData {
+  final String id;
   final String name;
   final String description;
-  final String? createdAt;
-  final String? updatedAt;
+  final String createdAt;
+  final String createdBy;
 
-  JoinedGroup({
+  GroupData({
     required this.id,
     required this.name,
     required this.description,
-    this.createdAt,
-    this.updatedAt,
+    required this.createdAt,
+    required this.createdBy,
   });
 
-  factory JoinedGroup.fromJson(Map<String, dynamic> json) {
-    return JoinedGroup(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+  factory GroupData.fromJson(Map<String, dynamic> json) {
+    return GroupData(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      createdAt: json['created_at'] ?? '',
+      createdBy: json['created_by'] ?? '',
     );
   }
 
@@ -333,8 +363,112 @@ class JoinedGroup {
       'id': id,
       'name': name,
       'description': description,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'created_at': createdAt,
+      'created_by': createdBy,
     };
+  }
+}
+
+class GroupDetailsResponse {
+  final GroupDetails group;
+  final bool success;
+
+  GroupDetailsResponse({required this.group, required this.success});
+
+  factory GroupDetailsResponse.fromJson(Map<String, dynamic> json) {
+    return GroupDetailsResponse(
+      group: GroupDetails.fromJson(json['group']),
+      success: json['success'] ?? false,
+    );
+  }
+}
+
+class GroupDetails {
+  final String id;
+  final String name;
+  final String description;
+  final String createdAt;
+  final String createdBy;
+  final AggregatedData aggregatedData;
+
+  GroupDetails({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.createdAt,
+    required this.createdBy,
+    required this.aggregatedData,
+  });
+
+  factory GroupDetails.fromJson(Map<String, dynamic> json) {
+    return GroupDetails(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      createdAt: json['created_at'] ?? '',
+      createdBy: json['created_by'] ?? '',
+      aggregatedData: AggregatedData.fromJson(json['aggregated_data']),
+    );
+  }
+}
+
+class GroupMembersResponse {
+  final bool success;
+  final List<GroupMember> data;
+  final String message;
+  final String? error;
+
+  GroupMembersResponse({
+    required this.success,
+    required this.data,
+    required this.message,
+    this.error,
+  });
+
+  factory GroupMembersResponse.fromJson(Map<String, dynamic> json) {
+    return GroupMembersResponse(
+      success: json['success'] ?? false,
+      data: (json['data'] as List<dynamic>?)
+              ?.map((e) => GroupMember.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      message: json['message'] ?? '',
+      error: json['error'],
+    );
+  }
+}
+
+class GroupMember {
+  final String uid;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String avatar;
+  final double carbonFootprint;
+  final int points;
+  final double kmTraveled;
+
+  GroupMember({
+    required this.uid,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.avatar,
+    required this.carbonFootprint,
+    required this.points,
+    required this.kmTraveled,
+  });
+
+  factory GroupMember.fromJson(Map<String, dynamic> json) {
+    return GroupMember(
+      uid: json['uid'] ?? '',
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      email: json['email'] ?? '',
+      avatar: json['avatar'] ?? '',
+      carbonFootprint: (json['carbon_footprint'] ?? 0).toDouble(),
+      points: json['points'] ?? 0,
+      kmTraveled: (json['km_traveled'] ?? 0).toDouble(),
+    );
   }
 }

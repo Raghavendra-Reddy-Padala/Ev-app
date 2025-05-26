@@ -137,7 +137,7 @@ class SearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isUser = item is User;
     final String name =
-        isUser ? (item as User).firstName : (item as Group).name;
+        isUser ? (item as User).firstName : (item as AllGroup).name;
     final String type = isUser ? 'User' : 'Group';
     final followController = Get.find<FollowController>();
 

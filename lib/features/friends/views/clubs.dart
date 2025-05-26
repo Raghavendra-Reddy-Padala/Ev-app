@@ -90,7 +90,7 @@ class ClubList extends StatelessWidget {
 }
 
 class ClubCard extends StatelessWidget {
-  final Group club;
+  final AllGroup club;
   const ClubCard({required this.club, super.key});
 
   @override
@@ -103,7 +103,7 @@ class ClubCard extends StatelessWidget {
         //   GroupUserPage(name: club.name, id: club.id),
         // );
       },
-      child: ClubComponent(club: club),
+      child: ClubComponent(allGroup: club),
     );
   }
 }

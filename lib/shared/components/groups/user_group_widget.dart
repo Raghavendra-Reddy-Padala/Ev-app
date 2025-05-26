@@ -5,7 +5,7 @@ import '../../models/group/group_models.dart';
 import '../cards/app_cards.dart';
 
 class GroupListItem extends StatelessWidget {
-  final Group group;
+  final AllGroup group;
   final VoidCallback onTap;
 
   const GroupListItem({
