@@ -24,7 +24,7 @@ void main() async {
   );
   await setupDependencies();
   final LocalStorage localStorage = Get.find();
-  localStorage.setBool('useDummyToken', false);
+  localStorage.setBool('useDummyToken', true);
   runApp(const MyApp());
 }
 

@@ -11,8 +11,8 @@ class SubscriptionController extends GetxController {
 
   final RxBool isLoading = false.obs;
   final Rxn<List<PlanData>> availablePlans = Rxn<List<PlanData>>();
-  final Rxn<List<UserSubscriptionModel>> userSubscriptions =
-      Rxn<List<UserSubscriptionModel>>();
+  final Rxn<List<UserSubscriptionData>> userSubscriptions =
+      Rxn<List<UserSubscriptionData>>();
   final RxString errorMessage = ''.obs;
 
   /// Get authentication token
@@ -56,15 +56,13 @@ class SubscriptionController extends GetxController {
         },
       );
 
-      AppLogger.i('Subscribe response: ${response?.data}');
+      AppLogger.i('Subscribe response: $response');
 
-      if (response != null &&
-          response.statusCode == 200 &&
-          response.data['message'] == 'success') {
+      if (response != null) {
         AppLogger.i('Successfully subscribed to plan: $id');
         return true;
       } else {
-        final errorMsg = response?.data['message'] ?? 'Unknown error occurred';
+        final errorMsg = response['message'] ?? 'Unknown error occurred';
         AppLogger.e('Failed to subscribe: $errorMsg');
         errorMessage.value = errorMsg;
         return false;
@@ -99,12 +97,10 @@ class SubscriptionController extends GetxController {
         },
       );
 
-      AppLogger.i('Fetch plans response: ${response?.data}');
+      AppLogger.i('Fetch plans response: $response');
 
-      if (response != null &&
-          response.statusCode == 200 &&
-          response.data['success'] == true) {
-        final planResponse = PlanResponse.fromJson(response.data);
+      if (response != null && response['success'] == true) {
+        final planResponse = PlanResponse.fromJson(response);
         availablePlans.value = planResponse.data;
 
         AppLogger.i(
@@ -128,7 +124,6 @@ class SubscriptionController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-
       AppLogger.i('Fetching user subscriptions...');
 
       final String? authToken = await getToken();
@@ -137,67 +132,126 @@ class SubscriptionController extends GetxController {
       }
 
       final response = await apiService.get(
-        endpoint:
-            ApiConstants.subscriptions, // You'll need to add this endpoint
+        endpoint: ApiConstants.userSubscriptions,
         headers: {
-          'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWdlIjoiIiwiZW1haWwiOiIiLCJlbXBsb3llZV9pZCI6IiIsImV4cCI6MTc1MDc4MTg4MywiZ2VuZGVyIjoiIiwibmFtZSI6IiIsInBob25lIjoiKzkxOTAzMjMyMzA5NSIsInVpZCI6ImdfOXhrdDRlZDEifQ.f2EWnxtudDgLiyvkRU01MA6jPf5r5n_T4zDZ7CYTz78',
+          'Authorization': 'Bearer $authToken',
           'Content-Type': 'application/json',
           'X-Karma-App': 'dafjcnalnsjn',
         },
       );
 
-      AppLogger.i('Fetch user subscriptions response: ${response?.data}');
+      AppLogger.i('Fetch user subscriptions response: $response');
 
-      if (response != null &&
-          response.statusCode == 200 &&
-          response.data['success'] == true) {
-        final List<dynamic> dataList = response.data['data'];
+      if (response != null && response['success'] == true) {
+        final List<dynamic> subscriptionsList = response['data'];
 
-        if (dataList.isNotEmpty) {
-          userSubscriptions.value = dataList
-              .map((item) => UserSubscriptionModel.fromJson(item))
-              .toList();
+        if (subscriptionsList.isNotEmpty) {
+          final List<UserSubscriptionData> subscriptions = subscriptionsList
+              .map((item) {
+                final userSubData = item['user_subscriptions'];
+                final subData = item['subscriptions'];
 
-          AppLogger.i(
-              'Successfully fetched ${userSubscriptions.value?.length} user subscriptions');
+                // Check if all required fields have values
+                if (subData['name'].toString().isEmpty &&
+                    subData['monthly_fee'] == 0 &&
+                    userSubData['start_date'].toString().isEmpty) {
+                  return null; // Skip invalid subscriptions
+                }
+
+                return UserSubscriptionData(
+                  tableName: subData['TableName'] ?? '',
+                  id: subData['id'] ?? '',
+                  monthlyFee: (subData['monthly_fee'] ?? 0.0).toDouble(),
+                  discount: (subData['discount'] ?? 0.0).toDouble(),
+                  name: subData['name'] ?? '',
+                  stationId: subData['station_id'] ?? '',
+                  bikeType: subData['bike_type'] ?? '',
+                  type: subData['type'] ?? '',
+                  securityDeposit:
+                      (subData['security_deposit'] ?? 0.0).toDouble(),
+                  startDate: userSubData['start_date'] ?? '',
+                  endDate: userSubData['end_date'] ?? '',
+                  subscriptionStatus: _determineSubscriptionStatus(
+                    userSubData['start_date'] ?? '',
+                    userSubData['end_date'] ?? '',
+                  ),
+                );
+              })
+              .whereType<UserSubscriptionData>()
+              .toList(); // Filter out null values
+
+          if (subscriptions.isNotEmpty) {
+            userSubscriptions.value = subscriptions;
+            AppLogger.i(
+                'Successfully fetched ${subscriptions.length} valid user subscriptions');
+          } else {
+            AppLogger.w('No valid user subscriptions found');
+            userSubscriptions.value = [];
+          }
         } else {
-          AppLogger.w('No user subscription data found in response');
+          AppLogger.w('No user subscriptions found in response');
           userSubscriptions.value = [];
         }
       } else {
         final errorMsg =
-            response?.data['message'] ?? 'Failed to fetch user subscriptions';
+            response?['message'] ?? 'Failed to fetch user subscriptions';
         throw Exception(errorMsg);
       }
     } catch (e) {
       AppLogger.e('Error fetching user subscriptions: $e');
       errorMessage.value =
           'Failed to load user subscriptions. Please try again.';
-      userSubscriptions.value = null;
+      userSubscriptions.value = [];
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Refresh subscription data
+  String _determineSubscriptionStatus(String startDate, String endDate) {
+    if (startDate.isEmpty || endDate.isEmpty) return 'Unknown';
+
+    try {
+      final startParts = startDate.split('/');
+      final endParts = endDate.split('/');
+
+      if (startParts.length != 3 || endParts.length != 3) return 'Unknown';
+
+      final startDateTime = DateTime(
+        int.parse(startParts[2]), // year
+        int.parse(startParts[1]), // month
+        int.parse(startParts[0]), // day
+      );
+
+      final endDateTime = DateTime(
+        int.parse(endParts[2]), // year
+        int.parse(endParts[1]), // month
+        int.parse(endParts[0]), // day
+      );
+
+      final now = DateTime.now();
+
+      if (now.isBefore(startDateTime)) return 'Pending';
+      if (now.isAfter(endDateTime)) return 'Expired';
+      return 'Active';
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
   Future<void> refreshAvailablePlans() async {
     AppLogger.i('Refreshing available plans data...');
     await fetchAvailablePlans();
   }
 
-  /// Refresh user subscriptions
   Future<void> refreshUserSubscriptions() async {
     AppLogger.i('Refreshing user subscriptions data...');
     await fetchUserSubscriptions();
   }
 
-  /// Clear error message
   void clearError() {
     errorMessage.value = '';
   }
 
-  /// Check if available plans are loaded
   bool get hasAvailablePlans =>
       availablePlans.value != null && availablePlans.value!.isNotEmpty;
 
