@@ -54,9 +54,9 @@ class TripsController extends BaseController {
             body: startData.toJson(),
           );
 
-          if (response != null && response.statusCode == 200) {
-            tripId.value = response.data['data']['id'];
-            print('Start Trip API Response: ${response.data}');
+          if (response != null) {
+            tripId.value = response['data']['id'];
+            print('Start Trip API Response: ${response}');
             print('Trip ID: ${tripId.value}');
 
             return true;
@@ -82,6 +82,10 @@ class TripsController extends BaseController {
     }
   }
 
+  Future<void> refreshTrips() async {
+    await fetchTrips();
+  }
+
   Future<bool> dataSend(EndTrip endData, String tripId) async {
     try {
       isLoading.value = true;
@@ -104,8 +108,8 @@ class TripsController extends BaseController {
             body: endData.toJson(),
           );
 
-          if (response != null && response.statusCode == 200) {
-            endTripDetails.value = EndTripModel.fromJson(response.data);
+          if (response != null) {
+            endTripDetails.value = EndTripModel.fromJson(response);
 
             Toast.show(
               message: "Trip Ended!",
@@ -165,7 +169,7 @@ class TripsController extends BaseController {
           );
 
           if (response != null) {
-            final tripsResponse = TripsResponse.fromJson(response.data);
+            final tripsResponse = TripsResponse.fromJson(response);
             trips.assignAll(tripsResponse.data);
             saveTripsDataToLocalStorage();
             return true;
@@ -211,8 +215,7 @@ class TripsController extends BaseController {
           );
 
           if (response != null) {
-            final locationsResponse =
-                TripLocationsResponse.fromJson(response.data);
+            final locationsResponse = TripLocationsResponse.fromJson(response);
             tripLocations.assignAll(locationsResponse.data);
             //saveTripLocationsToLocalStorage(tripId);
 
@@ -268,8 +271,8 @@ class TripsController extends BaseController {
             },
           );
 
-          if (response != null && response.data['success'] == true) {
-            final data = response.data['data'];
+          if (response != null && response['success'] == true) {
+            final data = response['data'];
             _updateTripMetrics(data);
             isLocationUpdated.value = true;
             saveTripMetricsToLocalStorage();

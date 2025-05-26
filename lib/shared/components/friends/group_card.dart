@@ -11,7 +11,7 @@ import '../buttons/app_button.dart';
 import '../cards/app_cards.dart';
 
 class GroupCard extends StatelessWidget {
-  final Group group;
+  final AllGroup group;
   final VoidCallback? onTap;
 
   const GroupCard({
@@ -229,17 +229,18 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-
 class FilterController extends GetxController {
   final RxString selectedValue = 'Pts'.obs;
   void changeFilter(String value) {
     selectedValue.value = value;
   }
+
   List<User> sortUsers(List<User> users) {
     users.sort((a, b) => b.points.compareTo(a.points));
     return users;
   }
-  List<Group> sortGroups(List<Group> groups) {
+
+  List<AllGroup> sortGroups(List<AllGroup> groups) {
     switch (selectedValue.value) {
       case 'Pts':
         groups.sort((a, b) => (b.aggregatedData?.totalPoints ?? b.totalTrips)
@@ -250,8 +251,9 @@ class FilterController extends GetxController {
             .compareTo(a.aggregatedData?.totalKm ?? 0));
         break;
       case 'Carbon':
-        groups.sort((a, b) => (b.aggregatedData?.totalCarbon ?? (b.averageSpeed/1000))
-            .compareTo(a.aggregatedData?.totalCarbon ?? 0));
+        groups.sort((a, b) =>
+            (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
+                .compareTo(a.aggregatedData?.totalCarbon ?? 0));
         break;
     }
     return groups;
@@ -271,7 +273,7 @@ class CustomDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left:20.w,right:20.w,bottom: 10.w),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 10.w),
       child: Row(
         children: [
           const SizedBox(width: 8),
@@ -290,7 +292,7 @@ class CustomDropdown extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Obx(
-                  () => DropdownButton<String>(
+              () => DropdownButton<String>(
                 underline: const SizedBox(),
                 borderRadius: BorderRadius.circular(10),
                 icon: const Icon(Icons.keyboard_arrow_down),

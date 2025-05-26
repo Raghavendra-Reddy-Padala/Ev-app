@@ -1,4 +1,3 @@
-import 'package:bolt_ui_kit/helpers/navigator.dart';
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,7 +8,7 @@ import 'package:mjollnir/shared/constants/colors.dart';
 import 'package:mjollnir/shared/models/group/group_models.dart';
 
 class UserGroupComponent extends StatelessWidget {
-  final Group club;
+  final AllGroup club;
   const UserGroupComponent({required this.club, super.key});
 
   @override
@@ -38,7 +37,7 @@ class UserGroupComponent extends StatelessWidget {
 }
 
 class ClubHeader extends StatelessWidget {
-  final Group club;
+  final AllGroup club;
   const ClubHeader({required this.club, super.key});
 
   @override

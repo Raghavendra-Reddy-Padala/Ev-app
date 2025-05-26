@@ -26,7 +26,7 @@ class ApiConstants {
 
   static const String tripsStart = 'trips/start';
   static const String tripsEnd = 'trips/end';
-  static const String tripsMyTrips = 'trips/mytrips';
+  static const String tripsMyTrips = 'trips/my';
   static const String tripsLocation = 'trips/location';
   static const String tripsSummary = 'trips/summary';
   static const String userTrips = 'trips/user';
@@ -35,7 +35,7 @@ class ApiConstants {
   static const String groupsCreate = 'groups/create';
   static const String groupsJoin = 'groups/join';
   static const String groupsMembers = 'groups/members';
-
+  static const String groupDetails = 'groups';
   static const String walletGet = 'wallet/get';
   static const String walletTopup = 'wallet/topup';
 

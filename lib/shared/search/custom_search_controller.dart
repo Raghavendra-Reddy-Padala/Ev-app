@@ -6,14 +6,13 @@ import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/shared/models/group/group_models.dart';
 import 'package:mjollnir/shared/models/user/user_model.dart';
 
-
 class CustomSearchController extends GetxController {
   RxList<dynamic> searchResults = <dynamic>[].obs;
   RxBool isSearching = false.obs;
   final RxBool isLoading = false.obs;
   final debouncer = Debouncer(milliseconds: 500);
 
-  void search(String query, List<User> users, List<Group> groups) {
+  void search(String query, List<User> users, List<AllGroup> groups) {
     debouncer.run(() {
       if (query.isEmpty) {
         searchResults.clear();
@@ -30,14 +29,14 @@ class CustomSearchController extends GetxController {
         // Search users
         if (users.isNotEmpty) {
           results.addAll(users.where((user) =>
-          user.firstName.toLowerCase().contains(query.toLowerCase()) ||
+              user.firstName.toLowerCase().contains(query.toLowerCase()) ||
               user.lastName.toLowerCase().contains(query.toLowerCase())));
         }
 
         // Search groups
         if (groups.isNotEmpty) {
-          results.addAll(groups.where(
-                  (group) => group.name.toLowerCase().contains(query.toLowerCase())));
+          results.addAll(groups.where((group) =>
+              group.name.toLowerCase().contains(query.toLowerCase())));
         }
 
         searchResults.value = results;

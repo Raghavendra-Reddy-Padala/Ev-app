@@ -8,13 +8,17 @@ import '../../../shared/models/group/group_models.dart';
 import '../../../shared/services/dummy_data_service.dart';
 
 class GroupController extends BaseController {
-  final RxList<Group> allGroups = <Group>[].obs;
-  final RxList<Group> userGroups = <Group>[].obs;
-  final RxList<Group> joinedGroups = <Group>[].obs;
+  final RxList<AllGroup> allGroups = <AllGroup>[].obs;
+  final RxList<GroupData> userGroups = <GroupData>[].obs;
+  final RxList<AllGroup> joinedGroups = <AllGroup>[].obs;
   final Rxn<GroupMembersDetailsModel> groupMembersDetails =
       Rxn<GroupMembersDetailsModel>();
   final Rxn<AggregatedData> groupAggregateData = Rxn<AggregatedData>();
-  var joined_groups = <JoinedGroup>[].obs;
+  var joined_groups = <GroupData>[].obs;
+  final RxMap<String, GroupDetails> userGroupDetails =
+      <String, GroupDetails>{}.obs;
+  final RxMap<String, List<GroupMember>> groupMembersData =
+      <String, List<GroupMember>>{}.obs;
 
   @override
   void onInit() {
@@ -94,17 +98,18 @@ class GroupController extends BaseController {
           );
 
           if (response != null) {
-            final groupsResponse = GetAllGroupsResponse.fromJson(response.data);
-            userGroups.assignAll(groupsResponse.groups);
+            final groupsResponse = GroupsResponse.fromJson(response);
+            userGroups.assignAll(groupsResponse.data);
+            await fetchGroupDetailsAndMembers();
             return true;
           }
           return false;
         },
         dummyData: () {
-          final dummyData = DummyDataService.getGroupsResponse();
-          final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
+          // final dummyData = DummyDataService.getGroupsResponse();
+          // final groupsResponse = GroupsResponse.fromJson(dummyData);
 
-          userGroups.assignAll(groupsResponse.groups.where((g) => g.isCreator));
+          //userGroups.assignAll(groupsResponse.data.where((g) => g.isCreator));
           return true;
         },
       );
@@ -112,6 +117,61 @@ class GroupController extends BaseController {
       handleError(e);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchGroupDetailsAndMembers() async {
+    for (var group in userGroups) {
+      await fetchGroupDetails(group.id);
+      await fetchGroupMembers(group.id);
+    }
+  }
+
+  Future<void> fetchGroupDetails(String groupId) async {
+    try {
+      final String? authToken = await getToken();
+      if (authToken == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await apiService.get(
+        endpoint: '${ApiConstants.groupDetails}/$groupId',
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn'
+        },
+      );
+
+      if (response != null) {
+        final groupDetailsResponse = GroupDetailsResponse.fromJson(response);
+        userGroupDetails[groupId] = groupDetailsResponse.group;
+      }
+    } catch (e) {
+      print('Error fetching group details for $groupId: $e');
+    }
+  }
+
+  Future<void> fetchGroupMembers(String groupId) async {
+    try {
+      final String? authToken = await getToken();
+      if (authToken == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await apiService.get(
+        endpoint: '${ApiConstants.groupDetails}/$groupId/members/data',
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn'
+        },
+      );
+
+      if (response != null) {
+        final membersResponse = GroupMembersResponse.fromJson(response);
+        groupMembersData[groupId] = membersResponse.data;
+      }
+    } catch (e) {
+      print('Error fetching group members for $groupId: $e');
     }
   }
 
@@ -136,8 +196,13 @@ class GroupController extends BaseController {
           );
 
           if (response != null) {
-            final groupsResponse = GetAllGroupsResponse.fromJson(response.data);
-            joinedGroups.assignAll(groupsResponse.groups);
+            if (response is List) {
+              final groups = response.map((e) => AllGroup.fromJson(e)).toList();
+              joinedGroups.assignAll(groups);
+            } else if (response.data != null) {
+              final groupsResponse = GetAllGroupsResponse.fromJson(response);
+              joinedGroups.assignAll(groupsResponse.groups);
+            }
             return true;
           }
           return false;
@@ -145,7 +210,6 @@ class GroupController extends BaseController {
         dummyData: () {
           final dummyData = DummyDataService.getGroupsResponse();
           final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
-
           joinedGroups
               .assignAll(groupsResponse.groups.where((g) => g.isMember));
           return true;
@@ -181,7 +245,7 @@ class GroupController extends BaseController {
                 "description": description
               });
 
-          if (response != null && response.data['success']) {
+          if (response != null && response['success']) {
             await fetchUserGroups();
             return true;
           }
@@ -192,19 +256,19 @@ class GroupController extends BaseController {
               DummyDataService.createGroupResponse(name, description);
 
           userGroups.add(
-            Group(
+            GroupData(
               id: dummyResponse['group_id'],
               name: name,
               description: description,
-              createdAt: DateTime.now(),
+              createdAt: DateTime.now().toString(),
               createdBy: 'dummy-user-id',
-              memberCount: 1,
-              isMember: true,
-              isCreator: true,
-              lastActivity: DateTime.now().toIso8601String(),
-              totalDistance: 0.0,
-              totalTrips: 0,
-              averageSpeed: 0.0,
+              // memberCount: 1,
+              // isMember: true,
+              // isCreator: true,
+              // lastActivity: DateTime.now().toIso8601String(),
+              // totalDistance: 0.0,
+              // totalTrips: 0,
+              // averageSpeed: 0.0,
             ),
           );
           return true;
@@ -240,8 +304,7 @@ class GroupController extends BaseController {
             },
           );
 
-          if (response != null && response.data['success']) {
-            // Refresh joined groups after joining a new one
+          if (response != null && response['success']) {
             await fetchJoinedGroups();
             return true;
           }
@@ -296,7 +359,7 @@ class GroupController extends BaseController {
 
           if (response != null) {
             groupMembersDetails.value =
-                GroupMembersDetailsModel.fromJson(response.data);
+                GroupMembersDetailsModel.fromJson(response);
             return true;
           }
           return false;
@@ -336,7 +399,7 @@ class GroupController extends BaseController {
           );
 
           if (response != null) {
-            final aggregateModel = GroupAggregateModel.fromJson(response.data);
+            final aggregateModel = GroupAggregateModel.fromJson(response);
             groupAggregateData.value = aggregateModel.aggregateData;
             return true;
           }
@@ -367,8 +430,7 @@ class GroupController extends BaseController {
         });
 
     if (response != null && response is List) {
-      joined_groups.value =
-          response.map((e) => JoinedGroup.fromJson(e)).toList();
+      joined_groups.value = response.map((e) => GroupData.fromJson(e)).toList();
     }
     print("Joined groups: $joined_groups");
   }

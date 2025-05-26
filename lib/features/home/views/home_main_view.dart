@@ -15,6 +15,7 @@ import 'package:mjollnir/shared/components/drawer/custom_drawer.dart';
 import 'package:mjollnir/shared/components/search/search_bar.dart';
 
 import '../../menubar/activity.dart';
+import '../../menubar/trips_main_view.dart';
 
 class HomeMainView extends StatefulWidget {
   const HomeMainView({super.key});
@@ -26,7 +27,6 @@ class HomeMainView extends StatefulWidget {
 class _HomeMainViewState extends State<HomeMainView> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ProfileController controller = Get.put(ProfileController());
-  
 
   @override
   void initState() {
@@ -111,9 +111,9 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.trip_origin,
         onTap: () {
           Navigator.pop(context);
-          // Get.to(() => const MyTrips());
+          Get.to(() => const TripsMainView());
           // Temporary placeholder
-          Get.snackbar('Info', 'My Trips page coming soon!');
+          //Get.snackbar('Info', 'My Trips page coming soon!');
         },
       ),
       DrawerOption(
@@ -124,7 +124,6 @@ class _HomeMainViewState extends State<HomeMainView> {
           Get.to(() => const GroupView());
         },
       ),
-      
     ];
   }
 

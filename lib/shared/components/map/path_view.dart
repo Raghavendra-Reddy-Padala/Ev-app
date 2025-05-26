@@ -13,72 +13,138 @@ class PathView extends StatefulWidget {
   final bool showLogoBadge;
 
   const PathView({
-    Key? key,
+    super.key,
     required this.pathPoints,
     this.isScreenshotMode = false,
     this.overlay,
     this.height = 170,
     this.borderRadius,
     this.showLogoBadge = true,
-  }) : super(key: key);
+  });
 
   @override
-  _PathViewState createState() => _PathViewState();
+  State<PathView> createState() => _PathViewState();
 }
 
 class _PathViewState extends State<PathView> {
   GoogleMapController? _mapController;
-  BitmapDescriptor? _startIcon;
-  BitmapDescriptor? _endIcon;
+  Set<Marker> _markers = {};
   LatLngBounds? _bounds;
+  bool _isMapReady = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCustomMarkers();
-    _calculateBounds();
+    _initializeMapData();
   }
 
-  Future<void> _loadCustomMarkers() async {
-    try {
-      _startIcon = await BitmapDescriptor.fromAssetImage(
-        ImageConfiguration(size: Size(24.w, 24.w)),
-        'assets/images/start_marker.png',
-      );
+  Future<void> _initializeMapData() async {
+    if (widget.pathPoints.isEmpty) return;
 
-      _endIcon = await BitmapDescriptor.fromAssetImage(
-        ImageConfiguration(size: Size(24.w, 24.w)),
-        'assets/images/end_marker.png',
-      );
-
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      print("Error loading markers: $e");
-      // Fallback to default markers if loading fails
-      _startIcon =
-          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
-      _endIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
-    }
+    _calculateBounds();
+    await _createMarkers();
   }
 
   void _calculateBounds() {
     if (widget.pathPoints.isEmpty) return;
 
-    double minLat = widget.pathPoints.map((e) => e.latitude).reduce(min);
-    double maxLat = widget.pathPoints.map((e) => e.latitude).reduce(max);
-    double minLng = widget.pathPoints.map((e) => e.longitude).reduce(min);
-    double maxLng = widget.pathPoints.map((e) => e.longitude).reduce(max);
+    final latitudes = widget.pathPoints.map((point) => point.latitude);
+    final longitudes = widget.pathPoints.map((point) => point.longitude);
 
-    // Add some padding around the bounds
-    final double latPadding = (maxLat - minLat) * 0.2;
-    final double lngPadding = (maxLng - minLng) * 0.2;
+    final minLat = latitudes.reduce(min);
+    final maxLat = latitudes.reduce(max);
+    final minLng = longitudes.reduce(min);
+    final maxLng = longitudes.reduce(max);
+
+    final latPadding = max((maxLat - minLat) * 0.3, 0.005);
+    final lngPadding = max((maxLng - minLng) * 0.3, 0.005);
 
     _bounds = LatLngBounds(
       southwest: LatLng(minLat - latPadding, minLng - lngPadding),
       northeast: LatLng(maxLat + latPadding, maxLng + lngPadding),
     );
+  }
+
+  Future<void> _createMarkers() async {
+    if (widget.pathPoints.isEmpty) return;
+
+    try {
+      final startIcon = await _loadCustomIcon('assets/images/start_marker.png');
+      final endIcon = await _loadCustomIcon('assets/images/end_marker.png');
+
+      _markers = {
+        Marker(
+          markerId: const MarkerId('start'),
+          position: widget.pathPoints.first,
+          icon: startIcon,
+          infoWindow: const InfoWindow(title: 'Start Point'),
+        ),
+        Marker(
+          markerId: const MarkerId('end'),
+          position: widget.pathPoints.last,
+          icon: endIcon,
+          infoWindow: const InfoWindow(title: 'End Point'),
+        ),
+      };
+    } catch (e) {
+      debugPrint('Error creating custom markers: $e');
+      _createDefaultMarkers();
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  Future<BitmapDescriptor> _loadCustomIcon(String assetPath) async {
+    return await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(
+        size: Size(48.w, 48.w),
+        devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+      ),
+      assetPath,
+    );
+  }
+
+  void _createDefaultMarkers() {
+    _markers = {
+      Marker(
+        markerId: const MarkerId('start'),
+        position: widget.pathPoints.first,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: const InfoWindow(title: 'Start Point'),
+      ),
+      Marker(
+        markerId: const MarkerId('end'),
+        position: widget.pathPoints.last,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: const InfoWindow(title: 'End Point'),
+      ),
+    };
+  }
+
+  Future<void> _onMapCreated(GoogleMapController controller) async {
+    _mapController = controller;
+    await _applyMapStyle();
+    _isMapReady = true;
+
+    if (_bounds != null) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _mapController?.animateCamera(
+        CameraUpdate.newLatLngBounds(_bounds!, 100.0),
+      );
+    }
+  }
+
+  Future<void> _applyMapStyle() async {
+    if (_mapController == null || !mounted) return;
+
+    try {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final mapStyle =
+          isDark ? Constants.darkMapStyle : Constants.lightMapStyle;
+      await _mapController?.setMapStyle(mapStyle);
+    } catch (e) {
+      debugPrint('Error applying map style: $e');
+    }
   }
 
   @override
@@ -91,6 +157,10 @@ class _PathViewState extends State<PathView> {
       return _buildScreenshotPlaceholder();
     }
 
+    return _buildMapContainer();
+  }
+
+  Widget _buildMapContainer() {
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(12.r);
 
     return Container(
@@ -104,45 +174,19 @@ class _PathViewState extends State<PathView> {
         child: Stack(
           children: [
             GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                _mapController = controller;
-                _applyMapStyle(context);
-                if (_bounds != null) {
-                  _mapController?.animateCamera(
-                    CameraUpdate.newLatLngBounds(_bounds!, 50),
-                  );
-                }
-              },
+              onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
-                target: widget.pathPoints.isNotEmpty
-                    ? widget.pathPoints[0]
-                    : const LatLng(0, 0),
+                target: widget.pathPoints.first,
                 zoom: 14,
               ),
-              markers: {
-                Marker(
-                  markerId: const MarkerId('start'),
-                  position: widget.pathPoints.first,
-                  icon: _startIcon ??
-                      BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueGreen),
-                  infoWindow: const InfoWindow(title: 'Start Point'),
-                ),
-                Marker(
-                  markerId: const MarkerId('end'),
-                  position: widget.pathPoints.last,
-                  icon: _endIcon ??
-                      BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueRed),
-                  infoWindow: const InfoWindow(title: 'End Point'),
-                ),
-              },
+              markers: _markers,
               polylines: {
                 Polyline(
                   polylineId: const PolylineId('path'),
                   points: widget.pathPoints,
                   color: Colors.blue,
-                  width: 5,
+                  width: 4,
+                  patterns: [],
                 ),
               },
               myLocationButtonEnabled: false,
@@ -151,13 +195,10 @@ class _PathViewState extends State<PathView> {
               scrollGesturesEnabled: true,
               tiltGesturesEnabled: false,
               rotateGesturesEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
             ),
-            if (widget.showLogoBadge)
-              Positioned(
-                top: 8.h,
-                left: 8.w,
-                child: _buildLogoBadge(),
-              ),
+            if (widget.showLogoBadge) _buildLogoBadge(),
             if (widget.overlay != null) widget.overlay!,
           ],
         ),
@@ -166,68 +207,60 @@ class _PathViewState extends State<PathView> {
   }
 
   Widget _buildLogoBadge() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(4.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4.0,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Image.asset(
-        'assets/company/Logo-Black.png',
-        height: 20.h,
-        fit: BoxFit.contain,
-      ),
-    );
-  }
-
-  Widget _buildErrorContainer(String message) {
-    return Container(
-      height: widget.height.h,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: widget.borderRadius ?? BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey, width: 1.0),
-      ),
-      child: Center(
-        child: Text(
-          message,
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
+    return Positioned(
+      bottom: 6.h,
+      left: 3.w,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(4.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 3.0,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Image.asset(
+          'assets/company/Logo-Black.png',
+          height: 15.h,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.business,
+              size: 14.h,
+              color: Colors.grey[700],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildScreenshotPlaceholder() {
+  Widget _buildErrorContainer(String message) {
+    final borderRadius = widget.borderRadius ?? BorderRadius.circular(12.r);
+
     return Container(
       height: widget.height.h,
       decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: widget.borderRadius ?? BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.black, width: 1.0),
+        color: Colors.grey[100],
+        borderRadius: borderRadius,
+        border: Border.all(color: Colors.grey[300]!, width: 1.0),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.map,
+              Icons.error_outline,
               size: 32.w,
-              color: Colors.grey[700],
+              color: Colors.grey[600],
             ),
             SizedBox(height: 8.h),
             Text(
-              'Map preview not available in screenshots',
+              message,
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
@@ -241,12 +274,51 @@ class _PathViewState extends State<PathView> {
     );
   }
 
-  void _applyMapStyle(BuildContext context) {
-    if (_mapController != null) {
-      final mapStyle = Theme.of(context).brightness == Brightness.dark
-          ? Constants.darkMapStyle
-          : Constants.lightMapStyle;
-      _mapController?.setMapStyle(mapStyle);
-    }
+  Widget _buildScreenshotPlaceholder() {
+    final borderRadius = widget.borderRadius ?? BorderRadius.circular(12.r);
+
+    return Container(
+      height: widget.height.h,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: borderRadius,
+        border: Border.all(color: Colors.grey[400]!, width: 1.0),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.map_outlined,
+              size: 40.w,
+              color: Colors.grey[600],
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'Map Preview',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Not available in screenshots',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
   }
 }
