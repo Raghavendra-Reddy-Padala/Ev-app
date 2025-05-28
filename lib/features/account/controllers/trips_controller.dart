@@ -7,6 +7,8 @@ import 'package:mjollnir/core/storage/local_storage.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../main.dart';
+import '../../../shared/models/trips/active_trip_model.dart'
+    show ActiveTripResponse;
 import '../../../shared/models/trips/trips_model.dart';
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
@@ -25,60 +27,106 @@ class TripsController extends BaseController {
   final RxString tripId = ''.obs;
   final RxBool isLocationUpdated = false.obs;
   final LocalStorage localStorage = Get.find<LocalStorage>();
-
+  final Rx<ActiveTripResponse?> activeTripData = Rx<ActiveTripResponse?>(null);
   @override
   void onInit() {
     super.onInit();
     fetchTrips();
   }
 
-  Future<bool> startTrip(StartTrip startData) async {
+  Future<bool> startTrip(StartTrip startTripData,
+      {required bool personal}) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final result = await useApiOrDummy(
-        apiCall: () async {
-          final String? authToken = localStorage.getToken();
-          if (authToken == null) {
-            NavigationService.pushReplacementTo(const AuthView());
-            return false;
-          }
-
-          final response = await apiService.post(
-            endpoint: ApiConstants.tripsStart,
-            headers: {
-              'Authorization': 'Bearer $authToken',
-              'X-Karma-App': 'dafjcnalnsjn'
-            },
-            body: startData.toJson(),
-          );
-
-          if (response != null) {
-            tripId.value = response['data']['id'];
-            print('Start Trip API Response: ${response}');
-            print('Trip ID: ${tripId.value}');
-
-            return true;
-          }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getStartTripResponse();
-          if (dummyData['success']) {
-            tripId.value = dummyData['data']['id'];
-            return true;
-          }
-          return false;
+      final response = await apiService.post(
+        endpoint: ApiConstants.tripsStart,
+        body: startTripData.toJson(),
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getToken()}',
+          'X-Karma-App': 'dafjcnalnsjn'
         },
       );
 
-      return result;
+      if (response != null) {
+        final responseData = response;
+
+        if (responseData['success'] == true) {
+          // Normal trip start
+          tripId.value = responseData['id'] ?? '';
+          return true;
+        } else {
+          // Check if it's an "already active trip" error
+          final message =
+              responseData['message']?.toString().toLowerCase() ?? '';
+          if (message.contains('already have an active trip') ||
+              message.contains('active trip')) {
+            // Fetch active trip details
+            final activeTrip = await fetchActiveTrip();
+            if (activeTrip != null) {
+              // Set the current trip ID to the active trip
+              tripId.value = activeTrip.id;
+              activeTripData.value = activeTrip;
+              return true; // Continue with existing trip
+            }
+          }
+
+          errorMessage.value =
+              responseData['message'] ?? 'Failed to start trip';
+          return false;
+        }
+      }
+
+      errorMessage.value = 'Failed to start trip';
+      return false;
     } catch (e) {
-      handleError(e);
+      handleError('Error starting trip: $e');
       return false;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<ActiveTripResponse?> fetchActiveTrip() async {
+    try {
+      // For now, simulate the response since endpoint is not implemented
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Simulated response - replace with actual API call when available
+      final simulatedResponse = {
+        "id": "active_trip_${DateTime.now().millisecondsSinceEpoch}",
+        "calories_trip": 28000,
+        "distance_km": 10,
+        "speed_kmh": 30,
+        "carbon_footprint_kg": 0.21,
+        "highest_speed": 30,
+        "longest_ride": {"distance_km": 10, "duration_hours": 40},
+        "max_elevation_m": 950,
+        "total_calories": 28000,
+        "total_time_hours": 40,
+        "total_trips": 1
+      };
+
+      return ActiveTripResponse.fromJson(simulatedResponse);
+
+      /*
+        // Uncomment when endpoint is available
+        final response = await apiService.get(
+          endpoint: '/trips/active',
+          headers: {
+            'Authorization': 'Bearer ${localStorage.getToken()}',
+            'X-Karma-App': 'dafjcnalnsjn'
+          },
+        );
+
+        if (response != null && response.statusCode == 200) {
+          return ActiveTripResponse.fromJson(response.data);
+        }
+        */
+    } catch (e) {
+      print('Error fetching active trip: $e');
+      return null;
     }
   }
 

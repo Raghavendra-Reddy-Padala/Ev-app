@@ -5,6 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 import 'package:mjollnir/shared/faq/faq_controller.dart';
+
+import '../../shared/components/header/header.dart';
+
 class FAQ extends StatelessWidget {
   FAQ({super.key});
 
@@ -14,36 +17,9 @@ class FAQ extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.white,
-        elevation: 0,
-        title: Text(
-          'FAQ',
-          style: t.AppTextThemes.bodyLarge().copyWith(
-            fontSize: 18.sp,
-            color: AppColors.titletext,
-            fontWeight: FontWeight.w600,
-          ),
-          textAlign: TextAlign.left,
-        ),
-        leading: Container(
-          margin: EdgeInsets.all(8.w),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: GestureDetector(
-            onTap: () {
-              NavigationService.pop();
-            },
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 20.sp,
-            ),
-          ),
-        ),
-        centerTitle: false,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
+        child: Header(heading: 'FAQ'),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -71,7 +47,8 @@ class FAQ extends StatelessWidget {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
@@ -98,7 +75,7 @@ class FAQ extends StatelessWidget {
                     'How can we help you?',
                     style: t.AppTextThemes.bodyMedium().copyWith(
                       fontSize: 16.sp,
-                      color: Colors.black, 
+                      color: Colors.black,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -111,12 +88,13 @@ class FAQ extends StatelessWidget {
                   separatorBuilder: (context, index) => SizedBox(height: 12.h),
                   itemBuilder: (context, index) {
                     final faq = controller.faqs[index];
-                    
+
                     return Obx(() {
-                      final isExpanded = index < controller.expandedStates.length 
-                          ? controller.expandedStates[index] 
-                          : false;
-                      
+                      final isExpanded =
+                          index < controller.expandedStates.length
+                              ? controller.expandedStates[index]
+                              : false;
+
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         padding: EdgeInsets.all(16.w),
@@ -154,7 +132,8 @@ class FAQ extends StatelessWidget {
                                 ),
                                 SizedBox(width: 12.w),
                                 GestureDetector(
-                                  onTap: () => controller.toggleExpansion(index),
+                                  onTap: () =>
+                                      controller.toggleExpansion(index),
                                   child: AnimatedRotation(
                                     duration: const Duration(milliseconds: 300),
                                     turns: isExpanded ? 0.125 : 0,
@@ -177,8 +156,8 @@ class FAQ extends StatelessWidget {
                             ),
                             AnimatedCrossFade(
                               duration: const Duration(milliseconds: 300),
-                              crossFadeState: isExpanded 
-                                  ? CrossFadeState.showSecond 
+                              crossFadeState: isExpanded
+                                  ? CrossFadeState.showSecond
                                   : CrossFadeState.showFirst,
                               firstChild: const SizedBox.shrink(),
                               secondChild: Column(

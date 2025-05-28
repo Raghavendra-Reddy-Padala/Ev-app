@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/friends/controller/groups_controller.dart';
-import 'package:mjollnir/features/friends/views/group_user_page.dart';
 import 'package:mjollnir/shared/components/friends/group_card.dart';
 import 'package:mjollnir/shared/components/groups/club_component.dart';
 import 'package:mjollnir/shared/models/group/group_models.dart';
@@ -101,7 +100,6 @@ class ClubCard extends StatelessWidget {
     Get.find<GroupController>();
 
     return GestureDetector(
-    
       child: ClubComponent(allGroup: club),
     );
   }

@@ -153,7 +153,20 @@ class BikeMetricsController extends BaseController {
     }
 
     try {
-      _resetTripData();
+      // Only reset trip data if starting a completely new trip
+      // If we're continuing an existing trip, keep the current values
+      if (totalDistance.value == 0.0 && totalDuration.value == 0.0) {
+        _resetTripData();
+      } else {
+        // Continuing existing trip - just clear path points for new tracking
+        pathPoints.clear();
+        localStorage.savePathPoints(pathPoints);
+        localStorage.saveLocationList([]);
+        _isFirstLocationUpdate = true;
+        _locationBuffer.clear();
+        _speedReadings.clear();
+        _elevationList.clear();
+      }
 
       await _location.changeSettings(
         interval: 2000,
@@ -169,6 +182,11 @@ class BikeMetricsController extends BaseController {
 
       isTracking.value = true;
       print("Tracking started successfully");
+
+      if (totalDistance.value > 0) {
+        print(
+            "Continuing existing trip with ${totalDistance.value}km traveled");
+      }
     } catch (e) {
       handleError('Failed to start tracking: $e');
     }

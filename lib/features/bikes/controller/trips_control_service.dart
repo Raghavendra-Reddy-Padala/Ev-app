@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
+import 'package:mjollnir/features/bikes/controller/qr_controller.dart';
+import 'package:mjollnir/features/bikes/views/qr_scanner.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
+import '../../../shared/models/trips/active_trip_model.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
 import '../controller/bike_metrics_controller.dart';
@@ -13,16 +16,25 @@ class TripControlService extends BaseController {
   final RxString currentTripId = ''.obs;
   final RxBool isEndTripSliderVisible = false.obs;
 
-  Future<bool> startTrip(StartTrip startTripData) async {
+  Future<bool> startTrip(StartTrip startTripData,
+      {required bool personal}) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      final success = await tripsController.startTrip(startTripData);
+
+      final success =
+          await tripsController.startTrip(startTripData, personal: personal);
 
       if (success) {
         currentTripId.value = tripsController.tripId.value;
 
-        await bikeMetricsController.startTracking();
+        // Check if we have active trip data (continuing existing trip)
+        if (tripsController.activeTripData.value != null) {
+          await _continueExistingTrip(tripsController.activeTripData.value!);
+        } else {
+          // Start new trip
+          await bikeMetricsController.startTracking();
+        }
 
         bikeMetricsController.bikeSubscribed.value = true;
         bikeMetricsController.bikeID.value = startTripData.bikeId;
@@ -43,6 +55,29 @@ class TripControlService extends BaseController {
     }
   }
 
+  Future<void> _continueExistingTrip(ActiveTripResponse activeTrip) async {
+    // Load existing metrics from active trip
+    bikeMetricsController.totalDistance.value = activeTrip.distanceKm;
+    bikeMetricsController.currentSpeed.value = activeTrip.speedKmh;
+    bikeMetricsController.calculatedCalories.value = activeTrip.caloriesTrip;
+    bikeMetricsController.maxElevation.value = activeTrip.maxElevationM;
+    bikeMetricsController.totalDuration.value =
+        activeTrip.totalTimeHours * 3600; // Convert hours to seconds
+
+    // Save to local storage
+    localStorage.setDouble("totalDistance", activeTrip.distanceKm);
+    localStorage.setDouble("currentSpeed", activeTrip.speedKmh);
+    localStorage.setDouble("calories", activeTrip.caloriesTrip);
+    localStorage.setDouble("maxElevation", activeTrip.maxElevationM);
+    localStorage.setTime((activeTrip.totalTimeHours * 3600).toInt());
+
+    // Start tracking with existing data
+    await bikeMetricsController.startTracking();
+
+    print(
+        'Continuing existing trip with metrics: Distance: ${activeTrip.distanceKm}km, Calories: ${activeTrip.caloriesTrip}');
+  }
+
   Future<bool> endTrip() async {
     try {
       isLoading.value = true;
@@ -60,8 +95,11 @@ class TripControlService extends BaseController {
       final endTripData = _prepareEndTripData();
       final success =
           await tripsController.dataSend(endTripData, currentTripId.value);
+      final QrScannerController qrScannerController = Get.find();
 
       if (success) {
+        await qrScannerController.toggleDevice(
+            qrScannerController.encodedDeviceId.value, false);
         await _cleanupAfterTripEnd();
         return true;
       }

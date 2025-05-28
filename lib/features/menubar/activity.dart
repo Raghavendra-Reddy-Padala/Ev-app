@@ -5,6 +5,7 @@ import 'package:mjollnir/shared/components/indicators/loading_indicator.dart';
 import 'package:mjollnir/shared/components/states/empty_state.dart';
 import '../../../shared/components/activity/activity_graph.dart';
 import '../../shared/components/activity/activity_state_grid.dart';
+import '../../shared/components/header/header.dart';
 import '../account/controllers/activity_controller.dart';
 
 class ActivityMainView extends StatelessWidget {
@@ -13,17 +14,9 @@ class ActivityMainView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Activity',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
+        child: Header(heading: 'Activity'),
       ),
       body: GetBuilder<ActivityController>(
         init: ActivityController(),
