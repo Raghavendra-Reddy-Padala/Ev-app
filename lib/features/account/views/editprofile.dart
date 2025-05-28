@@ -11,7 +11,6 @@ import 'package:mjollnir/main.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
-
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
   @override
@@ -32,119 +31,128 @@ class _EditProfileViewState extends State<EditProfileView> {
     if (userController.userData.value != null) {
       _formData['first_name'] = userController.userData.value!.data.firstName;
       _formData['last_name'] = userController.userData.value!.data.lastName;
-      _formData['date_of_birth'] = userController.userData.value!.data.dateOfBirth;
-      
+      _formData['date_of_birth'] =
+          userController.userData.value!.data.dateOfBirth;
+
       _formData['email'] = userController.userData.value!.data.email;
-      
+
       _formData['weight'] = userController.userData.value!.data.weight ?? '';
       _formData['height'] = userController.userData.value!.data.height ?? '';
-      
-      _formData['address_line'] = userController.userData.value!.data.addressLine ?? '';
+
+      _formData['address_line'] =
+          userController.userData.value!.data.addressLine ?? '';
       _formData['city'] = userController.userData.value!.data.city ?? '';
       _formData['state'] = userController.userData.value!.data.state ?? '';
       _formData['pincode'] = userController.userData.value!.data.pincode ?? '';
       _formData['country'] = userController.userData.value!.data.country ?? '';
       _formData['avatar'] = userController.userData.value!.data.avatar;
-        _formData['banner'] =  userController.userData.value!.data.banner ?? '';
-    
-    _formData['uid'] =userController.userData.value!.data.uid ?? '';
-    _formData['phone'] = userController.userData.value!.data.phone ?? '';
-    _formData['type'] = userController.userData.value!.data.type ?? '';
-    _formData['TableName'] = '';
-    _formData['points'] = userController.userData.value!.data.points ?? 0;
-    _formData['password'] = 'abcd'; // You might need to handle this differently
-    _formData['employee_id'] = userController.userData.value!.data.employeeId ?? '';
-    _formData['company'] = userController.userData.value!.data.company ?? '';
-    _formData['college'] = userController.userData.value!.data.college ?? '';
-    _formData['student_id'] = userController.userData.value!.data.studentId ?? '';
-    _formData['age'] = userController.userData.value!.data.age.toString() ?? '';
-    _formData['gender'] =userController.userData.value!.data.gender ?? '';
-    _formData['invite_code'] = userController.userData.value!.data.inviteCode ?? '';
+      _formData['banner'] = userController.userData.value!.data.banner ?? '';
+
+      _formData['uid'] = userController.userData.value!.data.uid ?? '';
+      _formData['phone'] = userController.userData.value!.data.phone ?? '';
+      _formData['type'] = userController.userData.value!.data.type ?? '';
+      _formData['TableName'] = '';
+      _formData['points'] = userController.userData.value!.data.points ?? 0;
+      _formData['password'] =
+          'abcd'; // You might need to handle this differently
+      _formData['employee_id'] =
+          userController.userData.value!.data.employeeId ?? '';
+      _formData['company'] = userController.userData.value!.data.company ?? '';
+      _formData['college'] = userController.userData.value!.data.college ?? '';
+      _formData['student_id'] =
+          userController.userData.value!.data.studentId ?? '';
+      _formData['age'] =
+          userController.userData.value!.data.age.toString() ?? '';
+      _formData['gender'] = userController.userData.value!.data.gender ?? '';
+      _formData['invite_code'] =
+          userController.userData.value!.data.inviteCode ?? '';
     }
   }
-Future<void> _updateProfile() async {
-  if (_formKey.currentState!.validate()) {
-    _formKey.currentState!.save();
-    setState(() {
-      _isLoading = true;
-    });
 
-    try {
-      var token = LocalStorage().getToken();
-      token ??= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZSI6Iis5MTkzNDc1NzI1NTYiLCJ1aWQiOiJhMWIyYzNkNGZzIn0.EuHFvVhlm9QrKQdIp1v_6FDa5aEyMd_UCro-rjjwdhU';
-      
-      final userData = userController.userData.value!.data;
-    
-      final Map<String, dynamic> jsonData = {
-        'TableName': ' ',
-        'uid': userData.uid ?? ' ',
-        'phone': userData.phone ?? ' ',
-        'password': 'abcd', 
-        'type': userData.type ?? '  ',
-        'employee_id': userData.employeeId ?? '  ',
-        'company': userData.company ?? ' ',
-        'college': userData.college ?? ' ',
-        'student_id': userData.studentId ?? ' ',
-        'age': userData.age.toString() ?? '',
-        'points': userData.points ?? 0,
-        'invite_code': userData.inviteCode ?? '',
-        'gender': userData.gender ?? '',
-        
-        'first_name': _formData['first_name'],
-        'last_name': _formData['last_name'],
-        'date_of_birth': _formData['date_of_birth'],
-        'email': _formData['email'],
-        'weight': _formData['weight']?.toString() ?? '',
-        'height': _formData['height']?.toString() ?? '',
-        'weight_units': _formData['weight_units'] ?? 'kg',
-        'height_units': _formData['height_units'] ?? 'cm',
-        'address_line': _formData['address_line'] ?? '',
-        'city': _formData['city'] ?? '',
-        'state': _formData['state'] ?? '',
-        'pincode': _formData['pincode'] ?? '',
-        'country': _formData['country'] ?? '',
-        'avatar': _formData['avatar'] ?? '',
-        'banner': _formData['banner'] ?? '',
-      };
-
-      jsonData.removeWhere((key, value) => value == null);
-      
-      AppLogger.i(jsonData.toString());
-      AppLogger.i('${ApiConstants.baseUrl}/user/update');
-      
-      final response = await apiService.post(
-        endpoint: 'user/update',
-        body: jsonData,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-          'X-Karma-App': 'dafjcnalnsjn',
-        },
-      );
-
-      // Fixed: response is already a Map, not an HTTP response object
-      AppLogger.i('Response received');
-      AppLogger.i('Response body: ${response.toString()}');
-
-      // Check if response is successful
-      if (response != null && response['success'] == true) {
-        await userController.fetchUserDetails();
-        _showSnackBar('Profile updated successfully', Colors.green);
-        Navigator.pop(context);
-      } else {
-        throw Exception('Failed to update profile: ${response?['message'] ?? 'Unknown error'}');
-      }
-
-    } catch (e) {
-      _showSnackBar('Error: ${e.toString()}', Colors.red);
-      AppLogger.e(e.toString());
-    } finally {
+  Future<void> _updateProfile() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
+
+      try {
+        var token = LocalStorage().getToken();
+        token ??=
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZSI6Iis5MTkzNDc1NzI1NTYiLCJ1aWQiOiJhMWIyYzNkNGZzIn0.EuHFvVhlm9QrKQdIp1v_6FDa5aEyMd_UCro-rjjwdhU';
+
+        final userData = userController.userData.value!.data;
+
+        final Map<String, dynamic> jsonData = {
+          'TableName': ' ',
+          'uid': userData.uid ?? ' ',
+          'phone': userData.phone ?? ' ',
+          'password': 'abcd',
+          'type': userData.type ?? '  ',
+          'employee_id': userData.employeeId ?? '  ',
+          'company': userData.company ?? ' ',
+          'college': userData.college ?? ' ',
+          'student_id': userData.studentId ?? ' ',
+          'age': userData.age.toString() ?? '',
+          'points': userData.points ?? 0,
+          'invite_code': userData.inviteCode ?? '',
+          'gender': userData.gender ?? '',
+          'first_name': _formData['first_name'],
+          'last_name': _formData['last_name'],
+          'date_of_birth': _formData['date_of_birth'],
+          'email': _formData['email'],
+          'weight': _formData['weight']?.toString() ?? '',
+          'height': _formData['height']?.toString() ?? '',
+          'weight_units': _formData['weight_units'] ?? 'kg',
+          'height_units': _formData['height_units'] ?? 'cm',
+          'address_line': _formData['address_line'] ?? '',
+          'city': _formData['city'] ?? '',
+          'state': _formData['state'] ?? '',
+          'pincode': _formData['pincode'] ?? '',
+          'country': _formData['country'] ?? '',
+          'avatar': _formData['avatar'] ?? '',
+          'banner': _formData['banner'] ?? '',
+        };
+
+        jsonData.removeWhere((key, value) => value == null);
+
+        AppLogger.i(jsonData.toString());
+        AppLogger.i('${ApiConstants.baseUrl}/user/update');
+
+        final response = await apiService.post(
+          endpoint: 'user/update',
+          body: jsonData,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'X-Karma-App': 'dafjcnalnsjn',
+          },
+        );
+
+        // Fixed: response is already a Map, not an HTTP response object
+        AppLogger.i('Response received');
+        AppLogger.i('Response body: ${response.toString()}');
+
+        // Check if response is successful
+        if (response != null && response['success'] == true) {
+          await userController.fetchUserDetails();
+          _showSnackBar('Profile updated successfully', Colors.green);
+          Navigator.pop(context);
+        } else {
+          throw Exception(
+              'Failed to update profile: ${response?['message'] ?? 'Unknown error'}');
+        }
+      } catch (e) {
+        _showSnackBar('Error: ${e.toString()}', Colors.red);
+        AppLogger.e(e.toString());
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
+
   void _showSnackBar(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -225,7 +233,8 @@ Future<void> _updateProfile() async {
           ),
           filled: true,
           fillColor: AppColors.offwhite,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         ),
         style: AppTextThemes.bodyMedium().copyWith(color: Colors.black87),
         validator: (value) {
@@ -268,7 +277,9 @@ Future<void> _updateProfile() async {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: DropdownButtonFormField<String>(
-        value: _formData[key]?.toString().isNotEmpty == true ? _formData[key].toString() : null,
+        value: _formData[key]?.toString().isNotEmpty == true
+            ? _formData[key].toString()
+            : null,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: AppTextThemes.bodySmall().copyWith(color: Colors.black54),
@@ -281,7 +292,8 @@ Future<void> _updateProfile() async {
           ),
           filled: true,
           fillColor: AppColors.offwhite,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         ),
         style: AppTextThemes.bodyMedium().copyWith(color: Colors.black87),
         items: options.map((String value) {
@@ -307,6 +319,10 @@ Future<void> _updateProfile() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
+        child: Header(heading: 'Edit Profile'),
+      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(16.w),
@@ -314,8 +330,6 @@ Future<void> _updateProfile() async {
             key: _formKey,
             child: Column(
               children: [
-                Header(heading: "Edit Profile"),
-                SizedBox(height: 16.h),
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -332,7 +346,7 @@ Future<void> _updateProfile() async {
                         _buildPhysicalInfoSection(),
                         SizedBox(height: 24.h),
                         _buildAddressInfoSection(),
-                        SizedBox(height: 100.h), 
+                        SizedBox(height: 100.h),
                       ],
                     ),
                   ),
@@ -513,7 +527,8 @@ Future<void> _updateProfile() async {
         ),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: EdgeInsets.all(16.w),
             child: Column(
@@ -545,7 +560,8 @@ Future<void> _updateProfile() async {
         ),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: EdgeInsets.all(16.w),
             child: Column(
@@ -576,7 +592,8 @@ Future<void> _updateProfile() async {
         ),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: EdgeInsets.all(16.w),
             child: Column(
@@ -591,7 +608,8 @@ Future<void> _updateProfile() async {
                     SizedBox(width: 12.w),
                     Expanded(
                       flex: 1,
-                      child: _buildDropdownField('Unit', 'weight_units', ['kg', 'lbs']),
+                      child: _buildDropdownField(
+                          'Unit', 'weight_units', ['kg', 'lbs']),
                     ),
                   ],
                 ),
@@ -605,7 +623,8 @@ Future<void> _updateProfile() async {
                     SizedBox(width: 12.w),
                     Expanded(
                       flex: 1,
-                      child: _buildDropdownField('Unit', 'height_units', ['cm', 'ft']),
+                      child: _buildDropdownField(
+                          'Unit', 'height_units', ['cm', 'ft']),
                     ),
                   ],
                 ),
@@ -633,7 +652,8 @@ Future<void> _updateProfile() async {
         ),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: EdgeInsets.all(16.w),
             child: Column(
@@ -694,7 +714,8 @@ Future<void> _updateProfile() async {
                       radius: 60.r,
                       backgroundColor: AppColors.offwhite,
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
                       ),
                     )
                   : CircleAvatar(

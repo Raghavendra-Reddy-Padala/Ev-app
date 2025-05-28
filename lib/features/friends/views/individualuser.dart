@@ -2,30 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
-import 'package:mjollnir/shared/components/bike/trip_summary_graph.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
-import 'package:mjollnir/shared/components/profile/invite_friends.dart';
 import 'package:mjollnir/shared/components/profile/user_header.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 
 class IndividualUserPage extends StatelessWidget {
   final String name;
   final String distance;
-  final int points ;
+  final int points;
   const IndividualUserPage(
-      {super.key, required this.name, required this.distance,required this.points});
+      {super.key,
+      required this.name,
+      required this.distance,
+      required this.points});
 
   @override
   Widget build(BuildContext context) {
-     
     return Scaffold(
         body: SafeArea(
       child: SingleChildScrollView(
         child: Column(
           children: [
-           const  SizedBox(height:0.02),
+            const SizedBox(height: 0.02),
             Header(heading: name),
-            _UI(name: name, distance: distance,points: points,),
+            _UI(
+              name: name,
+              distance: distance,
+              points: points,
+            ),
           ],
         ),
       ),
@@ -37,16 +41,12 @@ class _UI extends StatelessWidget {
   final String distance;
   final String name;
   final int points;
-  _UI({required this.name, required this.distance,required this.points});
+  _UI({required this.name, required this.distance, required this.points});
 
   @override
   Widget build(BuildContext context) {
-   
-
-     final currentLevel = (points / 100).floor() + 1;
-      final nextLevelPoints = currentLevel * 100;
-
-    
+    final currentLevel = (points / 100).floor() + 1;
+    final nextLevelPoints = currentLevel * 100;
 
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -69,29 +69,28 @@ class _UI extends StatelessWidget {
               ),
             ),
             child: UserHeader(
-              distance:double.parse(distance) ,
-  trips: double.parse(distance).toInt(), // or whatever makes sense for trips
+              distance: double.parse(distance),
+              trips: double.parse(distance)
+                  .toInt(), // or whatever makes sense for trips
               name: name,
               followers: 0,
             ),
           ),
           SizedBox(height: screenHeight * 0.01),
-        
-           UserProgressCard(
-            nextLevelPoints: nextLevelPoints,
-        currentPoints: currentLevel,
-            level: points,
 
+          UserProgressCard(
+            nextLevelPoints: nextLevelPoints,
+            currentPoints: currentLevel,
+            level: points,
           ),
           SizedBox(height: screenHeight * 0.01),
           Center(
-            
             child: Obx(() {
-            final summary = ProfileController().tripSummary.value;
+              final summary = ProfileController().tripSummary.value;
               return ActivityGraphWidget(
-        tripSummary:summary ,
-        onDateRangeChanged: (dateRange) {},
-      );
+                tripSummary: summary,
+                onDateRangeChanged: (dateRange) {},
+              );
             }),
           ),
           // SizedBox(height: screenHeight * 0.01),
@@ -100,7 +99,6 @@ class _UI extends StatelessWidget {
           //   onCopyCode: ,
           //   onShare: ,
 
-            
           // ),
           SizedBox(height: screenHeight * 0.02),
         ],

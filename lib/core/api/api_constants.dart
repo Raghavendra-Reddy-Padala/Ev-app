@@ -22,7 +22,7 @@ class ApiConstants {
   static const String bikesByStation = 'bikes/station';
   static const String bikesStatus = 'metal/status';
   static const String getBikes = 'bikes/get';
-  static const String bikesById = 'bikes/get';
+  static const String bikesById = 'bikes';
 
   static const String tripsStart = 'trips/start';
   static const String tripsEnd = 'trips/end';

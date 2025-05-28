@@ -308,7 +308,6 @@ class ProfileController extends BaseController {
       if (response != null && response['success'] == true) {
         referralCode.value = response['data']['referral_code'] ?? '';
       }
-
     } catch (e) {
       handleError(e);
     }
@@ -484,16 +483,6 @@ class ProfileController extends BaseController {
             }
           }
         ]
-      };
-
-  Map<String, dynamic> _getDummyReferralBenefits() => {
-        'success': true,
-        'data': {
-          'description':
-              'Get 20% off your first month and earn points for every friend you invite!',
-          'discount_percentage': 20,
-          'max_discount': 50,
-        }
       };
 }
 
