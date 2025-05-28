@@ -70,7 +70,7 @@ Future<void> fetchAllStations() async {
         final response = await apiService.get(
           endpoint: 'stations/',
           headers: {
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWdlIjoiSk5UVUgiLCJlbWFpbCI6ImNoaW50dUBnbWFpbC5jb20iLCJlbXBsb3llZV9pZCI6IiIsImdlbmRlciI6Ik1hbGUiLCJuYW1lIjoicGFkYWxhIiwicGhvbmUiOiIrOTE5MzQ2OTEzMTQ0IiwidWlkIjoiM3pmdjF5Y2hmbyJ9.wAq_Sul2320GyqTolwABj-ooqGWIF1wTY-F4oARS4q0',
+            'Authorization': 'Bearer $authToken',
             'Content-Type': 'application/json',
             'X-Karma-App': 'dafjcnalnsjn',
           },

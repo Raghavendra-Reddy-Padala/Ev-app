@@ -368,9 +368,21 @@ class UserDetails {
   final double weight;
   final int age;
   final int trips;
+  final String gender;
   final double distance;
   final int followers;
   final String? banner;
+  
+  final String? weightUnits;
+  final String? heightUnits;
+  final String? inviteCode;
+  final String? addressLine;
+  final String? city;
+  final String? state;
+  final String? pincode;
+  final String? country;
+  final String? createdAt;
+  final String? tableName;
 
   UserDetails({
     required this.uid,
@@ -393,7 +405,19 @@ class UserDetails {
     required this.trips,
     required this.distance,
     required this.followers,
+    required this.gender,
     this.banner,
+    // New fields
+    this.weightUnits,
+    this.heightUnits,
+    this.inviteCode,
+    this.addressLine,
+    this.city,
+    this.state,
+    this.pincode,
+    this.country,
+    this.createdAt,
+    this.tableName,
   });
 
   factory UserDetails.fromJson(Map<String, dynamic> json) {
@@ -406,25 +430,46 @@ class UserDetails {
       lastName: json['last_name'] ?? '',
       dateOfBirth: json['date_of_birth'] ?? '',
       type: json['type'] ?? '',
-      employeeId: json['employee_id']?.toString() ?? '',
-      company: json['company']?.toString() ?? '',
+      employeeId: json['employee_id']?.toString(),
+      company: json['company']?.toString(),
       college: json['college'] ?? '',
       studentId: json['student_id']?.toString() ?? '',
-      height: _parseInt(json['height']).toDouble(),
-      weight: _parseInt(json['weight']).toDouble(),
+      height: _parseDouble(json['height']),
+      weight: _parseDouble(json['weight']),
       points: _parseInt(json['points'], defaultValue: 0),
       avatar: json['avatar'] ?? '',
       age: _parseInt(json['age'], defaultValue: 0),
       trips: _parseInt(json['trips'], defaultValue: 0),
-      distance: _parseInt(json['distance'], defaultValue: 0).toDouble(),
+      distance: _parseDouble(json['distance']),
       followers: _parseInt(json['followers'], defaultValue: 0),
-      banner: json['banner'] ?? '',
+      banner: json['banner']?.toString(),
+      gender: json['gender'] ?? '',
+      weightUnits: json['weight_units']?.toString(),
+      heightUnits: json['height_units']?.toString(),
+      inviteCode: json['invite_code']?.toString(),
+      addressLine: json['address_line']?.toString(),
+      city: json['city']?.toString(),
+      state: json['state']?.toString(),
+      pincode: json['pincode']?.toString(),
+      country: json['country']?.toString(),
+      createdAt: json['created_at']?.toString(),
+      tableName: json['TableName']?.toString(),
     );
   }
+
   static int _parseInt(dynamic value, {int defaultValue = 0}) {
     if (value is int) return value;
     if (value is String && value.isNotEmpty) {
       return int.tryParse(value) ?? defaultValue;
+    }
+    return defaultValue;
+  }
+
+  static double _parseDouble(dynamic value, {double defaultValue = 0.0}) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String && value.isNotEmpty) {
+      return double.tryParse(value) ?? defaultValue;
     }
     return defaultValue;
   }
@@ -438,12 +483,137 @@ class UserDetails {
       'Last Name': lastName,
       'Date of Birth': dateOfBirth,
       'Type': type,
-      if (employeeId != null && employeeId!.isNotEmpty)
-        'Employee ID': employeeId,
+      if (employeeId != null && employeeId!.isNotEmpty) 'Employee ID': employeeId,
       if (company != null && company!.isNotEmpty) 'Company': company,
       'College': college,
       'Student ID': studentId,
+      'Height': height,
+      'Weight': weight,
+      'Age': age,
+      'Gender': gender,
+      'Points': points,
+      'Trips': trips,
+      'Distance': distance,
+      'Followers': followers,
+      if (banner != null && banner!.isNotEmpty) 'Banner': banner,
+      'Avatar': avatar,
+      if (weightUnits != null && weightUnits!.isNotEmpty) 'Weight Units': weightUnits,
+      if (heightUnits != null && heightUnits!.isNotEmpty) 'Height Units': heightUnits,
+      if (inviteCode != null && inviteCode!.isNotEmpty) 'Invite Code': inviteCode,
+      if (addressLine != null && addressLine!.isNotEmpty) 'Address Line': addressLine,
+      if (city != null && city!.isNotEmpty) 'City': city,
+      if (state != null && state!.isNotEmpty) 'State': state,
+      if (pincode != null && pincode!.isNotEmpty) 'Pincode': pincode,
+      if (country != null && country!.isNotEmpty) 'Country': country,
+      if (createdAt != null && createdAt!.isNotEmpty) 'Created At': createdAt,
+      if (tableName != null && tableName!.isNotEmpty) 'Table Name': tableName,
     };
+  }
+
+  Map<String, dynamic> toApiJson() {
+    Map<String, dynamic> json = {};
+    
+    if (uid.isNotEmpty) json['uid'] = uid;
+    if (phone.isNotEmpty) json['phone'] = phone;
+    if (email.isNotEmpty) json['email'] = email;
+    if (password.isNotEmpty) json['password'] = password;
+    if (firstName.isNotEmpty) json['first_name'] = firstName;
+    if (lastName.isNotEmpty) json['last_name'] = lastName;
+    if (dateOfBirth.isNotEmpty) json['date_of_birth'] = dateOfBirth;
+    if (type.isNotEmpty) json['type'] = type;
+    if (employeeId != null && employeeId!.isNotEmpty) json['employee_id'] = employeeId;
+    if (company != null && company!.isNotEmpty) json['company'] = company;
+    if (college.isNotEmpty) json['college'] = college;
+    if (studentId.isNotEmpty) json['student_id'] = studentId;
+    if (age > 0) json['age'] = age.toString();
+    if (weight > 0) json['weight'] = weight.toString();
+    if (height > 0) json['height'] = height.toString();
+    if (weightUnits != null && weightUnits!.isNotEmpty) json['weight_units'] = weightUnits;
+    if (heightUnits != null && heightUnits!.isNotEmpty) json['height_units'] = heightUnits;
+    if (gender.isNotEmpty) json['gender'] = gender;
+    if (avatar.isNotEmpty) json['avatar'] = avatar;
+    if (banner != null && banner!.isNotEmpty) json['banner'] = banner;
+    if (points > 0) json['points'] = points;
+    if (inviteCode != null && inviteCode!.isNotEmpty) json['invite_code'] = inviteCode;
+    if (addressLine != null && addressLine!.isNotEmpty) json['address_line'] = addressLine;
+    if (city != null && city!.isNotEmpty) json['city'] = city;
+    if (state != null && state!.isNotEmpty) json['state'] = state;
+    if (pincode != null && pincode!.isNotEmpty) json['pincode'] = pincode;
+    if (country != null && country!.isNotEmpty) json['country'] = country;
+    if (createdAt != null && createdAt!.isNotEmpty) json['created_at'] = createdAt;
+    if (tableName != null && tableName!.isNotEmpty) json['TableName'] = tableName;
+    
+    return json;
+  }
+
+  UserDetails copyWith({
+    String? uid,
+    String? phone,
+    String? email,
+    String? password,
+    String? firstName,
+    String? lastName,
+    String? dateOfBirth,
+    String? type,
+    String? employeeId,
+    String? company,
+    String? college,
+    String? studentId,
+    String? avatar,
+    int? points,
+    double? height,
+    double? weight,
+    int? age,
+    int? trips,
+    String? gender,
+    double? distance,
+    int? followers,
+    String? banner,
+    String? weightUnits,
+    String? heightUnits,
+    String? inviteCode,
+    String? addressLine,
+    String? city,
+    String? state,
+    String? pincode,
+    String? country,
+    String? createdAt,
+    String? tableName,
+  }) {
+    return UserDetails(
+      uid: uid ?? this.uid,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      password: password ?? this.password,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      type: type ?? this.type,
+      employeeId: employeeId ?? this.employeeId,
+      company: company ?? this.company,
+      college: college ?? this.college,
+      studentId: studentId ?? this.studentId,
+      avatar: avatar ?? this.avatar,
+      points: points ?? this.points,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      age: age ?? this.age,
+      trips: trips ?? this.trips,
+      gender: gender ?? this.gender,
+      distance: distance ?? this.distance,
+      followers: followers ?? this.followers,
+      banner: banner ?? this.banner,
+      weightUnits: weightUnits ?? this.weightUnits,
+      heightUnits: heightUnits ?? this.heightUnits,
+      inviteCode: inviteCode ?? this.inviteCode,
+      addressLine: addressLine ?? this.addressLine,
+      city: city ?? this.city,
+      state: state ?? this.state,
+      pincode: pincode ?? this.pincode,
+      country: country ?? this.country,
+      createdAt: createdAt ?? this.createdAt,
+      tableName: tableName ?? this.tableName,
+    );
   }
 }
 

@@ -67,17 +67,19 @@ class _UI extends StatelessWidget {
               return Center(
                 child: Column(
                   children: [
-                    Text(
-                      subscriptionController.errorMessage.value,
-                      style: AppTextThemes.bodyMedium(),
-                      textAlign: TextAlign.center,
+                    Center(
+                      child: Text(
+                        "No Subscriptions Were Made",
+                        style: AppTextThemes.bodyMedium(),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () =>
-                          subscriptionController.fetchUserSubscriptions(),
-                      child: const Text('Retry'),
-                    ),
+                    // ElevatedButton(
+                    //   onPressed: () =>
+                    //       subscriptionController.fetchUserSubscriptions(),
+                    //   child: const Text('Retry'),
+                    // ),
                   ],
                 ),
               );

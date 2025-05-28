@@ -35,11 +35,13 @@ abstract class BaseController extends GetxController {
     errorMessage.value = '';
   }
 
-  void handleError(dynamic error) {
-    print('Error: $error');
-    errorMessage.value = 'An unexpected error occurred. Please try again.';
-    isLoading.value = false;
+ void handleError(dynamic error) {
+  if (error is Exception) {
+    errorMessage.value = error.toString().replaceAll('Exception: ', '');
+  } else {
+    errorMessage.value = 'An unexpected error occurred';
   }
+}
 
   Future<T> useApiOrDummy<T>({
     required Future<T> Function() apiCall,

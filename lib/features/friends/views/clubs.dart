@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/friends/controller/groups_controller.dart';
+import 'package:mjollnir/features/friends/views/group_user_page.dart';
 import 'package:mjollnir/shared/components/friends/group_card.dart';
 import 'package:mjollnir/shared/components/groups/club_component.dart';
 import 'package:mjollnir/shared/models/group/group_models.dart';
@@ -24,26 +25,28 @@ class ClubList extends StatelessWidget {
         );
       }
 
-      if (groupController.errorMessage.value.isNotEmpty) {
-        return Center(
-          child: Column(
-            children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 48.w),
-              SizedBox(height: 15.w),
-              Text(
-                groupController.errorMessage.value,
-                style: AppTextThemes.bodyMedium().copyWith(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 15.w),
-              ElevatedButton(
-                onPressed: () => groupController.fetchGroups(),
-                child: const Text("Retry"),
-              ),
-            ],
-          ),
-        );
-      }
+//       if (groupController.errorMessage.value.isNotEmpty) {
+//         return Center(
+//           child: Column(
+//             children: [
+//               Icon(Icons.error_outline, color: Colors.red, size: 48.w),
+//               SizedBox(height: 15.w),
+//               Text(
+//                 groupController.errorMessage.value,
+//                 style: AppTextThemes.bodyMedium().copyWith(color: Colors.red),
+//                 textAlign: TextAlign.center,
+//               ),
+//               SizedBox(height: 15.w),
+//               ElevatedButton(
+//                 onPressed: () { groupController.fetchGroups();
+//                             groupController.errorMessage.value = ''; // Clear error
+// },
+//                 child: const Text("Retry"),
+//               ),
+//             ],
+//           ),
+//         );
+//       }
 
       if (groupController.allGroups.isEmpty) {
         return Center(
@@ -98,11 +101,7 @@ class ClubCard extends StatelessWidget {
     Get.find<GroupController>();
 
     return GestureDetector(
-      onTap: () {
-        // NavigationService.pushTo(
-        //   GroupUserPage(name: club.name, id: club.id),
-        // );
-      },
+    
       child: ClubComponent(allGroup: club),
     );
   }

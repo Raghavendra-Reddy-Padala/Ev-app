@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/user_controller.dart';
 import 'package:mjollnir/features/friends/controller/follow_controller.dart';
 import 'package:mjollnir/features/friends/views/clubs.dart';
+import 'package:mjollnir/features/friends/views/individualuser.dart';
 import 'package:mjollnir/shared/components/friends/group_card.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
@@ -120,7 +121,6 @@ class LeaderBoardList extends StatelessWidget {
   Widget build(BuildContext context) {
     final FollowController followController = Get.find();
     final UserController userController = Get.find<UserController>();
-    userController.getUsers();
     final FilterController filterController = Get.find<FilterController>();
     print(
         "Building LeaderBoardList, has users: ${userController.getAllUsers.value != null}");
@@ -130,47 +130,11 @@ class LeaderBoardList extends StatelessWidget {
 
     return Obx(() {
       if (userController.isLoading.value) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.green),
-              ),
-              SizedBox(height: 15.w),
-              Text(
-                "Loading Top Athletes...",
-                style: AppTextThemes.bodySmall(),
-              ),
-            ],
-          ),
+      return const Center(
+          child: CircularProgressIndicator(),
         );
       }
 
-      if (userController.errorMessage.value.isNotEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 48.w),
-              SizedBox(height: 15.w),
-              Text(
-                userController.errorMessage.value,
-                style: AppTextThemes.bodySmall().copyWith(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 15.w),
-              ElevatedButton(
-                onPressed: () => userController.getUsers(),
-                child: const Text("Retry"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.green,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
       if (userController.getAllUsers.value == null ||
           userController.getAllUsers.value!.data.isEmpty) {
         return Center(
@@ -210,12 +174,14 @@ class LeaderBoardList extends StatelessWidget {
             .map((item) {
           return InkWell(
             onTap: () {
-              // NavigationService.pushTo(
-              //   IndividualUserPage(
-              //     name: item.firstName,
-              //     distance: item.distance.toString(),
-              //   ),
-              // );
+              Get.to(()=>
+                IndividualUserPage(
+                  name: item.firstName,
+                  distance: item.distance.toString(),
+                  points:item.points
+
+                ),
+              );
             },
             child: UserLeaderboardItem(
               item: item,

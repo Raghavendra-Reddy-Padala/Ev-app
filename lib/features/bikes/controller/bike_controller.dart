@@ -22,54 +22,79 @@ Future<void> fetchBikesByStationId(String stationId) async {
     isLoading.value = true;
     errorMessage.value = '';
 
-    final response = await apiService.get(
-      endpoint: '${ApiConstants.bikesByStation}/$stationId',
-      headers: {
-        'Authorization': 'Bearer $authToken',
-        'X-Karma-App': 'dafjcnalnsjn',
-      },
-    );
+    try {
+      final response = await apiService.get(
+        endpoint: '${ApiConstants.bikesByStation}/$stationId',
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn',
+        },
+      );
 
-    print('Raw response: $response');
-    print('Response type: ${response.runtimeType}');
+      print('Raw response: $response');
+      print('Response type: ${response.runtimeType}');
 
-    Map<String, dynamic> responseData;
+      Map<String, dynamic> responseData;
 
-    if (response is Map<String, dynamic>) {
-      responseData = response;
-    } else if (response.runtimeType.toString().contains('Response')) {
-      if (response.statusCode == 200) {
-        responseData = response.data is Map<String, dynamic>
-            ? response.data
-            : response.data;
+      if (response is Map<String, dynamic>) {
+        responseData = response;
+      } else if (response.runtimeType.toString().contains('Response')) {
+        if (response.statusCode == 200) {
+          responseData = response.data is Map<String, dynamic>
+              ? response.data
+              : response.data;
+        } else {
+          errorMessage.value = 'HTTP Error: ${response.statusCode}';
+          bikes.value = [];
+          return;
+        }
       } else {
-        errorMessage.value = 'HTTP Error: ${response.statusCode}';
+        throw Exception('Unknown response type: ${response.runtimeType}');
+      }
+
+      print('Processing response data: $responseData');
+
+      final BikeResponseModel bikeResponse = BikeResponseModel.fromMap(responseData);
+
+      if (bikeResponse.success) {
+        bikes.value = bikeResponse.data;
+        print('Successfully loaded ${bikes.value.length} bikes');
+        
+        if (bikes.value.isNotEmpty) {
+          final firstBike = bikes.value.first;
+          print('First bike: ${firstBike.name} - ${firstBike.id}');
+        }
+      } else {
+        errorMessage.value = bikeResponse.message.isNotEmpty
+            ? bikeResponse.message
+            : 'Failed to fetch bikes';
         bikes.value = [];
-        return;
+        print('API returned success: false, message: ${bikeResponse.message}');
       }
-    } else {
-      throw Exception('Unknown response type: ${response.runtimeType}');
-    }
-
-    print('Processing response data: $responseData');
-
-    final BikeResponseModel bikeResponse = BikeResponseModel.fromMap(responseData);
-
-    if (bikeResponse.success) {
-      bikes.value = bikeResponse.data; // Now this is already a List<Bike>
-      print('Successfully loaded ${bikes.value.length} bikes');
-      
-      // Debug: Print first bike details
-      if (bikes.value.isNotEmpty) {
-        final firstBike = bikes.value.first;
-        print('First bike: ${firstBike.name} - ${firstBike.id}');
+    } catch (dioError) {
+      if (dioError.toString().contains('404')) {
+        print('404 - No bikes found at station');
+        bikes.value = [];
+        errorMessage.value = ''; 
+        
+        try {
+          if (dioError != null) {
+            final errorData = dioError;
+            if (errorData is Map<String, dynamic>) {
+              final message = errorData['message'] ?? '';
+              if (message.toLowerCase().contains('bike not found') || 
+                  message.toLowerCase().contains('no bikes')) {
+                print('Confirmed: No bikes available at this station');
+                return; 
+              }
+            }
+          }
+        } catch (parseError) {
+          print('Could not parse 404 response: $parseError');
+        }
+      } else {
+        throw dioError;
       }
-    } else {
-      errorMessage.value = bikeResponse.message.isNotEmpty
-          ? bikeResponse.message
-          : 'Failed to fetch bikes';
-      bikes.value = [];
-      print('API returned success: false, message: ${bikeResponse.message}');
     }
   } catch (e) {
     AppLogger.e('Error fetching bikes: $e');
@@ -80,7 +105,6 @@ Future<void> fetchBikesByStationId(String stationId) async {
     isLoading.value = false;
   }
 }
-
   Future<void> fetchBikesData() async {
     try {
       isLoading.value = true;

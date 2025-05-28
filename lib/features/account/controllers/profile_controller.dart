@@ -182,7 +182,7 @@ class ProfileController extends BaseController {
       }
     } catch (e) {
       handleError(e);
-      Toast.show(message: 'Failed to update profile', type: ToastType.error);
+      // Toast.show(message: 'Failed to update profile', type: ToastType.error);
     } finally {
       isUpdatingProfile.value = false;
     }
@@ -202,7 +202,7 @@ class ProfileController extends BaseController {
         Toast.show(message: 'Profile picture updated', type: ToastType.success);
       }
     } catch (e) {
-      Toast.show(message: 'Failed to upload image', type: ToastType.error);
+      // Toast.show(message: 'Failed to upload image', type: ToastType.error);
     } finally {
       isImageLoading.value = false;
     }
@@ -309,36 +309,35 @@ class ProfileController extends BaseController {
         referralCode.value = response['data']['referral_code'] ?? '';
       }
 
-      await _fetchReferralBenefits();
     } catch (e) {
       handleError(e);
     }
   }
 
-  Future<void> _fetchReferralBenefits() async {
-    try {
-      final token = await getToken();
-      if (token == null) return;
+  // Future<void> _fetchReferralBenefits() async {
+  //   try {
+  //     final token = await getToken();
+  //     if (token == null) return;
 
-      final response = await useApiOrDummy(
-        apiCall: () => apiService.get(
-          endpoint: ApiConstants.referralBenefits,
-          headers: {
-            'Authorization': 'Bearer $token',
-            'X-Karma-App': 'dafjcnalnsjn'
-          },
-        ),
-        dummyData: () => _getDummyReferralBenefits(),
-      );
+  //     final response = await useApiOrDummy(
+  //       apiCall: () => apiService.get(
+  //         endpoint: ApiConstants.referralBenefits,
+  //         headers: {
+  //           'Authorization': 'Bearer $token',
+  //           'X-Karma-App': 'dafjcnalnsjn'
+  //         },
+  //       ),
+  //       dummyData: () => _getDummyReferralBenefits(),
+  //     );
 
-      if (response != null && response['success'] == true) {
-        referralBenefits.value =
-            ReferralBenefitsData.fromJson(response['data']);
-      }
-    } catch (e) {
-      handleError(e);
-    }
-  }
+  //     if (response != null && response['success'] == true) {
+  //       referralBenefits.value =
+  //           ReferralBenefitsData.fromJson(response['data']);
+  //     }
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  // }
 
   Future<void> copyReferralCode() async {
     if (referralCode.value.isEmpty) {
@@ -372,10 +371,10 @@ class ProfileController extends BaseController {
       try {
         await Share.share(shareMessage);
       } catch (e) {
-        Toast.show(
-          message: "Couldn't share the referral code. Please try again.",
-          type: ToastType.error,
-        );
+        // Toast.show(
+        //   message: "Couldn't share the referral code. Please try again.",
+        //   type: ToastType.error,
+        // );
       }
     }
   }

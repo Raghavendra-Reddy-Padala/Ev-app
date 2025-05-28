@@ -6,7 +6,7 @@ class ApiConstants {
   static const String verifyOtp = 'auth/verify_otp';
   static const String dummyToken = 'auth/dummy';
 
-  static const String userGet = 'user/get';
+  static const String userGet = 'user/me';
   static const String userFollow = 'user/follow';
   static const String userGetAll = 'user/getAll';
   static const String userGroups = 'user/groups';

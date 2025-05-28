@@ -11,13 +11,11 @@ import '../pickers/image_picker.dart';
 class CustomDrawer extends StatelessWidget {
   final List<DrawerOption> options;
   final VoidCallback onCreateGroup;
-  final VoidCallback onInviteFriends;
 
   const CustomDrawer({
     super.key,
     required this.options,
     required this.onCreateGroup,
-    required this.onInviteFriends,
   });
 
   @override

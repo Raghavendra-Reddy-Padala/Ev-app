@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/account/views/profile_detials.dart';
 import 'package:mjollnir/shared/components/profile/user_header.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 import 'package:mjollnir/shared/components/profile/invite_friends.dart';
@@ -66,10 +67,10 @@ class _ProfileContent extends StatelessWidget {
         return SizedBox(
           height: 0.8.sh,
           child: EmptyState(
-            title: 'Failed to load profile',
-            subtitle: controller.errorMessage.value,
-            icon: Icon(Icons.error_outline, size: 64.w, color: Colors.red),
-            buttonText: 'Retry',
+            title: 'Load Your Profile',
+            subtitle: "Time to get back on track!",
+            icon: Icon(Icons.account_circle_sharp, size: 64.w, color: Colors.red),
+            buttonText: 'Profile',
             onButtonPressed: controller.refreshProfile,
           ),
         );
@@ -106,7 +107,7 @@ class _ProfileContent extends StatelessWidget {
           image: DecorationImage(
             image: NetworkImage(
               user.banner ??
-                  'https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=Profile+Banner',
+                  'https://res.cloudinary.com/djyny0qqn/image/upload/v1744564353/account_bg_h0teev.png',
             ),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
@@ -121,7 +122,7 @@ class _ProfileContent extends StatelessWidget {
           distance: user.distance,
           trips: user.trips,
           followers: user.followers,
-          onProfileTap: () => Get.toNamed('/profile/details'),
+          onProfileTap: () => Get.to(()=>Profiledetails()),
         ),
       );
     });
@@ -156,13 +157,11 @@ class _ProfileContent extends StatelessWidget {
 
   Widget _buildInviteFriendsCard() {
     return Obx(() {
-      final benefits = controller.referralBenefits.value;
 
       return InviteFriendsCard(
         referralCode: controller.referralCode.value,
         onCopyCode: controller.copyReferralCode,
         onShare: controller.shareReferralCode,
-        benefitsText: benefits?.description,
       );
     });
   }
