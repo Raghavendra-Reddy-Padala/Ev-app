@@ -7,8 +7,40 @@ import 'package:mjollnir/features/home/controller/station_controller.dart';
 import 'package:mjollnir/features/home/views/stationbikesview.dart';
 import 'package:mjollnir/shared/components/stations/station_card.dart';
 
-class StationsList extends StatelessWidget {
+class StationsList extends StatefulWidget {
   const StationsList({super.key});
+
+  @override
+  State<StationsList> createState() => _StationsListState();
+}
+
+class _StationsListState extends State<StationsList> {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      final LocationController locationController = Get.find<LocationController>();
+      final StationController stationController = Get.find<StationController>();
+      
+      print('Starting data initialization...');
+      
+      await Future.wait([
+        locationController.fetchUserLocation(),
+        stationController.fetchAllStations(),
+      ]);
+      
+      print('Data initialization completed');
+    } catch (e) {
+      print('Error initializing data: $e');
+    }
+  }
 
   double _safeParse(String? value, {double defaultValue = 0.0}) {
     if (value == null || value.isEmpty) return defaultValue;
@@ -17,21 +49,68 @@ class StationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LocationController locationController = Get.find();
-    locationController.fetchUserLocation();
-    final userLocation = locationController.initialLocation;
-
-    final StationController nearbyStationsController =
-        Get.find<StationController>();
-    nearbyStationsController.fetchAllStations();
+    final LocationController locationController = Get.find<LocationController>();
+    final StationController nearbyStationsController = Get.find<StationController>();
 
     return Obx(() {
-      if (nearbyStationsController.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+      if (nearbyStationsController.isLoading.value || 
+          locationController.initialLocation.value == null) {
+        return  Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        );
       }
 
+      if (nearbyStationsController.errorMessage.value.isNotEmpty) {
+        return Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 100,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _initializeData(),
+                    child: const Text('Get Nearby Stations'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Show no stations message
       if (nearbyStationsController.nearbyStations.isEmpty) {
-        return const Center(child: Text("No nearby stations found."));
+        return Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 100,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: const Center(child: Text("No nearby stations found.")),
+          ),
+        );
       }
 
       return DraggableScrollableSheet(
@@ -48,7 +127,7 @@ class StationsList extends StatelessWidget {
             ),
             child: ListView.builder(
               controller: scrollController,
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: nearbyStationsController.nearbyStations.length,
               itemBuilder: (context, index) {
                 final station = nearbyStationsController.nearbyStations[index];
@@ -58,9 +137,14 @@ class StationsList extends StatelessWidget {
                 );
 
                 final LocationController lc = Get.find();
-                lc.locations.add(stationLocation);
-                final distance =
-                    _calculateDistance(userLocation.value, stationLocation);
+                if (!lc.locations.contains(stationLocation)) {
+                  lc.locations.add(stationLocation);
+                }
+                
+                final userLocation = locationController.initialLocation.value;
+                final distance = userLocation != null 
+                    ? _calculateDistance(userLocation, stationLocation)
+                    : 0.0;
 
                 return StationCard(
                   station: station,

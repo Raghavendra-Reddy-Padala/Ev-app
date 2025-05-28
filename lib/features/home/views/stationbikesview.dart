@@ -33,9 +33,7 @@ class _UI extends StatelessWidget {
 
   Future<void> _fetchBikes(BuildContext context) async {
     String? authToken = LocalStorage().getToken();
-    if (authToken == null) {
-      authToken = "";
-    }
+    authToken ??= "";
     final BikeController bikeController = Get.find<BikeController>();
 
     await bikeController.fetchBikesByStationId(station.id);

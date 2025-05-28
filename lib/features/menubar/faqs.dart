@@ -60,17 +60,24 @@ class FAQ extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  controller.errorMessage.value,
+                  "FAQs are frequently asked questions that help you understand our services better.",
                   style: t.AppTextThemes.bodySmall().copyWith(
-                    color: Colors.red,
+                    color: Colors.black,
                     fontSize: 16.sp,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 16.h),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
                   onPressed: () => controller.refreshFaqs(),
-                  child: Text('Retry'),
+                  child: Text('Get FAQs'),
                 ),
               ],
             ),

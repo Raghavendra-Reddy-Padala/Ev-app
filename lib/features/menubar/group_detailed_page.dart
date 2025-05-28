@@ -262,7 +262,6 @@ class _GroupProgressCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          // Add your progress indicators here
           Text(
             'Progress metrics will be displayed here',
             style: AppTextThemes.bodySmall().copyWith(

@@ -6,6 +6,7 @@ import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
+import 'package:mjollnir/features/home/controller/station_controller.dart';
 import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/features/menubar/faqs.dart';
 import 'package:mjollnir/features/menubar/group_view.dart';
@@ -27,12 +28,16 @@ class HomeMainView extends StatefulWidget {
 class _HomeMainViewState extends State<HomeMainView> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ProfileController controller = Get.put(ProfileController());
+  late final LocationController locationController;
+  late final StationController stationController;
 
   @override
   void initState() {
     super.initState();
+    locationController = Get.put(LocationController());
+    stationController = Get.put(StationController());
     _initializeLocation();
-    controller.shareReferralCode();
+    _initializeLocation();
   }
 
   Future<void> _initializeLocation() async {
@@ -53,7 +58,6 @@ class _HomeMainViewState extends State<HomeMainView> {
       context: context,
       builder: (context) => CreateGroupDialog(
         onSubmit: (name, description, image) {
-          // Handle group creation logic here
           Get.snackbar(
             'Success',
             'Group "$name" created successfully!',
@@ -66,9 +70,7 @@ class _HomeMainViewState extends State<HomeMainView> {
     );
   }
 
-  void _handleInviteFriends() {
-    controller.shareReferralCode;
-  }
+ 
 
   List<DrawerOption> _getDrawerOptions() {
     return [
@@ -102,8 +104,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         onTap: () {
           Navigator.pop(context);
           Get.to(() => const ActivityMainView());
-          // Temporary placeholder
-          // Get.snackbar('Info', 'Activity page coming soon!');
+        
         },
       ),
       DrawerOption(
@@ -112,8 +113,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         onTap: () {
           Navigator.pop(context);
           Get.to(() => const TripsMainView());
-          // Temporary placeholder
-          //Get.snackbar('Info', 'My Trips page coming soon!');
+         
         },
       ),
       DrawerOption(
@@ -130,13 +130,14 @@ class _HomeMainViewState extends State<HomeMainView> {
   @override
   Widget build(BuildContext context) {
     final LocationController locationController = Get.find();
+    final StationController stationController = Get.find<StationController>();
+    stationController.fetchAllStations();
     locationController.fetchUserLocation();
     return Scaffold(
       key: _scaffoldKey,
       drawer: CustomDrawer(
         options: _getDrawerOptions(),
         onCreateGroup: _handleCreateGroup,
-        onInviteFriends: _handleInviteFriends,
       ),
       body: SafeArea(
         child: Stack(

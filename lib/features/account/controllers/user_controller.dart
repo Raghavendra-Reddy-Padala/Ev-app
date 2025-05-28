@@ -36,6 +36,7 @@ class UserController extends BaseController {
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn',
             },
           );
 
@@ -59,42 +60,28 @@ class UserController extends BaseController {
     }
   }
 
-  Future<void> getUsers() async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+ Future<void> getUsers() async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = ''; // Clear previous errors
 
-      await useApiOrDummy(
-        apiCall: () async {
-          final String? authToken = await getToken();
-          if (authToken == null) {
-            throw Exception('Authentication token not found');
-          }
+    await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = await getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
 
-          final response = await apiService.get(
-            endpoint: ApiConstants.userGetAll,
-            headers: {
-              'Authorization': 'Bearer $authToken',
-              'X-Karma-App': 'dafjcnalnsjn'
-            },
-          );
+        final response = await apiService.get(
+          endpoint: ApiConstants.userGetAll,
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'X-Karma-App': 'dafjcnalnsjn'
+          },
+        );
 
-          if (response != null) {
-            final usersResponse = GetAllUsersResponse.fromJson(response);
-            users.assignAll(usersResponse.data);
-            getAllUsers.value = usersResponse;
-
-            final followController = Get.find<FollowController>();
-            for (var user in getAllUsers.value!.data) {
-              followController.followedUsers[user.uid] = user.following;
-            }
-            return true;
-          }
-          return false;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getAllUsersResponse();
-          final usersResponse = GetAllUsersResponse.fromJson(dummyData);
+        if (response != null) {
+          final usersResponse = GetAllUsersResponse.fromJson(response);
           users.assignAll(usersResponse.data);
           getAllUsers.value = usersResponse;
 
@@ -103,14 +90,28 @@ class UserController extends BaseController {
             followController.followedUsers[user.uid] = user.following;
           }
           return true;
-        },
-      );
-    } catch (e) {
-      print('Error fetching users: $e');
-    } finally {
-      isLoading.value = false;
-    }
+        }
+        return false;
+      },
+      dummyData: () {
+        final dummyData = DummyDataService.getAllUsersResponse();
+        final usersResponse = GetAllUsersResponse.fromJson(dummyData);
+        users.assignAll(usersResponse.data);
+        getAllUsers.value = usersResponse;
+
+        final followController = Get.find<FollowController>();
+        for (var user in getAllUsers.value!.data) {
+          followController.followedUsers[user.uid] = user.following;
+        }
+        return true;
+      },
+    );
+  } catch (e) {
+    handleError(e); 
+  } finally {
+    isLoading.value = false;
   }
+}
 
   void updateFollowStatus() {
     final followController = Get.find<FollowController>();

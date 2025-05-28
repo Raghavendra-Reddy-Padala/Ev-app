@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/core/api/api_constants.dart';
 import 'package:mjollnir/core/routes/app_routes.dart';
+import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/shared/models/user/user_model.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/services/image_service.dart';
@@ -221,39 +222,79 @@ class AuthController extends BaseController {
     }
   }
 
-  Future<LoginResponse?> login(String phone) async {
+ Future<LoginResponse?> login(String phone) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
       final data = {'phone': '+91$phone'};
 
-      final response = await useApiOrDummy(apiCall: () async {
-        final apiResponse = await apiService.post(
-          endpoint: ApiConstants.login,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Karma-App': 'dafjcnalnsjn'
-          },
-          body: data,
-        );
-        print(apiResponse);
-        if (apiResponse != null) {
-          return LoginResponse.fromJson(apiResponse);
-        }
-        return null;
-      }, dummyData: () {
-        return LoginResponse(
-          success: true,
-          data: Data(
-              accountExists: true,
-              testPhone: true,
-              token: getToken().toString()),
-          message: "Login successful",
-        );
-      });
-
-      return response;
+      final apiResponse = await apiService.post(
+        endpoint: ApiConstants.login,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Karma-App': 'dafjcnalnsjn'
+        },
+        body: data,
+      );
+      
+     AppLogger.i('Login API Response: $apiResponse');
+      
+      if (apiResponse != null) {
+        final response = LoginResponse.fromJson(apiResponse);
+       AppLogger.i('Login Response Success: ${response.success}');
+        return response;
+      }
+      return null;
     } catch (e) {
+   AppLogger.e('Login Error: $e');
+      handleError(e);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<OtpResponse?> verifyOtp(String phone, String otp) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      storedOtp.value = otp;
+      
+      final data = {
+        'phone': '+91$phone',
+        'otp': otp,
+      };
+
+      final apiResponse = await apiService.post(
+        endpoint: ApiConstants.verifyOtp,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Karma-App': 'dafjcnalnsjn'
+        },
+        body: data,
+      );
+
+    AppLogger.i('OTP Verify API Response: $apiResponse');
+
+      if (apiResponse != null) {
+        final response = OtpResponse.fromJson(apiResponse);
+      AppLogger.i('Account Exists: ${response.data.accountExists}');
+        AppLogger.i('Token: ${response.data.token}');
+        
+        if (response.success && response.data.token != null) {
+          await localStorage.setToken(response.data.token!);
+          await localStorage.setLoggedIn(true);
+          
+          // Verify token was stored
+          final storedToken = await localStorage.getToken();
+          AppLogger.i('Token stored successfully: $storedToken');
+        }
+        
+        return response;
+      }
+      return null;
+    } catch (e) {
+      AppLogger.i('OTP Verify Error: $e');
       handleError(e);
       return null;
     } finally {
@@ -267,80 +308,40 @@ class AuthController extends BaseController {
       errorMessage.value = '';
 
       final String? token = await getToken();
+      AppLogger.i('Current token before signup: $token');
+      
       final headers = {
         'Content-Type': 'application/json',
         'X-Karma-App': 'dafjcnalnsjn',
         if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
-      final response = await useApiOrDummy(apiCall: () async {
-        final apiResponse = await apiService.post(
-            endpoint: ApiConstants.signup,
-            headers: headers,
-            body: signupRequest.toJson());
 
-        if (apiResponse != null) {
-          return SignupResponse.fromJson(apiResponse);
+      final apiResponse = await apiService.post(
+        endpoint: ApiConstants.signup,
+        headers: headers,
+        body: signupRequest.toJson(),
+      );
+
+
+      if (apiResponse != null) {
+        final response = SignupResponse.fromJson(apiResponse);
+        AppLogger.i('Signup Response Success: ${response.success}');
+        AppLogger.i('New Token: ${response.data}');
+        
+        if (response.success && response.data != null) {
+          await localStorage.setToken(response.data);
+          await localStorage.setLoggedIn(true);
+          
+          final storedToken = await localStorage.getToken();
+          AppLogger.i('New token stored successfully: $storedToken');
         }
-        return null;
-      }, dummyData: () {
-        return SignupResponse(
-            success: true,
-            data: "dummy-auth-token-${DateTime.now().millisecondsSinceEpoch}",
-            message: "User registered successfully");
-      });
-
-      if (response != null && response.success) {
-        await localStorage.setToken(response.data);
-        await localStorage.setLoggedIn(true);
+        
+        return response;
       }
-      return response;
-    } catch (e) {
-      handleError(e);
       return null;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<OtpResponse?> verifyOtp(String phone, String otp) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
-      storedOtp.value = otp;
-      final data = {
-        'phone': '+91$phone',
-        'otp': otp,
-      };
-
-      final response = await useApiOrDummy(apiCall: () async {
-        final apiResponse = await apiService.post(
-            endpoint: ApiConstants.verifyOtp,
-            headers: {'X-Karma-App': 'dafjcnalnsjn'},
-            body: data);
-
-        if (apiResponse != null) {
-          return OtpResponse.fromJson(apiResponse);
-        }
-        return null;
-      }, dummyData: () {
-        return OtpResponse(
-            success: true,
-            data: Data(
-                accountExists: true,
-                testPhone: true,
-                token:
-                    "dummy-auth-token-${DateTime.now().millisecondsSinceEpoch}"),
-            message: "OTP verified successfully");
-      });
-
-      if (response != null && response.success) {
-        await localStorage.setToken(response.data.token ?? '');
-        await localStorage.setLoggedIn(true);
-      }
-
-      return response;
     } catch (e) {
+      AppLogger.i('Signup Error: $e');
       handleError(e);
       return null;
     } finally {
