@@ -1,124 +1,107 @@
+import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:mjollnir/core/routes/app_routes.dart';
+import 'package:mjollnir/features/account/controllers/trips_controller.dart';
+import 'package:mjollnir/shared/components/activity/activity_widget.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
-import 'package:mjollnir/shared/components/indicators/loading_indicator.dart';
-import 'package:mjollnir/shared/components/states/empty_state.dart';
+import 'package:mjollnir/shared/components/trips/individual_tripscreen.dart';
 
-import '../../shared/components/activity/activity_widget.dart';
-import '../../shared/models/user/user_model.dart';
-import '../account/controllers/trips_controller.dart';
 
-class TripsMainView extends StatelessWidget {
-  const TripsMainView({super.key});
+class MyTrips extends StatelessWidget {
+  const MyTrips({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final TripsController tripsController = Get.find();
+    tripsController.fetchTrips();
+
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
-        child: Header(heading: 'Trips'),
-      ),
-      body: GetBuilder<TripsController>(
-        init: TripsController(),
-        builder: (controller) => SafeArea(
-          child: RefreshIndicator(
-            onRefresh: controller.refreshTrips,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: _TripsContent(controller: controller),
-            ),
-          ),
+      body: Padding(
+        padding: EdgeInsets.only(
+          top: 10.h,
+          bottom: 10.h,
+          left: 10.h,
+          right: 10.h,
+        ),
+        child: const SafeArea(
+          child: _UI(),
         ),
       ),
     );
   }
 }
 
-class _TripsContent extends StatelessWidget {
-  final TripsController controller;
-
-  const _TripsContent({required this.controller});
+class _UI extends StatelessWidget {
+  const _UI();
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.isLoading.value && controller.trips.isEmpty) {
-        return SizedBox(
-          height: 0.8.sh,
-          child: const LoadingIndicator(
-            type: LoadingType.circular,
-            message: 'Loading trips...',
-          ),
-        );
-      }
+    final TripsController tripController = Get.find<TripsController>();
 
-      if (controller.errorMessage.isNotEmpty && controller.trips.isEmpty) {
-        return SizedBox(
-          height: 0.8.sh,
-          child: EmptyState(
-            title: 'Failed to load trips',
-            subtitle: controller.errorMessage.value,
-            icon: Icon(Icons.error_outline, size: 64.w, color: Colors.red),
-            buttonText: 'Retry',
-            onButtonPressed: controller.refreshTrips,
-          ),
-        );
-      }
+    return Column(
+      children: [
+        Header(heading: "My Trips"),
+        SizedBox(height: 5.h),
+        Obx(() {
+          if (tripController.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (tripController.errorMessage.value.isNotEmpty) {
+            return Center(child: Text(tripController.errorMessage.value));
+          }
 
-      if (controller.trips.isEmpty) {
-        return SizedBox(
-          height: 0.8.sh,
-          child: EmptyState(
-            title: 'No trips found!',
-            subtitle: 'Start your first trip to see it here',
-            icon: Icon(Icons.directions_bike, size: 64.w, color: Colors.grey),
-            buttonText: 'Start Trip',
-            onButtonPressed: () => Get.toNamed(Routes.BIKE),
-          ),
-        );
-      }
+          return (tripController.trips.isEmpty)
+              ? Padding(
+                  padding: EdgeInsets.only(
+                      top: (ScreenUtil().screenHeight - 300.h) / 2),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 100.w,
+                          height: 100.h,
+                          child: Image.asset('assets/images/no-data.png'),
+                        ),
+                        Text(
+                          'No trips found!',
+                          style: AppTextThemes.bodyMedium()
+                              .copyWith(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: tripController.trips.length,
+                    itemBuilder: (context, index) {
+                      final trip = tripController.trips[index];
+                     final pathPoints = tripController.convertToLatLng(
+  trip.path.map((point) => [point.lat, point.long]).toList()
+);
 
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        child: Column(
-          children: [
-            SizedBox(height: 16.h),
-            _buildTripsList(),
-            SizedBox(height: 32.h),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildTripsList() {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.trips.length,
-      separatorBuilder: (context, index) => SizedBox(height: 16.h),
-      itemBuilder: (context, index) {
-        final trip = controller.trips[index];
-        final pathPoints = controller.convertToLatLng(
-          trip.path.map((point) => [point.lat, point.long]).toList(),
-        );
-
-        return GestureDetector(
-          onTap: () => _navigateToTripDetails(trip),
-          child: ActivityWidget(
-            pathPoints: pathPoints,
-            trip: trip,
-          ),
-        );
-      },
+                      return Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              
+                                Get.to(()=>  IndividualTripScreen(trip: trip));
+                            },
+                            child: ActivityWidget(
+                              pathPoints: pathPoints,
+                              trip: trip,
+                            ),
+                          ),
+                          if (index < tripController.trips.length - 1)
+                            SizedBox(height: 10.h),
+                        ],
+                      );
+                    },
+                  ),
+                );
+        }),
+      ],
     );
-  }
-
-  void _navigateToTripDetails(Trip trip) {
-    // NavigationService.pushTo(
-    //   IndividualTripView(trip: trip),
-    // );
   }
 }

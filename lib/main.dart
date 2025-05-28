@@ -38,6 +38,7 @@ class MyApp extends StatelessWidget {
         localStorage.isLoggedIn() ? Routes.HOME : Routes.LOGIN;
     return BoltKit.builder(
       designSize: const Size(391, 852),
+      
       builder: () {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
