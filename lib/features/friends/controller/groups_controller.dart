@@ -350,7 +350,7 @@ class GroupController extends BaseController {
           }
 
           final response = await apiService.get(
-            endpoint: 'groups/$groupId/members/data',
+            endpoint: '/v1/zgroups/$groupId/members/data',
             headers: {
               'Authorization': 'Bearer $authToken',
               'X-Karma-App': 'dafjcnalnsjn'

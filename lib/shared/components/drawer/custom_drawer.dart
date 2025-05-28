@@ -342,8 +342,7 @@ class DrawerOption {
     required this.onTap,
   });
 }
-
-// Create Group Dialog - Fixed version
+// Enhanced Create Group Dialog with loading states
 class CreateGroupDialog extends StatefulWidget {
   final Function(String name, String description, File? image) onSubmit;
 
@@ -360,6 +359,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final GlobalKey<ImagePickerWidgetState> imagePickerKey = GlobalKey();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -390,18 +391,21 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           children: [
             _buildHeader(),
             Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(24.w),
-                child: Column(
-                  children: [
-                    ImagePickerWidget(key: imagePickerKey),
-                    SizedBox(height: 24.h),
-                    _buildGroupNameField(),
-                    SizedBox(height: 16.h),
-                    _buildGroupDescriptionField(),
-                    SizedBox(height: 24.h),
-                    _buildButtons(context),
-                  ],
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(24.w),
+                  child: Column(
+                    children: [
+                      ImagePickerWidget(key: imagePickerKey),
+                      SizedBox(height: 24.h),
+                      _buildGroupNameField(),
+                      SizedBox(height: 16.h),
+                      _buildGroupDescriptionField(),
+                      SizedBox(height: 24.h),
+                      _buildButtons(context),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -438,10 +442,10 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: _isSubmitting ? null : () => Navigator.pop(context),
             icon: Icon(
               Icons.close,
-              color: Colors.white,
+              color: _isSubmitting ? Colors.white : Colors.white,
               size: 24.w,
             ),
           ),
@@ -453,17 +457,21 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
   Widget _buildGroupNameField() {
     return TextFormField(
       controller: nameController,
+      enabled: !_isSubmitting,
       decoration: InputDecoration(
         labelText: 'Group Name *',
         hintText: 'Enter a name for your group',
-        prefixIcon: Icon(Icons.group, color: AppColors.primary),
+        prefixIcon: Icon(
+          Icons.group, 
+          color: _isSubmitting ? Colors.white : AppColors.primary
+        ),
         labelStyle: TextStyle(
-          color: Colors.blueGrey,
+          color: _isSubmitting ? Colors.white : Colors.blueGrey,
           fontWeight: FontWeight.w500,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+          borderSide: BorderSide(color: Colors.white, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -477,12 +485,19 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(color: Colors.red, width: 2),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.white, width: 1.5),
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: _isSubmitting ? Colors.grey[100] : Colors.grey[50],
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return 'Group name is required';
+        }
+        if (value.trim().length < 3) {
+          return 'Group name must be at least 3 characters';
         }
         return null;
       },
@@ -492,12 +507,16 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
   Widget _buildGroupDescriptionField() {
     return TextFormField(
       controller: descriptionController,
+      enabled: !_isSubmitting,
       decoration: InputDecoration(
         labelText: 'Group Description',
         hintText: 'Tell others what your group is about',
-        prefixIcon: Icon(Icons.description, color: AppColors.primary),
+        prefixIcon: Icon(
+          Icons.description, 
+          color: _isSubmitting ? Colors.grey : AppColors.primary
+        ),
         labelStyle: TextStyle(
-          color: Colors.blueGrey,
+          color: _isSubmitting ? Colors.grey : Colors.blueGrey,
           fontWeight: FontWeight.w500,
         ),
         enabledBorder: OutlineInputBorder(
@@ -508,10 +527,20 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: _isSubmitting ? Colors.grey[100] : Colors.grey[50],
       ),
       maxLines: 3,
+      validator: (value) {
+        if (value != null && value.trim().isNotEmpty && value.trim().length < 10) {
+          return 'Description should be at least 10 characters or left empty';
+        }
+        return null;
+      },
     );
   }
 
@@ -519,38 +548,43 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     return Column(
       children: [
         AppButton(
-          text: "Create Group",
-          onPressed: () {
-            final groupName = nameController.text.trim();
-            final groupDescription = descriptionController.text.trim();
-            final imageFile = imagePickerKey.currentState?.selectedImage;
-
-            if (groupName.isEmpty) {
-              Get.snackbar(
-                'Error',
-                'Group name cannot be empty',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-                duration: const Duration(seconds: 3),
-              );
-              return;
-            }
-
-            Navigator.pop(context);
-            widget.onSubmit(groupName, groupDescription, imageFile);
-          },
+          text: _isSubmitting ? "Creating Group..." : "Create Group",
+          onPressed: _isSubmitting ? null : _handleSubmit,
           type: ButtonType.primary,
           fullWidth: true,
+          // If your AppButton supports loading state, add it here
+          // isLoading: _isSubmitting,
         ),
         SizedBox(height: 12.h),
         AppButton(
           text: "Cancel",
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
           type: ButtonType.outline,
           fullWidth: true,
         ),
       ],
     );
   }
+
+  void _handleSubmit() async {
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
+
+  setState(() {
+    _isSubmitting = true;
+  });
+
+  final groupName = nameController.text.trim();
+  final groupDescription = descriptionController.text.trim();
+  final imageFile = imagePickerKey.currentState?.selectedImage;
+
+  await widget.onSubmit(groupName, groupDescription, imageFile);
+  
+  if (mounted) {
+    setState(() {
+      _isSubmitting = false;
+    });
+  }
+}
 }

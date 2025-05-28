@@ -1,0 +1,2 @@
+C:/coffeecodes/evnew/ev.new/android/app/.cxx/RelWithDebInfo/351a6h1o/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/coffeecodes/evnew/ev.new/android/app/.cxx/RelWithDebInfo/351a6h1o/armeabi-v7a/CMakeFiles/rebuild_cache.dir

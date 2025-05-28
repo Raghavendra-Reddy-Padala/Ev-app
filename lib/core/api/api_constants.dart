@@ -32,7 +32,7 @@ class ApiConstants {
   static const String userTrips = 'trips/user';
 
   static const String groupsGetAll = 'groups';
-  static const String groupsCreate = 'groups/create';
+  static const String groupsCreate = 'groups';
   static const String groupsJoin = 'groups/join';
   static const String groupsMembers = 'groups/members';
   static const String groupDetails = 'groups';

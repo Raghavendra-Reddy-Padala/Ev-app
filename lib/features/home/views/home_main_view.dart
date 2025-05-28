@@ -6,6 +6,7 @@ import 'package:location/location.dart';
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/authentication/controller/loc_controller.dart';
+import 'package:mjollnir/features/friends/controller/groups_controller.dart';
 import 'package:mjollnir/features/home/controller/station_controller.dart';
 import 'package:mjollnir/features/home/views/stationsui.dart';
 import 'package:mjollnir/features/menubar/faqs.dart';
@@ -17,6 +18,7 @@ import 'package:mjollnir/shared/components/search/search_bar.dart';
 
 import '../../menubar/activity.dart';
 import '../../menubar/trips_main_view.dart';
+// Add this import for your GroupController
 
 class HomeMainView extends StatefulWidget {
   const HomeMainView({super.key});
@@ -30,13 +32,14 @@ class _HomeMainViewState extends State<HomeMainView> {
   final ProfileController controller = Get.put(ProfileController());
   late final LocationController locationController;
   late final StationController stationController;
+  late final GroupController groupController; 
 
   @override
   void initState() {
     super.initState();
     locationController = Get.put(LocationController());
     stationController = Get.put(StationController());
-    _initializeLocation();
+    groupController = Get.put(GroupController()); 
     _initializeLocation();
   }
 
@@ -57,20 +60,60 @@ class _HomeMainViewState extends State<HomeMainView> {
     showDialog(
       context: context,
       builder: (context) => CreateGroupDialog(
-        onSubmit: (name, description, image) {
-          Get.snackbar(
-            'Success',
-            'Group "$name" created successfully!',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
+        onSubmit: (name, description, image) async {
+          Get.dialog(
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+            barrierDismissible: false,
           );
+
+          try {
+            final success = await groupController.createGroup(name, description);
+            
+            Get.back();
+
+            if (success) {
+             Navigator.of(context).pop();
+
+              Get.snackbar(
+                'Success',
+                'Group "$name" created successfully!',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+              );
+            } else {
+              Get.snackbar(
+                'Error',
+                groupController.errorMessage.value.isNotEmpty 
+                    ? groupController.errorMessage.value 
+                    : 'Failed to create group. Please try again.',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+              );
+            }
+          } catch (e) {
+            if (Get.isDialogOpen == true) {
+             Navigator.of(context).pop();
+            }
+            
+            Get.snackbar(
+              'Error',
+              'An unexpected error occurred: ${e.toString()}',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+          }
         },
       ),
     );
   }
-
- 
 
   List<DrawerOption> _getDrawerOptions() {
     return [
@@ -104,7 +147,6 @@ class _HomeMainViewState extends State<HomeMainView> {
         onTap: () {
           Navigator.pop(context);
           Get.to(() => const ActivityMainView());
-        
         },
       ),
       DrawerOption(
@@ -112,8 +154,7 @@ class _HomeMainViewState extends State<HomeMainView> {
         icon: Icons.trip_origin,
         onTap: () {
           Navigator.pop(context);
-          Get.to(() => const TripsMainView());
-         
+          Get.to(() => const MyTrips());
         },
       ),
       DrawerOption(
