@@ -21,8 +21,9 @@ class Navbar extends StatelessWidget {
       Icons.home_outlined,
       Icons.directions_bike_outlined,
       Icons.account_balance_wallet_outlined,
-      Icons.person_outline,
       Icons.people_alt_outlined,
+            Icons.person_outline,
+
     ],
     this.animationDuration = const Duration(milliseconds: 200),
     this.animationCurve = Curves.easeInOut,

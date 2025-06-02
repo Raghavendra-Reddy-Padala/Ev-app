@@ -80,7 +80,9 @@ Future<bool> startTrip(StartTrip startTripData, {required bool personal}) async 
   } finally {
     isLoading.value = false;
   }
-}  Future<ActiveTripResponse?> fetchActiveTrip() async {
+} 
+
+ Future<ActiveTripResponse?> fetchActiveTrip() async {
   try {
     final String? authToken = localStorage.getToken();
     if (authToken == null) {

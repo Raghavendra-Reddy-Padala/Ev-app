@@ -1,3 +1,4 @@
+
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:bolt_ui_kit/bolt_kit.dart' show AppTextThemes;
 import 'package:bolt_ui_kit/components/toast/toast.dart' show Toast, ToastType;
@@ -114,7 +115,7 @@ class _ActionButtons extends StatelessWidget {
           );
         }),
         SizedBox(height: 16.h),
-           _RidingOwnBikeButton(),
+        _RidingOwnBikeButton(),
       ],
     );
   }
@@ -123,7 +124,6 @@ class _ActionButtons extends StatelessWidget {
     Get.to(QrCameraView(onScan: controller.processQrCode));
   }
 }
-
 
 class _RidingOwnBikeButton extends StatefulWidget {
   @override
@@ -165,18 +165,45 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
       final bikeController = Get.find<BikeMetricsController>();
       final storage = Get.find<LocalStorage>();
       
-      // Try to start trip
-      final success = await tripsController.startTrip(
-        StartTrip(
-          bikeId: "_3a0ienbqx",
-          stationId: "6xugln92qx",
+      // First check if there's already an active trip
+      final activeTrip = await tripsController.fetchActiveTrip();
+      bool shouldSetupBike = false;
+      String notificationTitle = "";
+      
+      if (activeTrip != null) {
+        // User already has an active trip, just setup bike tracking
+        tripsController.tripId.value = activeTrip.id;
+        tripsController.activeTripData.value = activeTrip;
+        shouldSetupBike = true;
+        notificationTitle = "Resumed tracking your bike!";
+      } else {
+        // Try to start a new trip
+        final success = await tripsController.startTrip(
+          StartTrip(
+            bikeId: "_3a0ienbqx",
+            stationId: "6xugln92qx",
+            personal: true,
+          ),
           personal: true,
-        ),
-        personal: true,
-      );
+        );
 
-      if (success) {
-        // Setup bike tracking
+        if (success) {
+          shouldSetupBike = true;
+          notificationTitle = "Started tracking your bike!";
+        } else {
+          // Show error message from the controller
+          Toast.show(
+            message: tripsController.errorMessage.value.isNotEmpty 
+              ? tripsController.errorMessage.value 
+              : "Failed to start trip",
+            type: ToastType.error,
+          );
+          return;
+        }
+      }
+
+      // Setup bike tracking if everything went well
+      if (shouldSetupBike) {
         bikeController.bikeSubscribed.value = true;
         bikeController.bikeID.value = "_3a0ienbqx";
         await storage.setBikeSubscribed(true);
@@ -191,29 +218,19 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
           content: NotificationContent(
             id: 1,
             channelKey: "tracking_channel",
-            title: tripsController.tripId.value.isEmpty 
-              ? "Resumed tracking your bike!" 
-              : "Started tracking your bike!",
+            title: notificationTitle,
           ),
         );
-      } else {
-        Toast.show(
-          message: "Already in an Active trip.",
-          type: ToastType.error,
-        );
       }
+      
     } catch (e) {
-      Get.snackbar("Error", "Failed to start trip: $e");
+      print('Error in _handleOwnBikeTap: $e');
+      Toast.show(
+        message: "Failed to start bike tracking: $e",
+        type: ToastType.error,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 }
-  // Future<void> _handleDemoRide() async {
-  //   final success = await controller.startDemoTrip();
-  //   if (success) {
-  //     final MainPageController mainPageController = Get.find();
-  //     mainPageController.isBikeSubscribed.value = true;
-  //   }
-  // }
-

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/core/storage/local_storage.dart' show LocalStorage;
 import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
+import 'package:mjollnir/features/main_page_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../features/bikes/controller/trips_control_service.dart';
 import '../buttons/app_button.dart';
@@ -314,7 +316,10 @@ class _EndTripSliderState extends State<_EndTripSlider>
   }
 
  // Fixed _EndTripSlider - Add debugging and proper navigation
+// Fixed _endTrip method in TripControlPanel
 BikeMetricsController bikeMetricsController = Get.find<BikeMetricsController>();
+MainPageController mainPageController = Get.find<MainPageController>(); // Add this
+
 Future<void> _endTrip(TripControlService service) async {
   setState(() {
     _isEndingTrip = true;
@@ -327,46 +332,41 @@ Future<void> _endTrip(TripControlService service) async {
     final success = await service.endTrip();
     print('DEBUG: End trip result: $success');
 
-    if (success) {
-      print('DEBUG: Trip ended successfully, showing notification...');
-      
-      AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: 3,
-          channelKey: 'ride_channel',
-          title: 'Trip Ended Successfully! 🎉',
-          body: 'Your trip has ended. Thanks for riding with us!',
-          notificationLayout: NotificationLayout.Default,
-        ),
-      );
+    // Always proceed to summary even if API returns false (since you mentioned it's not an issue)
+    print('DEBUG: Trip process completed, showing notification...');
+    
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 3,
+        channelKey: 'ride_channel',
+        title: 'Trip Ended Successfully! 🎉',
+        body: 'Your trip has ended. Thanks for riding with us!',
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
 
-      // Stop animations
-      _floatingController.stop();
-      _scaleController.reverse();
-      
-      print('DEBUG: Navigating to RideSummary...');
-      
-      // Wait a moment then navigate
-      await Future.delayed(Duration(milliseconds: 500));
-      
+    bikeMetricsController.bikeSubscribed.value = false;
+    mainPageController.updateSubscriptionStatus(false); 
+
+
+    _floatingController.stop();
+    _scaleController.reverse();
+    
+    print('DEBUG: Navigating to RideSummary...');
+    
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      Get.to(() => RideSummary());
+    } catch (e) {
       try {
-        Get.to(() => RideSummary());
-            bikeMetricsController.bikeSubscribed.value = false;
-
-      } catch (e) {
-        try {
-          NavigationService.pushReplacementTo(RideSummary());
-        } catch (e2) {
-          print('DEBUG: NavigationService failed: $e2');
-          // Method 3: Using Get.to with result handling
-          Get.to(() => RideSummary(), transition: Transition.rightToLeft);
-        }
+        NavigationService.pushReplacementTo(RideSummary());
+      } catch (e2) {
+        print('DEBUG: NavigationService failed: $e2');
+        Get.to(() => RideSummary(), transition: Transition.rightToLeft);
       }
-      
-    } else {
-      print('DEBUG: Trip end failed - API returned false');
-      _handleEndTripFailure();
     }
+      
   } catch (e) {
     print('DEBUG: Exception in _endTrip: $e');
     _handleEndTripFailure();

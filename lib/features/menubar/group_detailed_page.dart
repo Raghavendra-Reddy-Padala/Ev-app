@@ -2,6 +2,7 @@ import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/menubar/memberdetailpage.dart';
 
 import '../../shared/components/header/header.dart';
 import '../../shared/constants/colors.dart';
@@ -100,7 +101,7 @@ class _GroupDetailUI extends StatelessWidget {
           // Activity and Members Rows
           Column(
             children: [
-              _GroupActivityRow(groupId: groupId, groupName: groupName),
+              // _GroupActivityRow(groupId: groupId, groupName: groupName),
               SizedBox(height: 16.h),
               _GroupMembersRow(groupId: groupId, groupName: groupName),
             ],
@@ -195,7 +196,7 @@ class _GroupHeaderSection extends StatelessWidget {
                 SizedBox(width: 12.w),
                 _StatChip(
                   label: 'Total Distance',
-                  value: '\${allGroup!.totalDistance.toStringAsFixed(1)} km',
+                  value: '${allGroup!.totalDistance.toStringAsFixed(1)} km',
                 ),
               ],
             ),
@@ -223,7 +224,7 @@ class _StatChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
-        '\$label: \$value',
+        '${label}: ${value}',
         style: AppTextThemes.bodySmall().copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w500,
@@ -243,29 +244,67 @@ class _GroupProgressCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Group Progress',
-            style: AppTextThemes.bodyMedium().copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 16.sp,
+          Container(
+            width: 60.w,
+            height: 60.h,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Center(
+              child: Text(
+                '0',
+                style: AppTextThemes.bodyLarge().copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24.sp,
+                ),
+              ),
             ),
           ),
-          SizedBox(height: 12.h),
-          Text(
-            'Progress metrics will be displayed here',
-            style: AppTextThemes.bodySmall().copyWith(
-              color: Colors.grey.shade600,
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'TEAM LEVEL',
+                  style: AppTextThemes.bodySmall().copyWith(
+                    color: Colors.grey.shade600,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  height: 8.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: 0.7, // 70% progress
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '70 km to next level',
+                  style: AppTextThemes.bodySmall().copyWith(
+                    color: Colors.grey.shade600,
+                    fontSize: 10.sp,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -273,24 +312,15 @@ class _GroupProgressCard extends StatelessWidget {
     );
   }
 }
-
 class _ActivityGraphPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 200.h,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,32 +329,90 @@ class _ActivityGraphPlaceholder extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Activity Graph',
+                'Time Travelled',
                 style: AppTextThemes.bodyMedium().copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16.sp,
+                  fontSize: 14.sp,
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  // Add date picker functionality
-                },
-                icon: const Icon(Icons.date_range),
+              Row(
+                children: [
+                  Text(
+                    '1 Jun-Today',
+                    style: AppTextThemes.bodySmall().copyWith(
+                      color: Colors.grey.shade600,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade600,
+                    size: 16.sp,
+                  ),
+                ],
               ),
             ],
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'Activity graph will be displayed here',
-                style: AppTextThemes.bodySmall().copyWith(
-                  color: Colors.grey.shade600,
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '12 Hrs',
+                style: AppTextThemes.bodyLarge().copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
                 ),
               ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          // Bar Chart
+          Container(
+            height: 120.h,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildBar('M', 0.4, Colors.grey.shade300),
+                _buildBar('T', 0.7, AppColors.primary),
+                _buildBar('W', 1.0, AppColors.primary),
+                _buildBar('Th', 0.3, Colors.grey.shade300),
+                _buildBar('F', 0.6, AppColors.primary),
+                _buildBar('Sa', 0.8, AppColors.primary),
+                _buildBar('S', 0.2, Colors.grey.shade300),
+              ],
             ),
           ),
+          SizedBox(height: 16.h),
+          // Y-axis labels
+        
         ],
       ),
+    );
+  }
+
+  Widget _buildBar(String day, double height, Color color) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: 20.w,
+          height: (height * 80).h,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          day,
+          style: AppTextThemes.bodySmall().copyWith(
+            fontSize: 10.sp,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -522,11 +610,23 @@ class _GroupMembersRow extends StatelessWidget {
       }
 
       final memberDetails = groupController.groupMembersDetails.value;
-      if (memberDetails == null || memberDetails.members.isEmpty) {
+      
+      // Debug print to see what data you're getting
+      print('Member details: $memberDetails');
+      print('Members list: ${memberDetails?.members}');
+      
+      if (memberDetails == null) {
+        print('memberDetails is null');
+        return _buildEmptyRow('Members');
+      }
+      
+      if (memberDetails.members.isEmpty) {
+        print('memberDetails.members is empty');
         return _buildEmptyRow('Members');
       }
 
       final displayedMembers = memberDetails.members.take(3).toList();
+      print('Displayed members: $displayedMembers');
 
       return Container(
         decoration: BoxDecoration(
@@ -548,16 +648,27 @@ class _GroupMembersRow extends StatelessWidget {
               children: [
                 Row(
                   children: displayedMembers.map((member) {
+                    print('Processing member: $member');
+                    print('Member avatar: ${member.avatar}');
+                    print('Member firstName: ${member.firstName}');
+                    
                     return Padding(
                       padding: EdgeInsets.only(right: 4.w),
                       child: CircleAvatar(
                         radius: 15.r,
-                        backgroundColor: Colors.grey.shade300,
-                        backgroundImage: member.avatar.isNotEmpty
-                            ? NetworkImage(member.avatar)
+                        backgroundColor: Colors.orange,
+                        backgroundImage: (member.avatar != null && member.avatar!.isNotEmpty)
+                            ? NetworkImage(member.avatar!)
                             : null,
-                        child: member.avatar.isEmpty
-                            ? Icon(Icons.person, size: 18.sp)
+                        child: (member.avatar == null || member.avatar!.isEmpty)
+                            ? Text(
+                                _getInitial(member),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.sp,
+                                ),
+                              )
                             : null,
                       ),
                     );
@@ -566,11 +677,10 @@ class _GroupMembersRow extends StatelessWidget {
                 SizedBox(width: 8.w),
                 GestureDetector(
                   onTap: () {
-                    // Navigate to members list page
-                    // Get.to(() => GroupMembersPage(
-                    //   groupMembers: memberDetails,
-                    //   groupName: groupName,
-                    // ));
+                    Get.to(() => MemberDetailPage(
+                      groupMembers: memberDetails, 
+                      name: "${memberDetails.members[0].firstName} ${memberDetails.members[0].lastName}",
+                    ));
                   },
                   child: Icon(
                     Icons.arrow_forward_ios,
@@ -584,6 +694,39 @@ class _GroupMembersRow extends StatelessWidget {
         ),
       );
     });
+  }
+
+  String _getInitial(dynamic member) {
+    // Try different ways to access the first name
+    try {
+      // Method 1: If your model has firstName property
+      if (member.firstName != null && member.firstName.isNotEmpty) {
+        return member.firstName[0].toUpperCase();
+      }
+    } catch (e) {
+      print('Error accessing firstName: $e');
+    }
+
+    try {
+      // Method 2: If your model has first_name property
+      if (member.first_name != null && member.first_name.isNotEmpty) {
+        return member.first_name[0].toUpperCase();
+      }
+    } catch (e) {
+      print('Error accessing first_name: $e');
+    }
+
+    try {
+      // Method 3: If member is a Map
+      if (member is Map && member['first_name'] != null && member['first_name'].toString().isNotEmpty) {
+        return member['first_name'].toString()[0].toUpperCase();
+      }
+    } catch (e) {
+      print('Error accessing map first_name: $e');
+    }
+
+    // Fallback
+    return 'U';
   }
 
   Widget _buildLoadingRow(String title) {
@@ -628,7 +771,7 @@ class _GroupMembersRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              'Error: \$error',
+              'Error: $error',
               style: AppTextThemes.bodySmall().copyWith(
                 color: Colors.red,
               ),
