@@ -203,26 +203,28 @@ class EndTrip {
 class StartTrip {
   final String bikeId;
   final String stationId;
+  final bool personal ;
   //final DateTime startTimestamp;
 
   StartTrip({
     required this.bikeId,
     required this.stationId,
+    required this.personal,
     //required this.startTimestamp,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'bike_id': bikeId,
-      'station_id': stationId,
-      //'start_timestamp': startTimestamp.toIso8601String(),
-    };
-  }
-
+Map<String, dynamic> toJson() {
+  return {
+    'bike_id': bikeId,
+    'station_id': stationId,
+    'personal': personal, 
+  };
+}
   factory StartTrip.fromJson(Map<String, dynamic> json) {
     return StartTrip(
       bikeId: json['bike_id'],
       stationId: json['station_id'],
+      personal: json['personal'] ?? false,
       // startTimestamp: DateTime.parse(json['start_timestamp']),
     );
   }

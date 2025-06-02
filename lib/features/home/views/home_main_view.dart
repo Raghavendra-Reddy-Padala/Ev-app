@@ -18,10 +18,10 @@ import 'package:mjollnir/shared/components/search/search_bar.dart';
 
 import '../../menubar/activity.dart';
 import '../../menubar/trips_main_view.dart';
-// Add this import for your GroupController
 
 class HomeMainView extends StatefulWidget {
   const HomeMainView({super.key});
+
 
   @override
   State<HomeMainView> createState() => _HomeMainViewState();

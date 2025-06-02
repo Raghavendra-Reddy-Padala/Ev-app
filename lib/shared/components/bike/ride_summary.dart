@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:mjollnir/features/main_page.dart';
 import 'package:screenshot/screenshot.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
@@ -110,7 +111,7 @@ class RideSummary extends StatelessWidget {
                           text: 'Done',
                           type: ButtonType.primary,
                           fullWidth: true,
-                          onPressed: () => NavigationService.pop(),
+onPressed: () => Get.to(MainPage()),
                         ),
                         SizedBox(height: 20.h),
                       ],

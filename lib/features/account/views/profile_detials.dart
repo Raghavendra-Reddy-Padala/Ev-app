@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/account/views/editprofile.dart';
 import 'package:mjollnir/features/authentication/controller/auth_controller.dart';
+import 'package:mjollnir/features/authentication/views/login_view.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 
 class Profiledetails extends StatelessWidget {
@@ -73,8 +74,8 @@ class Profiledetails extends StatelessWidget {
           onPressed: () async {
             bool shouldLogout = await _showLogoutConfirmationDialog(context);
             if (shouldLogout) {
-              // LocalStorage().logout();
-              // Routes.LOGIN;
+              authController.logout();
+                   !Get.currentRoute.contains('/login');
             }
           },
           child: Text(
@@ -185,7 +186,7 @@ class _UI extends StatelessWidget {
                   ),
                   child: CircleAvatar(
                     radius: 45.r,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.black,
                     child: userController
                                 .userData.value?.data.avatar?.isNotEmpty ==
                             true
@@ -241,7 +242,7 @@ class _UI extends StatelessWidget {
                             : "User",
                         style: AppTextThemes.bodyMedium().copyWith(
                           fontSize: 24.sp,
-                          color: Colors.white,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -253,7 +254,7 @@ class _UI extends StatelessWidget {
                             : "user@example.com",
                         style: AppTextThemes.bodySmall().copyWith(
                           fontSize: 14.sp,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.black,
                         ),
                       ),
                     ],

@@ -26,6 +26,7 @@ class ApiConstants {
 
   static const String tripsStart = 'trips/start';
   static const String tripsEnd = 'trips/end';
+  static const String active = 'trips/active';
   static const String tripsMyTrips = 'trips/my';
   static const String tripsLocation = 'trips/location';
   static const String tripsSummary = 'trips/summary';

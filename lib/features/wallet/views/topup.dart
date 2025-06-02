@@ -64,6 +64,7 @@ class _WalletTopupState extends State<WalletTopup> {
   final WalletController controller = Get.find<WalletController>();
   final _focusNode = FocusNode();
   bool _isLoading = false;
+  String? selectedAmount;
 
   void _proceedWithTopUp() {
     if (_amountController.text.isEmpty) {
@@ -132,6 +133,60 @@ class _WalletTopupState extends State<WalletTopup> {
     }
   }
 
+  Widget _buildQuickAmountButtons() {
+    final amounts = ['50', '100', '200', '300'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Amount',
+          style: GoogleFonts.poppins(
+            textStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color.fromRGBO(56, 68, 76, 1),
+            ),
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: amounts.map((amount) {
+            bool isSelected = selectedAmount == amount;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedAmount = amount;
+                  _amountController.text = amount;
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.white,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                    width: isSelected ? 2 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  '+$amount',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _amountController.dispose();
@@ -170,8 +225,13 @@ class _WalletTopupState extends State<WalletTopup> {
             SizedBox(height: 20.h),
             Obx(() => amountBanner(controller.walletData.value?.balance.toInt() ?? 0)),
             SizedBox(height: 20.h),
+            
+            // Quick Amount Buttons
+            _buildQuickAmountButtons(),
+            SizedBox(height: 20.h),
+            
             Text(
-              'Top - Up',
+              'Custom Amount',
               style: GoogleFonts.poppins(
                 textStyle: const TextStyle(
                   fontSize: 12,
@@ -182,7 +242,11 @@ class _WalletTopupState extends State<WalletTopup> {
             ),
             SizedBox(height: 10.h),
             TextField(
-              onChanged: (value) => setState(() {}),
+              onChanged: (value) {
+                setState(() {
+                  selectedAmount = null; // Clear quick amount selection when typing
+                });
+              },
               focusNode: _focusNode,
               controller: _amountController,
               keyboardType: TextInputType.number,
