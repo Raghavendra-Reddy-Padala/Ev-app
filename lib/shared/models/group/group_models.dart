@@ -184,7 +184,7 @@ class GroupMembersDetailsModel {
   factory GroupMembersDetailsModel.fromJson(Map<String, dynamic> json) {
     return GroupMembersDetailsModel(
       members: List<MemberDetails>.from(
-          json['members'].map((member) => MemberDetails.fromJson(member))),
+          json['data'].map((member) => MemberDetails.fromJson(member))),
       success: json['success'],
     );
   }

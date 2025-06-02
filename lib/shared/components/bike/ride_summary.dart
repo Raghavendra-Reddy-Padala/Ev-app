@@ -3,16 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:mjollnir/features/main_page.dart';
 import 'package:screenshot/screenshot.dart';
-import '../../../core/navigation/navigation_service.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../features/account/controllers/trips_controller.dart';
 import '../../../features/bikes/controller/bike_controller.dart';
 import '../../../features/bikes/controller/bike_metrics_controller.dart';
 import '../../models/trips/trips_model.dart';
-import '../buttons/app_button.dart';
-import '../header/header.dart';
 import '../map/path_view.dart';
 import '../misc/miscdownloader.dart';
 import 'summary_card.dart';
@@ -41,7 +37,6 @@ class RideSummary extends StatelessWidget {
               controller: screenshotController,
               child: Column(
                 children: [
-                  const Header(heading: "Ride Summary"),
                   Padding(
                     padding: EdgeInsets.all(20.w),
                     child: Column(
@@ -107,13 +102,7 @@ class RideSummary extends StatelessWidget {
                           screenshotController: screenshotController,
                         ),
                         SizedBox(height: 16.h),
-                        AppButton(
-                          text: 'Done',
-                          type: ButtonType.primary,
-                          fullWidth: true,
-onPressed: () => Get.to(MainPage()),
-                        ),
-                        SizedBox(height: 20.h),
+
                       ],
                     ),
                   ),
