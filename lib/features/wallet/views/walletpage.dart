@@ -1,3 +1,4 @@
+import 'package:bolt_ui_kit/bolt_kit.dart' as BoltKit;
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,8 +29,6 @@ class _UI extends StatefulWidget {
 }
 
 class _UIState extends State<_UI> {
-  String? selectedAmount;
-
   @override
   Widget build(BuildContext context) {
     final WalletController controller = Get.find<WalletController>();
@@ -57,12 +56,7 @@ class _UIState extends State<_UI> {
               // Balance Card
               Obx(() => _buildBalanceCard(controller)),
 
-              SizedBox(height: 20.h),
-
-              // Quick Amount Buttons
-              _buildQuickAmountButtons(controller),
-
-              SizedBox(height: 20.h),
+              SizedBox(height: 30.h),
 
               // Action Buttons
               _buildActionButtons(controller),
@@ -112,88 +106,6 @@ class _UIState extends State<_UI> {
     );
   }
 
-  Widget _buildQuickAmountButtons(WalletController controller) {
-    final amounts = ['50', '100', '200', '300'];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: amounts.map((amount) {
-        bool isSelected = selectedAmount == amount;
-        return GestureDetector(
-          onTap: () async {
-            setState(() {
-              selectedAmount = amount;
-            });
-
-            // Show confirmation dialog
-            bool? confirmed = await showDialog<bool>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text("Confirm Top-up"),
-                  content:
-                      Text("Do you want to top-up ₹$amount to your wallet?"),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text("Cancel"),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: Text("Confirm"),
-                    ),
-                  ],
-                );
-              },
-            );
-
-            if (confirmed == true) {
-              try {
-                final String? response = await controller.topUpWallet(amount);
-                if (response != null) {
-                  // Navigate to payment page with the response
-                  String url = "https://payments.avidia.in/payments/$response";
-                  // Handle payment navigation here
-                  print("Payment URL: $url");
-                }
-              } catch (e) {
-                Get.snackbar("Error", "Failed to initiate top-up: $e");
-              }
-            }
-
-            // Reset selection after a delay
-            Future.delayed(Duration(milliseconds: 500), () {
-              if (mounted) {
-                setState(() {
-                  selectedAmount = null;
-                });
-              }
-            });
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.green : Colors.white,
-              border: Border.all(
-                color: isSelected ? AppColors.green : Colors.grey.shade300,
-                width: isSelected ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(25.r),
-            ),
-            child: Text(
-              '+$amount',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black87,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildActionButtons(WalletController controller) {
     return Row(
       children: [
@@ -228,7 +140,11 @@ class _UIState extends State<_UI> {
             onTap: () {
               // Fixed - should probably navigate to withdraw page
               // Get.to(() => WithdrawView());
-              print("Withdraw tapped");
+             BoltKit.Toast.show(
+               message:  "Wallet is Empty. please Top-up your wallet",
+               type:BoltKit.ToastType.error,
+                duration: Duration(seconds: 2),
+              );
             },
             child: Container(
               height: 50.h,

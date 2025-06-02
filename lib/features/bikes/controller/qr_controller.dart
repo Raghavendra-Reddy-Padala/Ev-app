@@ -52,6 +52,7 @@ class QrScannerController extends BaseController {
       final startTripData = StartTrip(
         bikeId: deviceId,
         stationId: bikeController.bikeData.value?.stationId ?? "0",
+        personal: false,
       );
 
       final tripStarted =
@@ -83,6 +84,7 @@ class QrScannerController extends BaseController {
       final startTripData = StartTrip(
         bikeId: demoDeviceId,
         stationId: "6xugln92qx",
+        personal: true,
       );
 
       final success =

@@ -8,8 +8,8 @@ import '../../../core/api/base/base_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
 import '../../../main.dart';
 import '../../../shared/models/trips/active_trip_model.dart'
-    show ActiveTripResponse;
-import '../../../shared/models/trips/trips_model.dart';
+    show ActiveTripResponse, LongestRide;
+import '../../../shared/models/trips/trips_model.dart' show EndTripModel, StartTrip, TripsResponse;
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
 import '../../authentication/views/auth_view.dart';
@@ -28,113 +28,111 @@ class TripsController extends BaseController {
   final RxBool isLocationUpdated = false.obs;
   final LocalStorage localStorage = Get.find<LocalStorage>();
   final Rx<ActiveTripResponse?> activeTripData = Rx<ActiveTripResponse?>(null);
+  
   @override
   void onInit() {
     super.onInit();
     fetchTrips();
   }
 
-  Future<bool> startTrip(StartTrip startTripData,
-      {required bool personal}) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+Future<bool> startTrip(StartTrip startTripData, {required bool personal}) async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
 
-      final response = await apiService.post(
-        endpoint: ApiConstants.tripsStart,
-        body: startTripData.toJson(),
-        headers: {
-          'Authorization': 'Bearer ${localStorage.getToken()}',
-          'X-Karma-App': 'dafjcnalnsjn'
-        },
-      );
+    final response = await apiService.post(
+      endpoint: ApiConstants.tripsStart,
+      body: startTripData.toJson(),
+      headers: {
+        'Authorization': 'Bearer ${localStorage.getToken()}',
+        'X-Karma-App': 'dafjcnalnsjn'
+      },
+    );
 
-      if (response != null) {
-        final responseData = response;
-
-        if (responseData['success'] == true) {
-          // Normal trip start
-          tripId.value = responseData['id'] ?? '';
-          return true;
-        } else {
-          // Check if it's an "already active trip" error
-          final message =
-              responseData['message']?.toString().toLowerCase() ?? '';
-          if (message.contains('already have an active trip') ||
-              message.contains('active trip')) {
-            // Fetch active trip details
-            final activeTrip = await fetchActiveTrip();
-            if (activeTrip != null) {
-              // Set the current trip ID to the active trip
-              tripId.value = activeTrip.id;
-              activeTripData.value = activeTrip;
-              return true; // Continue with existing trip
-            }
-          }
-
-          errorMessage.value =
-              responseData['message'] ?? 'Failed to start trip';
-          return false;
+    if (response != null) {
+      // If we get "already have active trip" message, fetch and use that trip
+      if (response['message']?.toString().contains('already have an active trip') == true) {
+        final activeTrip = await fetchActiveTrip();
+        if (activeTrip != null) {
+          tripId.value = activeTrip.id;
+          activeTripData.value = activeTrip;
+          return true; // Success - we're continuing existing trip
         }
       }
 
-      errorMessage.value = 'Failed to start trip';
+      // Normal success case
+      if (response['success'] == true) {
+        tripId.value = response['id']?.toString() ?? 
+                       response['data']?['id']?.toString() ?? 
+                       response['data']?['trip_id']?.toString() ?? '';
+        return true;
+      }
+
+      errorMessage.value = response['message'] ?? 'Failed to start trip';
       return false;
-    } catch (e) {
-      handleError('Error starting trip: $e');
-      return false;
-    } finally {
-      isLoading.value = false;
     }
+
+    errorMessage.value = 'Failed to start trip';
+    return false;
+  } catch (e) {
+    errorMessage.value = 'Error starting trip: $e';
+    return false;
+  } finally {
+    isLoading.value = false;
   }
-
-  Future<ActiveTripResponse?> fetchActiveTrip() async {
-    try {
-      // For now, simulate the response since endpoint is not implemented
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Simulated response - replace with actual API call when available
-      final simulatedResponse = {
-        "id": "active_trip_${DateTime.now().millisecondsSinceEpoch}",
-        "calories_trip": 28000,
-        "distance_km": 10,
-        "speed_kmh": 30,
-        "carbon_footprint_kg": 0.21,
-        "highest_speed": 30,
-        "longest_ride": {"distance_km": 10, "duration_hours": 40},
-        "max_elevation_m": 950,
-        "total_calories": 28000,
-        "total_time_hours": 40,
-        "total_trips": 1
-      };
-
-      return ActiveTripResponse.fromJson(simulatedResponse);
-
-      /*
-        // Uncomment when endpoint is available
-        final response = await apiService.get(
-          endpoint: '/trips/active',
-          headers: {
-            'Authorization': 'Bearer ${localStorage.getToken()}',
-            'X-Karma-App': 'dafjcnalnsjn'
-          },
-        );
-
-        if (response != null && response.statusCode == 200) {
-          return ActiveTripResponse.fromJson(response.data);
-        }
-        */
-    } catch (e) {
-      print('Error fetching active trip: $e');
+}  Future<ActiveTripResponse?> fetchActiveTrip() async {
+  try {
+    final String? authToken = localStorage.getToken();
+    if (authToken == null) {
+      print('Authentication token not found');
       return null;
     }
-  }
 
+    final response = await apiService.get(
+      endpoint: 'trips/active',
+      headers: {
+        'Authorization': 'Bearer $authToken',
+        'X-Karma-App': 'dafjcnalnsjn'
+      },
+    );
+
+    if (response != null) {
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'];
+        
+        // Create ActiveTripResponse from the actual response structure
+        return ActiveTripResponse(
+          id: data['trip_id']?.toString() ?? '', // This is the key fix
+          distanceKm: (data['longest_ride']?['distance_km'] ?? 0).toDouble(),
+          speedKmh: (data['highest_speed'] ?? 0).toDouble(),
+          caloriesTrip: (data['total_calories'] ?? 0).toDouble(),
+          maxElevationM: (data['max_elevation_m'] ?? 0).toDouble(),
+          totalTimeHours: (data['total_time_hours'] ?? 0).toDouble(),
+           carbonFootprintKg: (data['carbon_footprint_kg'] ?? 0).toDouble(),
+          highestSpeed: (data['highest_speed'] ?? 0).toDouble(),
+          totalCalories: (data['total_calories'] ?? 0).toDouble(),
+          totalTrips: (data['total_trips'] ?? 0).toInt(),
+          longestRide: LongestRide.fromJson(data['longest_ride'] ?? {})
+              
+          // Add other fields as needed based on your ActiveTripResponse model
+        );
+      } else if (response['success'] == false && response['data'] == null) {
+        print('No active trips found: ${response['message']}');
+        return null;
+      }
+    }
+
+    return null;
+  } catch (e) {
+    print('Error fetching active trip: $e');
+    return null;
+  }
+}
   Future<void> refreshTrips() async {
     await fetchTrips();
   }
 
-  Future<bool> dataSend(EndTrip endData, String tripId) async {
+  Future<bool> dataSend(bool personal) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -146,14 +144,16 @@ class TripsController extends BaseController {
             NavigationService.pushReplacementTo(const AuthView());
             return false;
           }
-
+          final Map<String, dynamic> requestBody = {
+            'personal': personal,
+          };
           final response = await apiService.post(
             endpoint: 'trips/end/$tripId',
             headers: {
               'Authorization': 'Bearer $authToken',
               'X-Karma-App': 'dafjcnalnsjn'
             },
-            body: endData.toJson(),
+            body: requestBody
           );
 
           if (response != null) {
@@ -171,7 +171,8 @@ class TripsController extends BaseController {
           return false;
         },
         dummyData: () {
-          final dummyData = DummyDataService.getEndTripResponse(tripId);
+          final dummyData = DummyDataService.getEndTripResponse("");
+
           if (dummyData['success']) {
             endTripDetails.value = EndTripModel.fromJson(dummyData);
 

@@ -19,8 +19,11 @@ class MainPageController extends GetxController {
     isBikeSubscribed.value = status;
   }
 
-  Future<void> _checkBikeSubscription() async {
-    final localStorage = Get.find<LocalStorage>();
-    isBikeSubscribed.value = localStorage.getBool('bike_subscribed');
-  }
+ Future<void> _checkBikeSubscription() async {
+  final localStorage = Get.find<LocalStorage>();
+  bool? subscriptionStatus = localStorage.getBool('bike_subscribed');
+  print('Bike Subscription Status: $subscriptionStatus');
+  isBikeSubscribed.value = subscriptionStatus;
+}
+
 }

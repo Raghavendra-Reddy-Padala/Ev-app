@@ -1,6 +1,13 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:bolt_ui_kit/bolt_kit.dart' show AppTextThemes;
+import 'package:bolt_ui_kit/components/toast/toast.dart' show Toast, ToastType;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/core/storage/local_storage.dart';
+import 'package:mjollnir/features/account/controllers/trips_controller.dart';
+import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
+import 'package:mjollnir/shared/models/trips/trips_model.dart';
 import '../../../../shared/components/buttons/app_button.dart';
 import '../../../../shared/constants/colors.dart';
 import '../../main_page_controller.dart';
@@ -107,7 +114,7 @@ class _ActionButtons extends StatelessWidget {
           );
         }),
         SizedBox(height: 16.h),
-        _DemoButton(controller: controller),
+           _RidingOwnBikeButton(),
       ],
     );
   }
@@ -117,49 +124,96 @@ class _ActionButtons extends StatelessWidget {
   }
 }
 
-class _DemoButton extends StatelessWidget {
-  final QrScannerController controller;
 
-  const _DemoButton({required this.controller});
+class _RidingOwnBikeButton extends StatefulWidget {
+  @override
+  _RidingOwnBikeButtonState createState() => _RidingOwnBikeButtonState();
+}
+
+class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return Padding(
-          padding: EdgeInsets.only(top: 8.h),
-          child: SizedBox(
-            width: 20.w,
-            height: 20.h,
-            child: CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 2,
+    return Column(
+      children: [
+        if (_isLoading)
+          Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: CircularProgressIndicator(color: AppColors.primary),
+          )
+        else
+          TextButton(
+            onPressed: _handleOwnBikeTap,
+            child: Text(
+              "Riding your own bike?",
+              style: TextStyle(
+                color: AppColors.primary,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
-        );
-      }
-
-      return GestureDetector(
-        onTap: _handleDemoRide,
-        child: Text(
-          "Riding your own bike?",
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
-            decoration: TextDecoration.underline,
-            decorationColor: AppColors.primary,
-          ),
-        ),
-      );
-    });
+      ],
+    );
   }
 
-  Future<void> _handleDemoRide() async {
-    final success = await controller.startDemoTrip();
-    if (success) {
-      final MainPageController mainPageController = Get.find();
-      mainPageController.isBikeSubscribed.value = true;
+  Future<void> _handleOwnBikeTap() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final tripsController = Get.find<TripsController>();
+      final bikeController = Get.find<BikeMetricsController>();
+      final storage = Get.find<LocalStorage>();
+      
+      // Try to start trip
+      final success = await tripsController.startTrip(
+        StartTrip(
+          bikeId: "_3a0ienbqx",
+          stationId: "6xugln92qx",
+          personal: true,
+        ),
+        personal: true,
+      );
+
+      if (success) {
+        // Setup bike tracking
+        bikeController.bikeSubscribed.value = true;
+        bikeController.bikeID.value = "_3a0ienbqx";
+        await storage.setBikeSubscribed(true);
+        await storage.setBikeCode("_3a0ienbqx");
+        await bikeController.startTracking();
+
+        // Update main page
+        Get.find<MainPageController>().isBikeSubscribed.value = true;
+        
+        // Show success notification
+        AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: 1,
+            channelKey: "tracking_channel",
+            title: tripsController.tripId.value.isEmpty 
+              ? "Resumed tracking your bike!" 
+              : "Started tracking your bike!",
+          ),
+        );
+      } else {
+        Toast.show(
+          message: "Already in an Active trip.",
+          type: ToastType.error,
+        );
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to start trip: $e");
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 }
+  // Future<void> _handleDemoRide() async {
+  //   final success = await controller.startDemoTrip();
+  //   if (success) {
+  //     final MainPageController mainPageController = Get.find();
+  //     mainPageController.isBikeSubscribed.value = true;
+  //   }
+  // }
+

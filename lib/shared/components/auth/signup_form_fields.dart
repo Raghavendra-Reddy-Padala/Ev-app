@@ -66,20 +66,9 @@ class SignupFormFields {
           ),
         );
       });
-    } else if (userType == "employee") {
-      return Builder(builder: (context) {
-        return _buildTextField(
-          controller: controller,
-          hintText: "Company Name",
-        );
-      });
-    } else if (userType == "general") {
-      return const SizedBox.shrink();
     } else {
-      return _buildTextField(
-        controller: controller,
-        hintText: "Place",
-      );
+      // For general users, no place field needed
+      return const SizedBox.shrink();
     }
   }
 
@@ -249,19 +238,41 @@ class SignupFormFields {
     });
   }
 
-  static Widget idField(TextEditingController controller, String userType) {
-    return _buildTextField(
-      controller: controller,
-      hintText: userType == "student" ? "Student ID" : "Employee ID",
-    );
+  // Only show ID field for students and employees
+  static Widget? idField(TextEditingController controller, String userType) {
+    if (userType == "student") {
+      return _buildTextField(
+        controller: controller,
+        hintText: "Student ID",
+      );
+    } else if (userType == "employee") {
+      return _buildTextField(
+        controller: controller,
+        hintText: "Employee ID",
+      );
+    } else {
+      // General users don't need ID field
+      return null;
+    }
   }
 
-  static Widget emailField(TextEditingController controller, String userType) {
-    return _buildTextField(
-      controller: controller,
-      hintText: userType == "student" ? "College Mail" : "Email",
-      keyboardType: TextInputType.emailAddress,
-    );
+  // Email field logic based on user type
+  static Widget? emailField(TextEditingController controller, String userType) {
+    if (userType == "student") {
+      return _buildTextField(
+        controller: controller,
+        hintText: "College Mail",
+        keyboardType: TextInputType.emailAddress,
+      );
+    } else if (userType == "employee") {
+      return _buildTextField(
+        controller: controller,
+        hintText: "Work Email",
+        keyboardType: TextInputType.emailAddress,
+      );
+    } else {
+      return null;
+    }
   }
 
   static Widget _buildTextField({

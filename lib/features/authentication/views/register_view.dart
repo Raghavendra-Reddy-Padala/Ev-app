@@ -78,27 +78,26 @@ class SignupScreen extends StatelessWidget {
       AuthController controller, BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(20.h),
-      child: Column(
+      child: Obx(() => Column(
         children: [
           SignupFormFields.userTypeDropdown(controller.userType),
           SizedBox(height: 10.h),
           SignupFormFields.placeField(
               controller.placeController, controller.userType.value),
           SizedBox(height: 10.h),
-          Obx(() => Visibility(
-                visible: controller.userType.value == "student" ||
-                    controller.userType.value == "employee",
-                child: Column(
-                  children: [
-                    SignupFormFields.idField(
-                        controller.idController, controller.userType.value),
-                    SizedBox(height: 10.h),
-                  ],
-                ),
-              )),
-          SignupFormFields.emailField(
-              controller.emailController, controller.userType.value),
-          SizedBox(height: 10.h),
+          
+          // ID Field - only show for students and employees
+          if (SignupFormFields.idField(controller.idController, controller.userType.value) != null) ...[
+            SignupFormFields.idField(controller.idController, controller.userType.value)!,
+            SizedBox(height: 10.h),
+          ],
+          
+          // Email Field - only show for students and employees
+          if (SignupFormFields.emailField(controller.emailController, controller.userType.value) != null) ...[
+            SignupFormFields.emailField(controller.emailController, controller.userType.value)!,
+            SizedBox(height: 10.h),
+          ],
+          
           SignupFormFields.heightField(
               controller.heightController, controller.heightUnit),
           SizedBox(height: 10.h),
@@ -114,7 +113,7 @@ class SignupScreen extends StatelessWidget {
           SizedBox(height: 10.h),
           const TermsText(),
         ],
-      ),
+      )),
     );
   }
 

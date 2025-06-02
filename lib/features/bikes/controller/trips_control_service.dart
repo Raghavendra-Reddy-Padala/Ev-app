@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/bikes/controller/qr_controller.dart';
 import 'package:mjollnir/features/bikes/views/qr_scanner.dart';
@@ -78,41 +79,118 @@ class TripControlService extends BaseController {
         'Continuing existing trip with metrics: Distance: ${activeTrip.distanceKm}km, Calories: ${activeTrip.caloriesTrip}');
   }
 
-  Future<bool> endTrip() async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+// Enhanced endTrip method with better trip ID handling
 
-      if (currentTripId.value.isEmpty) {
-        currentTripId.value = tripsController.tripId.value;
-
-        if (currentTripId.value.isEmpty) {
-          handleError('No active trip found');
-          return false;
-        }
+Future<bool> endTrip() async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    
+    print('DEBUG: ==========  END TRIP CALLED  ==========');
+    print('DEBUG: TripControlService.currentTripId: "${currentTripId.value}"');
+    print('DEBUG: TripsController.tripId: "${tripsController.tripId.value}"');
+    
+    // Check localStorage for trip ID
+    final storedTripId = localStorage.getString('tripId');
+    print('DEBUG: localStorage tripId: "$storedTripId"');
+    
+    // Check BikeMetricsController if it has trip info
+    final bikeId = bikeMetricsController.bikeID.value;
+    print('DEBUG: BikeMetricsController.bikeID: "$bikeId"');
+    
+    // Try multiple sources for trip ID
+    String? workingTripId;
+    
+    if (currentTripId.value.isNotEmpty) {
+      workingTripId = currentTripId.value;
+      print('DEBUG: Using TripControlService.currentTripId');
+    } else if (tripsController.tripId.value.isNotEmpty) {
+      workingTripId = tripsController.tripId.value;
+      currentTripId.value = workingTripId;
+      print('DEBUG: Using TripsController.tripId');
+    } else if (storedTripId != null && storedTripId.isNotEmpty) {
+      workingTripId = storedTripId;
+      currentTripId.value = workingTripId;
+      tripsController.tripId.value = workingTripId;
+      print('DEBUG: Using localStorage tripId');
+    } else {
+      // Last resort - check if we can get active trip from API
+      print('DEBUG: No trip ID found, trying to fetch active trip...');
+      final activeTrip = await tripsController.fetchActiveTrip();
+      if (activeTrip != null && activeTrip.id.isNotEmpty) {
+        workingTripId = activeTrip.id;
+        currentTripId.value = workingTripId;
+        tripsController.tripId.value = workingTripId;
+        await localStorage.setString('tripId', workingTripId);
+        print('DEBUG: Got active trip ID: "$workingTripId"');
       }
-
-      final endTripData = _prepareEndTripData();
-      final success =
-          await tripsController.dataSend(endTripData, currentTripId.value);
-      final QrScannerController qrScannerController = Get.find();
-
-      if (success) {
-        await qrScannerController.toggleDevice(
-            qrScannerController.encodedDeviceId.value, false);
-        await _cleanupAfterTripEnd();
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      handleError('Failed to end trip: $e');
-      return false;
-    } finally {
-      isLoading.value = false;
     }
-  }
 
+    if (workingTripId == null || workingTripId.isEmpty) {
+      print('DEBUG: ERROR - No trip ID found from any source!');
+      
+     
+      
+      handleError('No active trip found');
+      return false;
+    }
+
+    print('DEBUG: Final working trip ID: "$workingTripId"');
+    print('DEBUG: Calling tripsController.dataSend(true)...');
+    
+    final success = await tripsController.dataSend(true);
+    print('DEBUG: dataSend result: $success');
+    
+    if (tripsController.errorMessage.value.isNotEmpty) {
+      print('DEBUG: TripsController error: "${tripsController.errorMessage.value}"');
+    }
+
+    if (success) {
+      try {
+        final QrScannerController qrScannerController = Get.find();
+        if (qrScannerController.encodedDeviceId.value.isNotEmpty) {
+          await qrScannerController.toggleDevice(
+              qrScannerController.encodedDeviceId.value, false);
+        }
+      } catch (e) {
+        print('DEBUG: Device stop error (non-critical): $e');
+      }
+      
+      await _cleanupAfterTripEnd();
+      return true;
+    } else {
+      print('DEBUG: dataSend returned false');
+      handleError('Trip end API call failed: ${tripsController.errorMessage.value}');
+      return false;
+    }
+
+  } catch (e) {
+    print('DEBUG: Exception in endTrip: $e');
+    handleError('Failed to end trip: $e');
+    return false;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Also add this method to check trip status
+void debugTripStatus() {
+  print('DEBUG: ========== TRIP STATUS DEBUG ==========');
+  print('DEBUG: TripControlService.currentTripId: "${currentTripId.value}"');
+  print('DEBUG: TripControlService.hasActiveTrip: $hasActiveTrip');
+  print('DEBUG: TripsController.tripId: "${tripsController.tripId.value}"');
+  print('DEBUG: BikeMetricsController.bikeID: "${bikeMetricsController.bikeID.value}"');
+  print('DEBUG: BikeMetricsController.bikeSubscribed: ${bikeMetricsController.bikeSubscribed.value}');
+  
+  final storedTripId = localStorage.getString('tripId');
+  final storedBikeCode = localStorage.getString('bikeCode');
+  final bikeSubscribed = localStorage.getBool('bikeSubscribed');
+  
+  print('DEBUG: localStorage.tripId: "$storedTripId"');
+  print('DEBUG: localStorage.bikeCode: "$storedBikeCode"');
+  print('DEBUG: localStorage.bikeSubscribed: $bikeSubscribed');
+  print('DEBUG: =========================================');
+}
   EndTrip _prepareEndTripData() {
     final metrics = bikeMetricsController.getCurrentMetrics();
     final locations = localStorage.getLocationList();
