@@ -239,7 +239,7 @@ class ProfileController extends BaseController {
 
       final response = await useApiOrDummy(
         apiCall: () => apiService.get(
-          endpoint: ApiConstants.userTrips,
+          endpoint: ApiConstants.tripsMyTrips,
           headers: {
             'Authorization': 'Bearer $token',
             'X-Karma-App': 'dafjcnalnsjn'

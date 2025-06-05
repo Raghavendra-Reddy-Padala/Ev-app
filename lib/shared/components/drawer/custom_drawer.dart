@@ -43,16 +43,12 @@ class CustomDrawer extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                       _buildCreateGroupCard(),
+                      _buildCreateGroupCard(),
                       SizedBox(height: 12.h),
-                     
                       _buildSectionTitle('Menu'),
                       SizedBox(height: 8.h),
-                      ...options
-                          .map((option) => _buildOptionItem(option))
-                          ,
+                      ...options.map((option) => _buildOptionItem(option)),
                       SizedBox(height: 20.h),
-                      
                       _buildInviteFriendsCard(),
                       SizedBox(height: 20.h),
                     ],
@@ -73,8 +69,8 @@ class CustomDrawer extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary,
-            AppColors.primary,
+            Colors.black,
+            Colors.black,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -91,14 +87,20 @@ class CustomDrawer extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'MJÖLLNIR',
-                style: TextStyle(
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
+              // Text(
+              //   'MJÖLLNIR',
+              //   style: TextStyle(
+              //     fontSize: 22.sp,
+              //     fontWeight: FontWeight.w900,
+              //     color: Colors.white,
+              //     letterSpacing: 1.2,
+              //   ),
+              // ),
+              Image.asset(
+                "assets/company/Logo.png",
+                width: 180,
+                // height: 60,
+                fit: BoxFit.contain,
               ),
               Text(
                 'Ride the Future',
@@ -342,6 +344,7 @@ class DrawerOption {
     required this.onTap,
   });
 }
+
 // Enhanced Create Group Dialog with loading states
 class CreateGroupDialog extends StatefulWidget {
   final Function(String name, String description, File? image) onSubmit;
@@ -461,10 +464,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       decoration: InputDecoration(
         labelText: 'Group Name *',
         hintText: 'Enter a name for your group',
-        prefixIcon: Icon(
-          Icons.group, 
-          color: _isSubmitting ? Colors.white : AppColors.primary
-        ),
+        prefixIcon: Icon(Icons.group,
+            color: _isSubmitting ? Colors.white : AppColors.primary),
         labelStyle: TextStyle(
           color: _isSubmitting ? Colors.white : Colors.blueGrey,
           fontWeight: FontWeight.w500,
@@ -511,10 +512,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       decoration: InputDecoration(
         labelText: 'Group Description',
         hintText: 'Tell others what your group is about',
-        prefixIcon: Icon(
-          Icons.description, 
-          color: _isSubmitting ? Colors.grey : AppColors.primary
-        ),
+        prefixIcon: Icon(Icons.description,
+            color: _isSubmitting ? Colors.grey : AppColors.primary),
         labelStyle: TextStyle(
           color: _isSubmitting ? Colors.grey : Colors.blueGrey,
           fontWeight: FontWeight.w500,
@@ -536,7 +535,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       ),
       maxLines: 3,
       validator: (value) {
-        if (value != null && value.trim().isNotEmpty && value.trim().length < 10) {
+        if (value != null &&
+            value.trim().isNotEmpty &&
+            value.trim().length < 10) {
           return 'Description should be at least 10 characters or left empty';
         }
         return null;
@@ -567,24 +568,24 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
   }
 
   void _handleSubmit() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-  setState(() {
-    _isSubmitting = true;
-  });
-
-  final groupName = nameController.text.trim();
-  final groupDescription = descriptionController.text.trim();
-  final imageFile = imagePickerKey.currentState?.selectedImage;
-
-  await widget.onSubmit(groupName, groupDescription, imageFile);
-  
-  if (mounted) {
     setState(() {
-      _isSubmitting = false;
+      _isSubmitting = true;
     });
+
+    final groupName = nameController.text.trim();
+    final groupDescription = descriptionController.text.trim();
+    final imageFile = imagePickerKey.currentState?.selectedImage;
+
+    await widget.onSubmit(groupName, groupDescription, imageFile);
+
+    if (mounted) {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
   }
-}
 }

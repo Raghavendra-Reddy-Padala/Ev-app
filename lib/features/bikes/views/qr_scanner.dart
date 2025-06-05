@@ -1,4 +1,3 @@
-
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:bolt_ui_kit/bolt_kit.dart' show AppTextThemes;
 import 'package:bolt_ui_kit/components/toast/toast.dart' show Toast, ToastType;
@@ -79,9 +78,9 @@ class _QrImage extends StatelessWidget {
     return Column(
       children: [
         SizedBox(
-          width: 200.w,
-          height: 200.w,
-          child: Image.asset('assets/images/qr.png'),
+          width: 250.w,
+          height: 250.w,
+          child: Image.asset('assets/images/qr2.png'),
         ),
         SizedBox(height: 16.h),
         Text(
@@ -143,33 +142,41 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
             child: CircularProgressIndicator(color: AppColors.primary),
           )
         else
-          TextButton(
-            onPressed: _handleOwnBikeTap,
-            child: Text(
-              "Riding your own bike?",
-              style: TextStyle(
-                color: AppColors.primary,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
+          // TextButton(
+          //   onPressed: _handleOwnBikeTap,
+          //   child: Text(
+          //     "Riding your own bike?",
+          //     style: TextStyle(
+          //       color: AppColors.primary,
+          //       decoration: TextDecoration.underline,
+          //     ),
+          //   ),
+          // ),
+          AppButton(
+            text: "Riding your own bike?",
+            type: ButtonType.dark,
+
+            fullWidth: true,
+            // isLoading: controller.isProcessing.value,
+            onPressed: () => _handleOwnBikeTap(),
+          )
       ],
     );
   }
 
   Future<void> _handleOwnBikeTap() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final tripsController = Get.find<TripsController>();
       final bikeController = Get.find<BikeMetricsController>();
       final storage = Get.find<LocalStorage>();
-      
+
       // First check if there's already an active trip
       final activeTrip = await tripsController.fetchActiveTrip();
       bool shouldSetupBike = false;
       String notificationTitle = "";
-      
+
       if (activeTrip != null) {
         // User already has an active trip, just setup bike tracking
         tripsController.tripId.value = activeTrip.id;
@@ -193,9 +200,9 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
         } else {
           // Show error message from the controller
           Toast.show(
-            message: tripsController.errorMessage.value.isNotEmpty 
-              ? tripsController.errorMessage.value 
-              : "Failed to start trip",
+            message: tripsController.errorMessage.value.isNotEmpty
+                ? tripsController.errorMessage.value
+                : "Failed to start trip",
             type: ToastType.error,
           );
           return;
@@ -212,7 +219,7 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
 
         // Update main page
         Get.find<MainPageController>().isBikeSubscribed.value = true;
-        
+
         // Show success notification
         AwesomeNotifications().createNotification(
           content: NotificationContent(
@@ -222,7 +229,6 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
           ),
         );
       }
-      
     } catch (e) {
       print('Error in _handleOwnBikeTap: $e');
       Toast.show(
