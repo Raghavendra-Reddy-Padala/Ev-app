@@ -8,7 +8,7 @@ class SignupFormFields {
       {bool readOnly = false}) {
     return _buildTextField(
       controller: controller,
-      hintText: "9999999999",
+      hintText: "Please enter your mobile number.",
       keyboardType: TextInputType.phone,
       prefixText: "+91  ",
       readOnly: readOnly,
@@ -66,9 +66,15 @@ class SignupFormFields {
           ),
         );
       });
+    } else if (userType == "employee") {
+      // For employee users, no place field needed
+      return _buildTextField(
+        controller: controller,
+        hintText: "Company Name",
+        keyboardType: TextInputType.name,
+      );
     } else {
-      // For general users, no place field needed
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
   }
 
@@ -271,7 +277,11 @@ class SignupFormFields {
         keyboardType: TextInputType.emailAddress,
       );
     } else {
-      return null;
+      return _buildTextField(
+        controller: controller,
+        hintText: "Enter your Email",
+        keyboardType: TextInputType.emailAddress,
+      );
     }
   }
 

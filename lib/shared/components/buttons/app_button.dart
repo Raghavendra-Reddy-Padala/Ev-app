@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/colors.dart';
 
-enum ButtonType { primary, secondary, outline, text, error, danger }
+enum ButtonType { primary, secondary, outline, text, error, danger, dark }
 
 enum ButtonSize { small, medium, large }
 
@@ -136,6 +136,8 @@ class AppButton extends StatelessWidget {
       case ButtonType.outline:
       case ButtonType.text:
         return Colors.transparent;
+      case ButtonType.dark:
+        return Colors.black;
     }
   }
 
@@ -150,6 +152,8 @@ class AppButton extends StatelessWidget {
         return AppColors.primary;
       case ButtonType.text:
         return AppColors.primary;
+      case ButtonType.dark:
+        return Colors.white;
     }
   }
 
@@ -163,6 +167,8 @@ class AppButton extends StatelessWidget {
       case ButtonType.outline:
       case ButtonType.text:
         return AppColors.primary;
+      case ButtonType.dark:
+        return Colors.white;
     }
   }
 
