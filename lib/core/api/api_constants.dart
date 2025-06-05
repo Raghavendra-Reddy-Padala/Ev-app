@@ -54,4 +54,6 @@ class ApiConstants {
 
   static const String subscriptions = 'subscriptions';
   static const String userSubscription = 'user_subscription/';
+
+  static const String issues = 'issues';
 }

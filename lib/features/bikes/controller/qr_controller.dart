@@ -20,6 +20,17 @@ class QrScannerController extends BaseController {
   final RxBool isProcessing = false.obs;
   final RxString scannedDeviceId = ''.obs;
   final RxString encodedDeviceId = ''.obs;
+  final RxString issueBikeID =''.obs;
+  Future<bool> issueScanner(String qrCode)async{
+    final deviceId = _extractDeviceId(qrCode);
+    if (deviceId!=null){
+      issueBikeID.value = deviceId;
+      return true;
+    }else{
+      return false;
+    }
+
+  }
   Future<bool> processQrCode(String qrCode) async {
     if (isProcessing.value) return false;
 
