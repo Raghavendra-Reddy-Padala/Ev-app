@@ -228,78 +228,77 @@ class UserLeaderboardItem extends StatelessWidget {
   }
 
   Widget _buildFollowButton() {
-    return Obx(() {
-      bool isFollowed = followController.followedUsers[item.uid] ?? false;
-      bool isLoading = followController.isLoading.value &&
-          followController.followedUsers.containsKey(item.uid);
+  return Obx(() {
+    bool isFollowed = followController.followedUsers[item.uid] ?? false;
+    bool isLoading = followController.isUserLoading(item.uid); // Use the new method
 
-      if (isLoading) {
-        return Container(
-          width: 36.w,
-          height: 36.w,
-          decoration: BoxDecoration(
-            color: AppColors.green.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Center(
-            child: SizedBox(
-              width: 18.w,
-              height: 18.w,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.green),
-              ),
+    if (isLoading) {
+      return Container(
+        width: 36.w,
+        height: 36.w,
+        decoration: BoxDecoration(
+          color: AppColors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 18.w,
+            height: 18.w,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.green),
             ),
           ),
-        );
-      }
+        ),
+      );
+    }
 
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: isFollowed
-            ? Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: isFollowed
+          ? Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: AppColors.green,
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.green.withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                color: Colors.white,
+                size: 20.sp,
+              ),
+            )
+          : GestureDetector(
+              onTap: () => followController.followUser(item.uid),
+              child: Container(
                 width: 36.w,
                 height: 36.w,
                 decoration: BoxDecoration(
-                  color: AppColors.green,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.green.withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(
-                  Icons.check_rounded,
-                  color: Colors.white,
-                  size: 20.sp,
-                ),
-              )
-            : GestureDetector(
-                onTap: () => followController.followUser(item.uid),
-                child: Container(
-                  width: 36.w,
-                  height: 36.w,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: Colors.grey[400]!,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: Colors.grey[600],
-                    size: 18.sp,
-                  ),
+                  Icons.person_add_alt_1_rounded,
+                  color: Colors.grey[600],
+                  size: 18.sp,
                 ),
               ),
-      );
-    });
-  }
+            ),
+    );
+  });
+}
 
   Color _getRankColor() {
     if (rank == null) return Colors.grey;

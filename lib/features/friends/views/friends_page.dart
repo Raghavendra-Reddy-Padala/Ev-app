@@ -86,7 +86,7 @@ class FriendsPage extends StatelessWidget {
                 ),
               ),
               SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                padding: EdgeInsets.symmetric(horizontal: 11.w),
                 sliver: Obx(
                   () => tabControllerX.selectedIndex.value == 0
                       ? SliverList(
@@ -171,7 +171,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
           ),
           Obx(() {
             final availableItems = tabControllerX.selectedIndex.value == 0
-                ? const ['Pts']
+                ? const ['Pts','followers','Trips']
                 : const ['Pts', 'Km', 'Carbon'];
 
             final filterController = Get.find<FilterController>();
