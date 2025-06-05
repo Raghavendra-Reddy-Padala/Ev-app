@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,26 +11,61 @@ import '../../../core/storage/local_storage.dart';
 class FollowController extends GetxController {
   RxBool isLoading = false.obs;
   final RxMap<String, bool> followedUsers = <String, bool>{}.obs;
+  final RxMap<String, bool> loadingUsers = <String, bool>{}.obs; // Track loading per user
   final LocalStorage localStorage = Get.find<LocalStorage>();
+
   Future<void> followUser(String userId) async {
     try {
-      isLoading.value = true;
-      final response = await apiService.get(
-          endpoint: '/user/follow/$userId',
-          headers: {'Authorization': 'Bearer ${localStorage.getToken()}'});
+      loadingUsers[userId] = true; // Set loading for specific user
+      final response = await apiService.post(
+          endpoint: 'user/follow/$userId',
+          headers: {
+            'Authorization': 'Bearer ${localStorage.getToken()}',
+            'X-Karma-App': 'dafjcnalnsjn'
+          });
 
-      print(response.data);
-      print(response.statusCode);
+      print('Response: $response');
 
-      if (response.statusCode == 200) {
+      // Since your API service returns the response body directly as a Map
+      Map<String, dynamic> responseData;
+      if (response is Map) {
+        responseData = Map<String, dynamic>.from(response);
+      } else if (response is String) {
+        responseData = jsonDecode(response);
+      } else {
+        responseData = {'success': false, 'message': 'Invalid response format'};
+      }
+
+      print('Parsed response: $responseData');
+
+      // Check if the API call was successful
+      if (responseData['success'] == true) {
         followedUsers[userId] = true;
         showSuccessDialog();
+      } else {
+        // Handle API error
+        Get.snackbar(
+          'Error',
+          responseData['message'] ?? 'Failed to follow user',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
     } catch (e) {
-      print(e);
+      print('Error following user: $e');
+      Get.snackbar(
+        'Error',
+        'Something went wrong. Please try again.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
-      isLoading.value = false;
+      loadingUsers[userId] = false; // Stop loading for specific user
     }
+  }
+
+  bool isUserLoading(String userId) {
+    return loadingUsers[userId] ?? false;
   }
 
   void showSuccessDialog() {
@@ -78,7 +115,7 @@ class FollowController extends GetxController {
               ),
               SizedBox(height: 10.h),
               Text(
-                'You are now following this user',
+                'You are now following the user',
                 style: TextStyle(
                   color: Colors.grey[600],
                 ),

@@ -296,8 +296,8 @@ class GroupController extends BaseController {
             throw Exception('Authentication token not found');
           }
 
-          final response = await apiService.post(
-            endpoint: '/groups/$groupId/join',
+          final response = await apiService.get(
+            endpoint: 'groups/$groupId/join',
             headers: {
               'Authorization': 'Bearer $authToken',
               'X-Karma-App': 'dafjcnalnsjn'
