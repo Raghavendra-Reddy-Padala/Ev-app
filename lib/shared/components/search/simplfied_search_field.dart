@@ -34,7 +34,7 @@ class SimpleSearchField extends StatelessWidget {
             children: [
               // Search field with adjusted border radius when showing results
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   // Only round the top corners when showing results
