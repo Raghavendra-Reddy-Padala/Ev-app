@@ -1,6 +1,11 @@
+import 'package:bolt_ui_kit/bolt_kit.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/core/api/api_constants.dart';
+import 'package:mjollnir/main.dart';
 
 class IssueController extends GetxController {
+  Rx isLoading = false.obs;
+  RxString errorMessage = ''.obs;
   var selectedIssues = <String>[].obs;
 
   void toggleIssueSelection(int index, String name) {
@@ -11,10 +16,29 @@ class IssueController extends GetxController {
     }
   }
 
-  Future<bool> submitIssue(String concern, List<String> issues) async {
-    await Future.delayed(const Duration(seconds: 1));
-    print("Concern: $concern");
-    print("Selected Issues: $issues");
-    return true;
+  Future<void> submitIssue(String concern, List<String> issues,
+      {required String bikeId}) async {
+    try {
+      isLoading.value = true;
+      final response = await apiService.post(
+          endpoint: ApiConstants.issues,
+          body: {
+            'bike_id': bikeId,
+            'description': concern,
+            'type': issues.join(',')
+          });
+      if (response['success']) {
+        Toast.show(message: response['message'], type: ToastType.success);
+        return;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Toast.show(
+          message: e.toString().substring(0, 10), type: ToastType.success);
+      return;
+    } finally {
+      isLoading.value = false;
+      return;
+    }
   }
 }

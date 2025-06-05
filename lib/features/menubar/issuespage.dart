@@ -2,9 +2,12 @@ import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/bikes/controller/qr_controller.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/constants/colors.dart' show AppColors;
 import 'package:mjollnir/shared/issues/issuecontroller.dart';
+
+import '../bikes/views/qr_camera_view.dart';
 
 class Issues extends StatelessWidget {
   const Issues({super.key});
@@ -12,9 +15,13 @@ class Issues extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Get.put(IssueController());
-    return const Scaffold(
+    return Scaffold(
+      appBar: PreferredSize(preferredSize: Size.fromHeight(kToolbarHeight + 40.h), child:Header(heading: "Report an issue"),),
       body: SafeArea(
-        child: _UI(),
+        child: Padding(
+          padding: EdgeInsets.all(20.w),
+          child: _UI(),
+        ),
       ),
     );
   }
@@ -25,24 +32,16 @@ class _UI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: SizedBox(
-                height: ScreenUtil().screenHeight,
+    return SizedBox(
+              height: ScreenUtil().screenHeight,
 
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Header(heading: "Report an issue"),
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: const _IssueOptions(),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: const _TextFieldAndSubmit(),
-            )
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+        SizedBox(),
+          const _IssueOptions(),
+          const _TextFieldAndSubmit()
+        ],
       ),
     );
   }
@@ -149,7 +148,10 @@ class _IconGenerator extends StatelessWidget {
                 : Border.all(color: Colors.transparent),
           ),
           child: Center(
-            child: image,
+            child: Padding(
+              padding:  EdgeInsets.all(20.h),
+              child: image,
+            ),
           ),
         ),
         SizedBox(height: 5.h),
@@ -205,28 +207,19 @@ class _TextFieldAndSubmit extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () async {
-              bool success = await issueController.submitIssue(
+              final controller = Get.find<QrScannerController>();
+              Get.to(QrCameraView(onScan: controller.issueScanner));
+
+               await issueController.submitIssue(
                 textController.text,
                 issueController.selectedIssues,
+                bikeId:controller.issueBikeID.value
               );
 
-              if (success) {
-                Get.defaultDialog(
-                  contentPadding: EdgeInsets.all(10.w),
-                  title: "Success",
-                  titleStyle: AppTextThemes.bodyLarge()
-                      .copyWith(fontWeight: FontWeight.bold),
-                  content:
-                      const Text("Your issue has been submitted successfully!"),
-                  confirm: ElevatedButton(
-                    onPressed: () => Get.back(),
-                    child: const Text("OK"),
-                  ),
-                );
-                textController.clear();
-              }
+              Get.back();
+              textController.clear();
             },
-            child: const Text("Submit"),
+            child: const Text("Scan & Submit"),
           ),
         ),
       ],
