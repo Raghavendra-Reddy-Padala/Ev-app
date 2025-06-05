@@ -2,7 +2,10 @@ import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/menubar/memberdetailpage.dart';
+import 'package:mjollnir/shared/components/activity/activity_graph.dart';
+import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 
 import '../../shared/components/header/header.dart';
 import '../../shared/constants/colors.dart';
@@ -39,6 +42,7 @@ class GroupDetailPage extends StatelessWidget {
               _GroupDetailUI(
                 allGroup: allGroup,
                 groupData: groupData,
+                controller: ProfileController(),
               ),
             ],
           ),
@@ -51,8 +55,10 @@ class GroupDetailPage extends StatelessWidget {
 class _GroupDetailUI extends StatelessWidget {
   final AllGroup? allGroup;
   final GroupData? groupData;
+  final ProfileController controller;
 
   const _GroupDetailUI({
+    required this.controller,
     this.allGroup,
     this.groupData,
   });
@@ -89,12 +95,14 @@ class _GroupDetailUI extends StatelessWidget {
           SizedBox(height: 16.h),
 
           // Progress Card (placeholder - you can customize this)
-          _GroupProgressCard(),
+          // _GroupProgressCard(),
+          _buildUserProgressCard(),
 
           SizedBox(height: 16.h),
 
           // Activity Graph (placeholder - you can integrate your graph here)
-          _ActivityGraphPlaceholder(),
+          // _ActivityGraphPlaceholder(),
+          _buildActivityGraph(),
 
           SizedBox(height: 20.h),
 
@@ -112,6 +120,33 @@ class _GroupDetailUI extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildUserProgressCard() {
+  return Obx(() {
+    final user = ProfileController().userData.value?.data;
+    if (user == null) return const SizedBox();
+
+    final currentLevel = (user.points / 100).floor() + 1;
+    final nextLevelPoints = currentLevel * 100;
+
+    return UserProgressCard(
+      currentPoints: user.points,
+      nextLevelPoints: nextLevelPoints,
+      level: currentLevel,
+    );
+  });
+}
+
+Widget _buildActivityGraph() {
+  return Obx(() {
+    final summary = ProfileController().tripSummary.value;
+
+    return ActivityGraphWidget(
+      tripSummary: summary,
+      onDateRangeChanged: (dateRange) {},
+    );
+  });
 }
 
 class _GroupHeaderSection extends StatelessWidget {
@@ -312,6 +347,7 @@ class _GroupProgressCard extends StatelessWidget {
     );
   }
 }
+
 class _ActivityGraphPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -386,7 +422,6 @@ class _ActivityGraphPlaceholder extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           // Y-axis labels
-        
         ],
       ),
     );
@@ -610,16 +645,16 @@ class _GroupMembersRow extends StatelessWidget {
       }
 
       final memberDetails = groupController.groupMembersDetails.value;
-      
+
       // Debug print to see what data you're getting
       print('Member details: $memberDetails');
       print('Members list: ${memberDetails?.members}');
-      
+
       if (memberDetails == null) {
         print('memberDetails is null');
         return _buildEmptyRow('Members');
       }
-      
+
       if (memberDetails.members.isEmpty) {
         print('memberDetails.members is empty');
         return _buildEmptyRow('Members');
@@ -651,15 +686,16 @@ class _GroupMembersRow extends StatelessWidget {
                     print('Processing member: $member');
                     print('Member avatar: ${member.avatar}');
                     print('Member firstName: ${member.firstName}');
-                    
+
                     return Padding(
                       padding: EdgeInsets.only(right: 4.w),
                       child: CircleAvatar(
                         radius: 15.r,
                         backgroundColor: Colors.orange,
-                        backgroundImage: (member.avatar != null && member.avatar!.isNotEmpty)
-                            ? NetworkImage(member.avatar!)
-                            : null,
+                        backgroundImage:
+                            (member.avatar != null && member.avatar!.isNotEmpty)
+                                ? NetworkImage(member.avatar!)
+                                : null,
                         child: (member.avatar == null || member.avatar!.isEmpty)
                             ? Text(
                                 _getInitial(member),
@@ -678,9 +714,10 @@ class _GroupMembersRow extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     Get.to(() => MemberDetailPage(
-                      groupMembers: memberDetails, 
-                      name: "${memberDetails.members[0].firstName} ${memberDetails.members[0].lastName}",
-                    ));
+                          groupMembers: memberDetails,
+                          name:
+                              "${memberDetails.members[0].firstName} ${memberDetails.members[0].lastName}",
+                        ));
                   },
                   child: Icon(
                     Icons.arrow_forward_ios,
@@ -718,7 +755,9 @@ class _GroupMembersRow extends StatelessWidget {
 
     try {
       // Method 3: If member is a Map
-      if (member is Map && member['first_name'] != null && member['first_name'].toString().isNotEmpty) {
+      if (member is Map &&
+          member['first_name'] != null &&
+          member['first_name'].toString().isNotEmpty) {
         return member['first_name'].toString()[0].toUpperCase();
       }
     } catch (e) {

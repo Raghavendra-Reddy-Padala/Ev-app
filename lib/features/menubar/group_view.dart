@@ -31,7 +31,8 @@ class GroupView extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.all(15.w),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      // mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildOwnedGroups(groupController),
                       ],
@@ -46,19 +47,21 @@ class GroupView extends StatelessWidget {
 
   Widget _buildOwnedGroups(GroupController groupController) {
     if (groupController.isLoading.value) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Owned Groups:",
-            style: AppTextThemes.bodySmall().copyWith(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade700,
+      return Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Owned Groups:",
+              style: AppTextThemes.bodySmall().copyWith(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade700,
+              ),
             ),
-          ),
-          SizedBox(height: 8.h),
-          const CircularProgressIndicator(),
-        ],
+            SizedBox(height: 8.h),
+            const CircularProgressIndicator(),
+          ],
+        ),
       );
     } else if (groupController.userGroups.isEmpty) {
       return _buildEmptyState("Owned Groups:");
@@ -91,24 +94,28 @@ class GroupView extends StatelessWidget {
   }
 
   Widget _buildEmptyState(String title) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTextThemes.bodySmall().copyWith(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade700,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+        crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+        children: [
+          Text(
+            title,
+            style: AppTextThemes.bodySmall().copyWith(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        SizedBox(height: 20.h),
-        SizedBox(
-          width: 100.w,
-          height: 100.h,
-          child: Image.asset('assets/images/no-data.png'),
-        ),
-        SizedBox(height: 20.h)
-      ],
+          SizedBox(height: 20.h),
+          SizedBox(
+            width: 140.w,
+            height: 140.h,
+            child: Image.asset('assets/images/no-data.png'),
+          ),
+          SizedBox(height: 20.h),
+        ],
+      ),
     );
   }
 }
