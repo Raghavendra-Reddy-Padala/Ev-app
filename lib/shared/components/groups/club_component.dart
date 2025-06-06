@@ -353,7 +353,6 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
-
 class JoinButton extends StatelessWidget {
   final _UnifiedGroupData data;
   final bool isUserGroup;
@@ -367,12 +366,24 @@ class JoinButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groupController = Get.find<GroupController>();
-    final userId = Get.find<UserController>().userData.value?.data.uid;
-    final isCreator = data.createdBy == userId;
-
+    final userController = Get.find<UserController>();
+    
     return Obx(() {
-      final isJoined = groupController.joined_groups
-          .any((joined) => joined.id.toString() == data.id);
+      final userId = userController.userData.value?.data.uid;
+      final isCreator = data.createdBy == userId;
+      
+      // Access the reactive variables within Obx
+      final joinedGroupsList = groupController.joined_groups.value;
+      final allGroupsList = groupController.allGroups.value;
+      
+      // Check if user is joined using multiple methods
+      final isJoinedFromList = joinedGroupsList.any((joined) => 
+        joined.id.toString() == data.id || joined.id == data.id);
+      
+      final isJoinedFromAllGroups = allGroupsList.any((group) => 
+        group.id == data.id && group.isMember);
+      
+      final isJoined = data.isMember || isJoinedFromList || isJoinedFromAllGroups;
 
       Color backgroundColor;
       Color textColor;
@@ -402,8 +413,26 @@ class JoinButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: isEnabled
               ? () async {
-                  await groupController.joinGroup(data.id);
-                  groupController.getAlreadyJoinedGroups();
+                  final success = await groupController.joinGroup(data.id);
+                  if (success) {
+                    // Show success message
+                    Get.snackbar(
+                      'Success',
+                      'Successfully joined the group!',
+                      backgroundColor: Colors.green.withOpacity(0.8),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 2),
+                    );
+                  } else {
+                    // Show error message
+                    Get.snackbar(
+                      'Error',
+                      'Failed to join the group. Please try again.',
+                      backgroundColor: Colors.red.withOpacity(0.8),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 2),
+                    );
+                  }
                 }
               : null,
           style: ElevatedButton.styleFrom(
