@@ -36,7 +36,7 @@ class SpeedDetailsView extends StatelessWidget {
                     SizedBox(height: 20.h),
                     Expanded(child: _SpeedChart(controller: controller)),
                     SizedBox(height: 20.h),
-                    const TripControlPanel(),
+                    // const TripControlPanel(),
                   ],
                 ),
               ),
