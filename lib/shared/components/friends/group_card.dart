@@ -255,17 +255,16 @@ class FilterController extends GetxController {
             (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
                 .compareTo(a.aggregatedData?.totalCarbon ?? 0));
         break;
-        // case 'followers':
-        // groups.sort((a, b) =>
-        //     (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
-        //         .compareTo(a.aggregatedData?.totalCarbon ?? 0));
-        // break;
-        // case 'Trips':
-        // groups.sort((a, b) =>
-        //     (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
-        //         .compareTo(a.aggregatedData?.totalCarbon ?? 0));
-        // break;
-
+      case 'followers':
+        groups.sort((a, b) =>
+            (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
+                .compareTo(a.aggregatedData?.totalCarbon ?? 0));
+        break;
+      case 'Trips':
+        groups.sort((a, b) =>
+            (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
+                .compareTo(a.aggregatedData?.totalCarbon ?? 0));
+        break;
     }
     return groups;
   }

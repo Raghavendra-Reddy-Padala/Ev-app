@@ -109,9 +109,9 @@ class _GroupDetailUI extends StatelessWidget {
           // Activity and Members Rows
           Column(
             children: [
-              // _GroupActivityRow(groupId: groupId, groupName: groupName),
-              SizedBox(height: 16.h),
               _GroupMembersRow(groupId: groupId, groupName: groupName),
+              SizedBox(height: 16.h),
+              _GroupActivityRow(groupId: groupId, groupName: groupName),
             ],
           ),
 
