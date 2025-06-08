@@ -6,7 +6,7 @@ import '../../models/user/user_model.dart';
 import '../map/path_view.dart';
 
 class ActivityWidget extends StatelessWidget {
-  final Trip trip;
+  final Trip? trip;
   final List<LatLng> pathPoints;
   final bool isFullScreen;
 
@@ -102,16 +102,16 @@ class ActivityWidget extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Row(
         children: [
-          _buildStatColumn("Time", _formatDuration(trip.duration),
+          _buildStatColumn("Time", _formatDuration(trip?.duration ?? 0),
               Icons.access_time_rounded),
           _buildDivider(),
-          _buildStatColumn("Distance", _formatDistance(trip.distance),
+          _buildStatColumn("Distance", _formatDistance(trip?.distance   ?? 0),
               Icons.straighten_rounded),
           _buildDivider(),
-          _buildStatColumn("Calories", _formatCalories(trip.kcal),
+          _buildStatColumn("Calories", _formatCalories(trip?.kcal   ?? 0),
               Icons.local_fire_department_rounded),
           _buildDivider(),
-          _buildStatColumn("Max Elv", _formatMaxElevation(trip.maxElevation),
+          _buildStatColumn("Max Elv", _formatMaxElevation(trip?.maxElevation ?? 0),
               Icons.terrain_rounded),
         ],
       ),

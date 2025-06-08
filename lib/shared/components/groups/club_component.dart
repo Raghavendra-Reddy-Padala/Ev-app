@@ -66,13 +66,11 @@ class ClubComponent extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header Section
               Expanded(
                 flex: 3,
                 child: ClubHeader(data: _data),
               ),
 
-              // Stats Section
               Expanded(
                 flex: 3,
                 child: StatsRow(data: _data),
@@ -85,7 +83,7 @@ class ClubComponent extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   child: JoinButton(
                     data: _data,
-                    isUserGroup: groupData != null,
+isUserGroup: (allGroup?.isCreator ?? false) ? true : false,
                   ),
                 ),
               ),
@@ -97,9 +95,9 @@ class ClubComponent extends StatelessWidget {
   }
 }
 
-// Unified data class to handle both AllGroup and GroupData
 class _UnifiedGroupData {
   final String id;
+  final String Avatharurl;
   final String name;
   final String description;
   final String createdBy;
@@ -125,6 +123,7 @@ class _UnifiedGroupData {
     required this.totalTrips,
     required this.averageSpeed,
     this.aggregatedData,
+    required this.Avatharurl
   });
 
   factory _UnifiedGroupData.fromAllGroup(AllGroup group) {
@@ -141,6 +140,7 @@ class _UnifiedGroupData {
       totalTrips: group.totalTrips,
       averageSpeed: group.averageSpeed,
       aggregatedData: group.aggregatedData,
+      Avatharurl: group.Avatharurl, 
     );
   }
 
@@ -150,14 +150,15 @@ class _UnifiedGroupData {
 
     return _UnifiedGroupData(
       id: group.id,
+      Avatharurl: "assets/images/club.png",
       name: group.name,
       description: group.description,
       createdBy: group.createdBy,
-      memberCount: 0, // Default values since GroupData doesn't have these
-      isMember: true, // Assuming user is member of their groups
+      memberCount: 0, 
+      isMember: true, 
       isCreator: group.createdBy == userId,
       lastActivity: group.createdAt,
-      totalDistance: 0.0, // Default values
+      totalDistance: 0.0, 
       totalTrips: 0,
       averageSpeed: 0.0,
       aggregatedData: details?.aggregatedData,
@@ -296,7 +297,7 @@ class StatsRow extends StatelessWidget {
             ),
             Expanded(
               child: _StatItem(
-                label: 'Speed',
+                label: 'Carbon',
                 value: (data.aggregatedData?.totalCarbon ??
                         (data.averageSpeed / 1000))
                     .toStringAsFixed(1),
@@ -372,7 +373,6 @@ class JoinButton extends StatelessWidget {
       final userId = userController.userData.value?.data.uid;
       final isCreator = data.createdBy == userId;
       
-      // Access the reactive variables within Obx
       final joinedGroupsList = groupController.joined_groups.value;
       final allGroupsList = groupController.allGroups.value;
       

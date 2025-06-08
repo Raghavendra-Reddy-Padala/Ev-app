@@ -1,12 +1,11 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
+import 'package:mjollnir/shared/components/profile_picker/profile_image_picker.dart';
 import '../../constants/colors.dart';
 import '../buttons/app_button.dart';
-import '../pickers/image_picker.dart';
 
 class CustomDrawer extends StatelessWidget {
   final List<DrawerOption> options;
@@ -345,9 +344,9 @@ class DrawerOption {
   });
 }
 
-// Enhanced Create Group Dialog with loading states
+// Enhanced Create Group Dialog with ProfileImagePicker
 class CreateGroupDialog extends StatefulWidget {
-  final Function(String name, String description, File? image) onSubmit;
+  final Function(String name, String description, String? groupImage) onSubmit; // Changed signature
 
   const CreateGroupDialog({
     Key? key,
@@ -361,8 +360,8 @@ class CreateGroupDialog extends StatefulWidget {
 class _CreateGroupDialogState extends State<CreateGroupDialog> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  final GlobalKey<ImagePickerWidgetState> imagePickerKey = GlobalKey();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final Rx<String?> selectedGroupImage = Rx<String?>(null); // Added this
   bool _isSubmitting = false;
 
   @override
@@ -370,6 +369,14 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     nameController.dispose();
     descriptionController.dispose();
     super.dispose();
+  }
+
+  // Added this method
+  void _handleImageSelected(dynamic imageSource) {
+    if (imageSource is String) {
+      selectedGroupImage.value = imageSource;
+    }
+    // Handle ImageSource (camera/gallery) if needed in the future
   }
 
   @override
@@ -400,7 +407,14 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                   padding: EdgeInsets.all(24.w),
                   child: Column(
                     children: [
-                      ImagePickerWidget(key: imagePickerKey),
+                      // Use ProfileImagePicker instead of ImagePickerWidget
+                      ProfileImagePicker(
+                        imageUrl: selectedGroupImage,
+                        onImageSelected: _handleImageSelected,
+                        size: 100,
+                        showLabel: true,
+                        label: 'Choose Group Avatar',
+                      ),
                       SizedBox(height: 24.h),
                       _buildGroupNameField(),
                       SizedBox(height: 16.h),
@@ -448,7 +462,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             onPressed: _isSubmitting ? null : () => Navigator.pop(context),
             icon: Icon(
               Icons.close,
-              color: _isSubmitting ? Colors.white : Colors.white,
+              color: _isSubmitting ? Colors.white.withOpacity(0.5) : Colors.white,
               size: 24.w,
             ),
           ),
@@ -465,14 +479,14 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
         labelText: 'Group Name *',
         hintText: 'Enter a name for your group',
         prefixIcon: Icon(Icons.group,
-            color: _isSubmitting ? Colors.white : AppColors.primary),
+            color: _isSubmitting ? Colors.grey : AppColors.primary),
         labelStyle: TextStyle(
-          color: _isSubmitting ? Colors.white : Colors.blueGrey,
+          color: _isSubmitting ? Colors.grey : Colors.blueGrey,
           fontWeight: FontWeight.w500,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: Colors.white, width: 1.5),
+          borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -488,7 +502,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: Colors.white, width: 1.5),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
         ),
         filled: true,
         fillColor: _isSubmitting ? Colors.grey[100] : Colors.grey[50],
@@ -578,9 +592,9 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
 
     final groupName = nameController.text.trim();
     final groupDescription = descriptionController.text.trim();
-    final imageFile = imagePickerKey.currentState?.selectedImage;
+    final groupImage = selectedGroupImage.value; // Changed from imageFile
 
-    await widget.onSubmit(groupName, groupDescription, imageFile);
+    await widget.onSubmit(groupName, groupDescription, groupImage); // Updated call
 
     if (mounted) {
       setState(() {

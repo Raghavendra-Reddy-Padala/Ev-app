@@ -21,6 +21,23 @@ class ProfileImagePicker extends StatelessWidget {
     this.label = 'Upload Profile Picture',
   }) : super(key: key);
 
+  // Predefined avatar images - Cloudinary hosted URLs
+  static const Map<String, String> predefinedAvatars = {
+        'Avengers':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273812/icons8-avengers-480_v6dvmf.png',
+    'Black Widow': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272523/icons8-black-widow-480_gogwm9.png',
+    'Spider-Man New': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272532/icons8-spider-man-new-512_ct4cgf.png',
+    'Spider-Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272543/icons8-spider-man-500_b60vnv.png',
+    'Iron Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272554/icons8-iron-man-480_tt9icn.png',
+    'Thanos': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272612/icons8-thanos-480_m1vszd.png',
+    'Groot': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272621/icons8-groot-480_jg6zgw.png',
+    'storm-marvel':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273781/icons8-storm-marvel-500_kuwc5z.png',
+    'DeadPool':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273788/icons8-deadpool-480_wsac4a.png',
+    'Magneto':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273796/icons8-magneto-480_ljsx5o.png',
+    'Batman':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273801/icons8-batman-144_tpnasu.png',
+    'Joker':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273806/icons8-joker-suicide-squad-240_gyxsg0.png',
+
+  };
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -85,28 +102,44 @@ class ProfileImagePicker extends StatelessWidget {
   /// Builds the profile image widget based on the current imageUrl
   Widget _buildProfileImage() {
     if (imageUrl.value != null && imageUrl.value!.isNotEmpty) {
-      return Image.network(
-        imageUrl.value!,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(
-            Icons.person,
-            size: (size * 0.5).w,
-            color: Colors.grey[400],
-          );
-        },
-      );
+      // Check if it's a predefined avatar (asset image)
+      if (imageUrl.value!.startsWith('assets/')) {
+        return Image.asset(
+          imageUrl.value!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.person,
+              size: (size * 0.5).w,
+              color: Colors.grey[400],
+            );
+          },
+        );
+      } else {
+        // Network image
+        return Image.network(
+          imageUrl.value!,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.person,
+              size: (size * 0.5).w,
+              color: Colors.grey[400],
+            );
+          },
+        );
+      }
     } else {
       return Icon(
         Icons.person,
@@ -131,10 +164,14 @@ class ProfileImagePicker extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Select Image Source',
-              style: Get.textTheme.titleMedium,
+              'Select Profile Picture',
+              style: Get.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 20.h),
+            
+            // Camera and Gallery options
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -150,8 +187,97 @@ class ProfileImagePicker extends StatelessWidget {
                 ),
               ],
             ),
+            
+            SizedBox(height: 20.h),
+            
+            // Divider
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey[300])),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Text(
+                    'or choose from avatars',
+                    style: Get.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.grey[300])),
+              ],
+            ),
+            
+            SizedBox(height: 16.h),
+            
+            // Predefined avatars grid
+            Container(
+              height: 120.h,
+              child: GridView.builder(
+                scrollDirection: Axis.horizontal,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 8.w,
+                  crossAxisSpacing: 8.h,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: predefinedAvatars.length,
+                itemBuilder: (context, index) {
+                  String avatarName = predefinedAvatars.keys.elementAt(index);
+                  String avatarUrl = predefinedAvatars.values.elementAt(index);
+                  return _buildAvatarOption(avatarUrl, avatarName);
+                },
+              ),
+            ),
+            
             SizedBox(height: 16.h),
           ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  /// Builds an avatar option from predefined images
+  Widget _buildAvatarOption(String avatarUrl, String avatarName) {
+    return GestureDetector(
+      onTap: () => _selectPredefinedAvatar(avatarUrl),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: imageUrl.value == avatarUrl 
+                ? AppColors.primary 
+                : Colors.grey[300]!,
+            width: imageUrl.value == avatarUrl ? 3 : 1,
+          ),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            avatarUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                  strokeWidth: 2,
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: Icon(
+                  Icons.person,
+                  color: Colors.grey[400],
+                  size: 30.w,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -187,9 +313,26 @@ class ProfileImagePicker extends StatelessWidget {
     );
   }
 
+  /// Handles selecting a predefined avatar
+  void _selectPredefinedAvatar(String avatarUrl) {
+    Get.back(); // Close the bottom sheet
+    imageUrl.value = avatarUrl;
+    onImageSelected(avatarUrl); // Pass the URL directly
+  }
+
   /// Handles picking an image from the specified source
   void _pickImage(ImageSource source) async {
     Get.back(); // Close the bottom sheet
     await onImageSelected(source);
+  }
+
+  /// Static method to check if a URL is a predefined avatar
+  static bool isPredefinedAvatar(String? url) {
+    return url != null && predefinedAvatars.containsValue(url);
+  }
+
+  /// Static method to get all predefined avatar URLs
+  static List<String> getAllPredefinedAvatars() {
+    return predefinedAvatars.values.toList();
   }
 }

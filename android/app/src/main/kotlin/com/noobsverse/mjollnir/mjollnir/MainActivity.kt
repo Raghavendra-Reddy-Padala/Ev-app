@@ -1,4 +1,4 @@
-package com.noobsverse.mjollnir.mjollnir
+package com.noobsverse.mjollnir
 
 import io.flutter.embedding.android.FlutterActivity
 

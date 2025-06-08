@@ -1,6 +1,7 @@
 class AllGroup {
   String id;
   String name;
+  String Avatharurl;
   String description;
   DateTime? createdAt;
   String createdBy;
@@ -16,6 +17,7 @@ class AllGroup {
   AllGroup({
     required this.id,
     required this.name,
+   required this.Avatharurl,
     required this.description,
     this.createdAt, // Made nullable
     required this.createdBy,
@@ -32,6 +34,7 @@ class AllGroup {
   factory AllGroup.fromJson(Map<String, dynamic> json) {
     return AllGroup(
       id: json['id'],
+      Avatharurl: json['Avatharurl'] ?? '',
       name: json['name'],
       description: json['description'],
       createdAt:
