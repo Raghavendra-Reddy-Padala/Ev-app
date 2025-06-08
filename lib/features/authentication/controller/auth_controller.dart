@@ -114,8 +114,9 @@ class AuthController extends BaseController {
     update();
   }
 
-  Future<void> updateProfileImage(ImageSource source) async {
-    try {
+Future<void> updateProfileImage(dynamic source) async {
+  try {
+    if (source is ImageSource) {
       final url = await ImageService.pickAndUploadImage(
         type: ImageType.avatar,
         source: source,
@@ -123,11 +124,13 @@ class AuthController extends BaseController {
       if (url != null) {
         profileImageUrl.value = url;
       }
-    } catch (e) {
-      showErrorToast('Failed to upload image: ${e.toString()}');
+    } else if (source is String) {
+      profileImageUrl.value = source;
     }
+  } catch (e) {
+    showErrorToast('Failed to update image: ${e.toString()}');
   }
-
+}
   void completeSignup() async {
     try {
       isLoading.value = true;
@@ -393,6 +396,18 @@ class AuthController extends BaseController {
     _resendTimerInstance?.cancel();
   }
 
+void goToPreviousStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+    update();
+  }
+}
+void goToStep(int step) {
+  if (step >= 1 && step <= 3) {
+    currentStep.value = step;
+    update();
+  }
+}
   Future<String?> getToken() async {
     return localStorage.getToken();
   }

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/menubar/memberdetailpage.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
+import 'package:mjollnir/shared/components/groups/groupmemberpage.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 
 import '../../shared/components/header/header.dart';
@@ -270,187 +271,187 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-class _GroupProgressCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60.w,
-            height: 60.h,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Center(
-              child: Text(
-                '0',
-                style: AppTextThemes.bodyLarge().copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24.sp,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TEAM LEVEL',
-                  style: AppTextThemes.bodySmall().copyWith(
-                    color: Colors.grey.shade600,
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Container(
-                  height: 8.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: 0.7, // 70% progress
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '70 km to next level',
-                  style: AppTextThemes.bodySmall().copyWith(
-                    color: Colors.grey.shade600,
-                    fontSize: 10.sp,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// class _GroupProgressCard extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: double.infinity,
+//       padding: EdgeInsets.all(16.w),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(12.r),
+//       ),
+//       child: Row(
+//         children: [
+//           Container(
+//             width: 60.w,
+//             height: 60.h,
+//             decoration: BoxDecoration(
+//               color: AppColors.primary,
+//               borderRadius: BorderRadius.circular(12.r),
+//             ),
+//             child: Center(
+//               child: Text(
+//                 '0',
+//                 style: AppTextThemes.bodyLarge().copyWith(
+//                   color: Colors.white,
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 24.sp,
+//                 ),
+//               ),
+//             ),
+//           ),
+//           SizedBox(width: 16.w),
+//           Expanded(
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   'TEAM LEVEL',
+//                   style: AppTextThemes.bodySmall().copyWith(
+//                     color: Colors.grey.shade600,
+//                     fontSize: 10.sp,
+//                     fontWeight: FontWeight.w500,
+//                   ),
+//                 ),
+//                 SizedBox(height: 8.h),
+//                 Container(
+//                   height: 8.h,
+//                   decoration: BoxDecoration(
+//                     color: Colors.grey.shade300,
+//                     borderRadius: BorderRadius.circular(4.r),
+//                   ),
+//                   child: FractionallySizedBox(
+//                     alignment: Alignment.centerLeft,
+//                     widthFactor: 0.7, // 70% progress
+//                     child: Container(
+//                       decoration: BoxDecoration(
+//                         color: AppColors.primary,
+//                         borderRadius: BorderRadius.circular(4.r),
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 SizedBox(height: 4.h),
+//                 Text(
+//                   '70 km to next level',
+//                   style: AppTextThemes.bodySmall().copyWith(
+//                     color: Colors.grey.shade600,
+//                     fontSize: 10.sp,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
-class _ActivityGraphPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Time Travelled',
-                style: AppTextThemes.bodyMedium().copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                ),
-              ),
-              Row(
-                children: [
-                  Text(
-                    '1 Jun-Today',
-                    style: AppTextThemes.bodySmall().copyWith(
-                      color: Colors.grey.shade600,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey.shade600,
-                    size: 16.sp,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '12 Hrs',
-                style: AppTextThemes.bodyLarge().copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18.sp,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          // Bar Chart
-          Container(
-            height: 120.h,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildBar('M', 0.4, Colors.grey.shade300),
-                _buildBar('T', 0.7, AppColors.primary),
-                _buildBar('W', 1.0, AppColors.primary),
-                _buildBar('Th', 0.3, Colors.grey.shade300),
-                _buildBar('F', 0.6, AppColors.primary),
-                _buildBar('Sa', 0.8, AppColors.primary),
-                _buildBar('S', 0.2, Colors.grey.shade300),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-          // Y-axis labels
-        ],
-      ),
-    );
-  }
+// class _ActivityGraphPlaceholder extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: double.infinity,
+//       padding: EdgeInsets.all(16.w),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(12.r),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 'Time Travelled',
+//                 style: AppTextThemes.bodyMedium().copyWith(
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 14.sp,
+//                 ),
+//               ),
+//               Row(
+//                 children: [
+//                   Text(
+//                     '1 Jun-Today',
+//                     style: AppTextThemes.bodySmall().copyWith(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 12.sp,
+//                     ),
+//                   ),
+//                   Icon(
+//                     Icons.keyboard_arrow_down,
+//                     color: Colors.grey.shade600,
+//                     size: 16.sp,
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//           SizedBox(height: 16.h),
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 '12 Hrs',
+//                 style: AppTextThemes.bodyLarge().copyWith(
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 18.sp,
+//                 ),
+//               ),
+//             ],
+//           ),
+//           SizedBox(height: 20.h),
+//           // Bar Chart
+//           Container(
+//             height: 120.h,
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               crossAxisAlignment: CrossAxisAlignment.end,
+//               children: [
+//                 _buildBar('M', 0.4, Colors.grey.shade300),
+//                 _buildBar('T', 0.7, AppColors.primary),
+//                 _buildBar('W', 1.0, AppColors.primary),
+//                 _buildBar('Th', 0.3, Colors.grey.shade300),
+//                 _buildBar('F', 0.6, AppColors.primary),
+//                 _buildBar('Sa', 0.8, AppColors.primary),
+//                 _buildBar('S', 0.2, Colors.grey.shade300),
+//               ],
+//             ),
+//           ),
+//           SizedBox(height: 16.h),
+//           // Y-axis labels
+//         ],
+//       ),
+//     );
+//   }
 
-  Widget _buildBar(String day, double height, Color color) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 20.w,
-          height: (height * 80).h,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4.r),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Text(
-          day,
-          style: AppTextThemes.bodySmall().copyWith(
-            fontSize: 10.sp,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
-    );
-  }
-}
+  // Widget _buildBar(String day, double height, Color color) {
+  //   return Column(
+  //     mainAxisAlignment: MainAxisAlignment.end,
+  //     children: [
+  //       Container(
+  //         width: 20.w,
+  //         height: (height * 80).h,
+  //         decoration: BoxDecoration(
+  //           color: color,
+  //           borderRadius: BorderRadius.circular(4.r),
+  //         ),
+  //       ),
+  //       SizedBox(height: 8.h),
+  //       Text(
+  //         day,
+  //         style: AppTextThemes.bodySmall().copyWith(
+  //           fontSize: 10.sp,
+  //           color: Colors.grey.shade600,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+// }
 
 class _GroupActivityRow extends StatelessWidget {
   final String groupId;
@@ -519,11 +520,10 @@ class _GroupActivityRow extends StatelessWidget {
                 SizedBox(width: 8.w),
                 GestureDetector(
                   onTap: () {
-                    // Navigate to member activity details
-                    // Get.to(() => MemberActivityDetailPage(
-                    //   groupMembers: memberDetails,
-                    //   groupName: groupName,
-                    // ));
+                    Get.to(() => MemberDetailPage(
+                      groupMembers: memberDetails,
+                      name: groupName,
+                    ));
                   },
                   child: Icon(
                     Icons.arrow_forward_ios,
@@ -713,7 +713,7 @@ class _GroupMembersRow extends StatelessWidget {
                 SizedBox(width: 8.w),
                 GestureDetector(
                   onTap: () {
-                    Get.to(() => MemberDetailPage(
+                    Get.to(() => GroupMembersPage(
                           groupMembers: memberDetails,
                           name:
                               "${memberDetails.members[0].firstName} ${memberDetails.members[0].lastName}",

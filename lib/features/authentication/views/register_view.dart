@@ -19,7 +19,7 @@ class SignupScreen extends StatelessWidget {
           child: SingleChildScrollView(
             child: GetBuilder<AuthController>(
               builder: (controller) {
-                return Column(
+                return Obx(() => Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: 10.h),
@@ -35,7 +35,7 @@ class SignupScreen extends StatelessWidget {
                     else
                       _buildProfilePictureStep(controller, context),
                   ],
-                );
+                ));
               },
             ),
           ),
@@ -104,12 +104,17 @@ class SignupScreen extends StatelessWidget {
           SignupFormFields.weightField(
               controller.weightController, controller.weightUnit),
           SizedBox(height: 20.h),
-          CustomButton(
-            label: 'Continue',
-            onPressed: controller.validateSecondFormAndContinue,
-            width: double.infinity,
-            backgroundColor: Colors.black,
+          
+          // Custom bottom with back and continue buttons
+          _buildCustomBottomButtons(
+            onBack: () {
+              controller.currentStep.value = 1;
+              controller.update();
+            },
+            onContinue: controller.validateSecondFormAndContinue,
+            continueLabel: 'Continue',
           ),
+          
           SizedBox(height: 10.h),
           const TermsText(),
         ],
@@ -142,18 +147,54 @@ class SignupScreen extends StatelessWidget {
           SizedBox(height: 10.h),
           SignupFormFields.inviteCodeField(controller.inviteCodeController),
           SizedBox(height: 20.h),
-          CustomButton(
-            label: 'Complete Signup',
-            onPressed: () {
-              (controller.validateFinal()) ? controller.completeSignup() : null;
+          
+          // Custom bottom with back and complete buttons
+          _buildCustomBottomButtons(
+            onBack: () {
+              controller.currentStep.value = 2;
+              controller.update();
             },
-            width: double.infinity,
-            backgroundColor: Colors.black,
+            onContinue: () {
+              if (controller.validateFinal()) {
+                controller.completeSignup();
+              }
+            },
+            continueLabel: 'Complete Signup',
           ),
+          
           SizedBox(height: 10.h),
           const TermsText(),
         ],
       ),
+    );
+  }
+
+  Widget _buildCustomBottomButtons({
+    required VoidCallback onBack,
+    required VoidCallback onContinue,
+    required String continueLabel,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: CustomButton(
+            label: 'Back',
+            onPressed: onBack,
+            backgroundColor: Colors.grey[300],
+            textColor: Colors.black,
+          ),
+        ),
+        SizedBox(width: 15.w),
+        Expanded(
+          flex: 2,
+          child: CustomButton(
+            label: continueLabel,
+            onPressed: onContinue,
+            backgroundColor: Colors.black,
+          ),
+        ),
+      ],
     );
   }
 }

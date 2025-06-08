@@ -222,68 +222,71 @@ class GroupController extends BaseController {
     }
   }
 
-  Future<bool> createGroup(String name, String description) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+ // Updated createGroup method for GroupController
+Future<bool> createGroup(String name, String description, [String? groupImage]) async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
 
-      final result = await useApiOrDummy(
-        apiCall: () async {
-          final String? authToken = await getToken();
-          if (authToken == null) {
-            throw Exception('Authentication token not found');
-          }
+    final result = await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = await getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
 
-          final response = await apiService.post(
-              endpoint: ApiConstants.groupsCreate,
-              headers: {
-                'Authorization': 'Bearer $authToken',
-                'X-Karma-App': 'dafjcnalnsjn'
-              },
-              body: {
-                "name": name,
-                "description": description
-              });
+        // Prepare the request body
+        Map<String, dynamic> requestBody = {
+          "name": name,
+          "description": description,
+        };
 
-          if (response != null && response['success']) {
-            await fetchUserGroups();
-            return true;
-          }
-          return false;
-        },
-        dummyData: () {
-          final dummyResponse =
-              DummyDataService.createGroupResponse(name, description);
+        // Add group_image only if it's provided
+        if (groupImage != null && groupImage.isNotEmpty) {
+          requestBody["group_image"] = groupImage;
+        }
 
-          userGroups.add(
-            GroupData(
-              id: dummyResponse['group_id'],
-              name: name,
-              description: description,
-              createdAt: DateTime.now().toString(),
-              createdBy: 'dummy-user-id',
-              // memberCount: 1,
-              // isMember: true,
-              // isCreator: true,
-              // lastActivity: DateTime.now().toIso8601String(),
-              // totalDistance: 0.0,
-              // totalTrips: 0,
-              // averageSpeed: 0.0,
-            ),
-          );
+        final response = await apiService.post(
+          endpoint: ApiConstants.groupsCreate,
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'X-Karma-App': 'dafjcnalnsjn'
+          },
+          body: requestBody,
+        );
+
+        if (response != null && response['success']) {
+          await fetchUserGroups();
           return true;
-        },
-      );
+        }
+        return false;
+      },
+      dummyData: () {
+        final dummyResponse = DummyDataService.createGroupResponse(name, description);
 
-      return result;
-    } catch (e) {
-      handleError(e);
-      return false;
-    } finally {
-      isLoading.value = false;
-    }
+        userGroups.add(
+          GroupData(
+            id: dummyResponse['group_id'],
+            name: name,
+            description: description,
+            createdAt: DateTime.now().toString(),
+            createdBy: 'dummy-user-id',
+            // Add groupImage to your GroupData model if needed
+            // groupImage: groupImage,
+          ),
+        );
+        return true;
+      },
+    );
+
+    return result;
+  } catch (e) {
+    handleError(e);
+    return false;
+  } finally {
+    isLoading.value = false;
   }
-Future<bool> joinGroup(String groupId) async {
+}Future<bool> joinGroup(String groupId) async {
   try {
     isLoading.value = true;
     errorMessage.value = '';

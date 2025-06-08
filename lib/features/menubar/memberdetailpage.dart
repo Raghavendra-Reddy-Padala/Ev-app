@@ -2,10 +2,7 @@ import 'dart:math';
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mjollnir/features/account/controllers/trips_controller.dart';
 import 'package:mjollnir/shared/components/activity/activity_widget.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
@@ -64,8 +61,6 @@ class MemberDetailPage extends StatelessWidget {
     ];
 
     final screenHeight = MediaQuery.of(context).size.height;
-    TripsController tripController = Get.find<TripsController>();
-                          final trip = tripController.trips[0];
 
 
     return Scaffold(
@@ -117,7 +112,7 @@ class MemberDetailPage extends StatelessWidget {
                               Random().nextInt(pathPointsList.length);
                           return ActivityWidget(
                             pathPoints: pathPointsList[randomIndex],
-                            trip: trip,
+                            trip: null,
                           );
                         }),
                       ],

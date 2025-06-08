@@ -128,20 +128,16 @@ class _UI extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 25.h, horizontal: 20.w),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(userController
-                      .userData.value?.data.banner?.isNotEmpty ==
-                  true
-              ? userController.userData.value!.data.banner!
-              : "https://res.cloudinary.com/djyny0qqn/image/upload/v1744564353/account_bg_h0teev.png"),
-          fit: BoxFit.cover,
+          image: NetworkImage( "https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png"),
+          fit: BoxFit.fill,
         ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(1),
-            offset: const Offset(0, 5),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: AppColors.primary.withOpacity(1),
+        //     offset: const Offset(0, 5),
+        //   ),
+        // ],
       ),
       child: userController.isLoading.value
           ? Center(
@@ -229,37 +225,37 @@ class _UI extends StatelessWidget {
                           ),
                   ),
                 ),
-                SizedBox(width: 20.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userController.userData.value?.data.firstName
-                                    ?.isNotEmpty ==
-                                true
-                            ? userController.userData.value!.data.firstName!
-                            : "User",
-                        style: AppTextThemes.bodyMedium().copyWith(
-                          fontSize: 24.sp,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 5.h),
-                      Text(
-                        userController.userData.value?.data.email?.isNotEmpty ==
-                                true
-                            ? userController.userData.value!.data.email!
-                            : "user@example.com",
-                        style: AppTextThemes.bodySmall().copyWith(
-                          fontSize: 14.sp,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                Spacer(),
+                // Expanded(
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: [
+                //       Text(
+                //         userController.userData.value?.data.firstName
+                //                     ?.isNotEmpty ==
+                //                 true
+                //             ? userController.userData.value!.data.firstName!
+                //             : "User",
+                //         style: AppTextThemes.bodyMedium().copyWith(
+                //           fontSize: 24.sp,
+                //           color: Colors.black,
+                //           fontWeight: FontWeight.bold,
+                //         ),
+                //       ),
+                //       SizedBox(height: 5.h),
+                //       Text(
+                //         userController.userData.value?.data.email?.isNotEmpty ==
+                //                 true
+                //             ? userController.userData.value!.data.email!
+                //             : "user@example.com",
+                //         style: AppTextThemes.bodySmall().copyWith(
+                //           fontSize: 14.sp,
+                //           color: Colors.black,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 GestureDetector(
                   onTap: () {
                     Get.to(() => EditProfileView());

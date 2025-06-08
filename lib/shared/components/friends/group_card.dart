@@ -236,11 +236,21 @@ class FilterController extends GetxController {
   }
 
   List<User> sortUsers(List<User> users) {
-    users.sort((a, b) => b.points.compareTo(a.points));
+    switch (selectedValue.value) {
+      case 'Pts':
+        users.sort((a, b) => b.points.compareTo(a.points));
+        break;
+      case 'followers':
+        users.sort((a, b) => b.followers.compareTo(a.followers));
+        break;
+      case 'Trips':
+        users.sort((a, b) => b.trips.compareTo(a.trips));
+        break;
+    }
     return users;
   }
 
-  List<AllGroup> sortGroups(List<AllGroup> groups) {
+  List<AllGroup> sortGroups(List<AllGroup> groups ) {
     switch (selectedValue.value) {
       case 'Pts':
         groups.sort((a, b) => (b.aggregatedData?.totalPoints ?? b.totalTrips)
@@ -255,16 +265,7 @@ class FilterController extends GetxController {
             (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
                 .compareTo(a.aggregatedData?.totalCarbon ?? 0));
         break;
-      case 'followers':
-        groups.sort((a, b) =>
-            (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
-                .compareTo(a.aggregatedData?.totalCarbon ?? 0));
-        break;
-      case 'Trips':
-        groups.sort((a, b) =>
-            (b.aggregatedData?.totalCarbon ?? (b.averageSpeed / 1000))
-                .compareTo(a.aggregatedData?.totalCarbon ?? 0));
-        break;
+     
     }
     return groups;
   }

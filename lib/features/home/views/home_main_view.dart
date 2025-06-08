@@ -56,66 +56,69 @@ class _HomeMainViewState extends State<HomeMainView> {
     }
   }
 
-  void _handleCreateGroup() {
-    showDialog(
-      context: context,
-      builder: (context) => CreateGroupDialog(
-        onSubmit: (name, description, image) async {
-          Get.dialog(
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-            barrierDismissible: false,
-          );
+ // Updated _handleCreateGroup method in HomeMainView
+void _handleCreateGroup() {
+  showDialog(
+    context: context,
+    builder: (context) => CreateGroupDialog(
+      onSubmit: (name, description, groupImage) async {
+        Get.dialog(
+          const Center(
+            child: CircularProgressIndicator(),
+          ),
+          barrierDismissible: false,
+        );
 
-          try {
-            final success = await groupController.createGroup(name, description);
-            
-            Get.back();
+        try {
+          final success = await groupController.createGroup(name, description, groupImage);
+          
+          Get.back(); // Close loading dialog
 
-            if (success) {
-             Navigator.of(context).pop();
+          if (success) {
+            Navigator.of(context).pop(); // Close create group dialog
 
-              Get.snackbar(
-                'Success',
-                'Group "$name" created successfully!',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-                duration: const Duration(seconds: 3),
-              );
-            } else {
-              Get.snackbar(
-                'Error',
-                groupController.errorMessage.value.isNotEmpty 
-                    ? groupController.errorMessage.value 
-                    : 'Failed to create group. Please try again.',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-                duration: const Duration(seconds: 3),
-              );
-            }
-          } catch (e) {
-            if (Get.isDialogOpen == true) {
-             Navigator.of(context).pop();
-            }
-            
+            Get.snackbar(
+              'Success',
+              'Group "$name" created successfully!',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+              icon: const Icon(Icons.check_circle, color: Colors.white),
+            );
+            groupController.fetchGroups();
+          } else {
             Get.snackbar(
               'Error',
-              'An unexpected error occurred: ${e.toString()}',
+              groupController.errorMessage.value.isNotEmpty 
+                  ? groupController.errorMessage.value 
+                  : 'Failed to create group. Please try again.',
               snackPosition: SnackPosition.BOTTOM,
               backgroundColor: Colors.red,
               colorText: Colors.white,
               duration: const Duration(seconds: 3),
+              icon: const Icon(Icons.error, color: Colors.white),
             );
           }
-        },
-      ),
-    );
-  }
-
-  List<DrawerOption> _getDrawerOptions() {
+        } catch (e) {
+          if (Get.isDialogOpen == true) {
+            Get.back(); 
+          }
+          
+          Get.snackbar(
+            'Error',
+            'An unexpected error occurred: ${e.toString()}',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+            icon: const Icon(Icons.error, color: Colors.white),
+          );
+        }
+      },
+    ),
+  );
+}  List<DrawerOption> _getDrawerOptions() {
     return [
       DrawerOption(
         title: 'Subscriptions',
