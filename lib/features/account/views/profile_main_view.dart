@@ -95,28 +95,39 @@ class _ProfileContent extends StatelessWidget {
       );
     });
   }
-Widget _buildCompactProfileHeader() {
+  Widget _buildCompactProfileHeader() {
   return Obx(() {
     final user = controller.userData.value?.data;
     if (user == null) return const SizedBox();
 
-    return Column(
-      children: [
-        // Banner and Image Container
-        _buildBannerContainer(user),
-        SizedBox(height: 12.h),
-        // Name and Stats Container
-        _buildInfoContainer(user),
-      ],
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 8.w),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            children: [
+              // Banner Container
+              _buildBannerContainer(user),
+              // White Info Container (positioned right below banner)
+              _buildInfoContainer(user),
+            ],
+          ),
+          // Profile picture positioned to overlap both containers
+          _buildOverlapProfilePicture(user),
+        ],
+      ),
     );
   });
 }
 
 Widget _buildBannerContainer(user) {
   return Container(
-    margin: EdgeInsets.symmetric(horizontal: 8.w),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16.r),
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(16.r),
+        topRight: Radius.circular(16.r),
+      ),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withOpacity(0.04),
@@ -127,11 +138,15 @@ Widget _buildBannerContainer(user) {
     ),
     child: Stack(
       children: [
+        // Banner Image
         Container(
-          height: 140.h,
+          height: 120.h,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.r),
+              topRight: Radius.circular(16.r),
+            ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -143,7 +158,6 @@ Widget _buildBannerContainer(user) {
             image: DecorationImage(
               image: NetworkImage(
                 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
-
               ),
               fit: BoxFit.fill,
             ),
@@ -154,7 +168,10 @@ Widget _buildBannerContainer(user) {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.r),
+                topRight: Radius.circular(16.r),
+              ),
               onTap: () => Get.to(() => Profiledetails()),
               child: Container(),
             ),
@@ -166,8 +183,6 @@ Widget _buildBannerContainer(user) {
           right: 8.w,
           child: Container(
             decoration: BoxDecoration(
-              
-              
               color: Colors.black.withOpacity(0.4),
               borderRadius: BorderRadius.circular(8.r),
             ),
@@ -175,52 +190,12 @@ Widget _buildBannerContainer(user) {
               height: 32.h,
               width: 32.w,
               child: IconButton(
-              
                 onPressed: () => Get.to(() => Profiledetails()),
-                icon:  Icon(
+                icon: Icon(
                   Icons.edit_outlined,
                   color: Colors.white,
                   size: 16.w,
                 ),
-              ),
-            ),
-          ),
-        ),
-        
-        // Profile Avatar
-        Positioned(
-          bottom: 20.h, // Moved up to be fully visible within the banner
-          left: 0,
-          right: 250,
-          child: Center(
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3.w,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 40.w,
-                backgroundImage: user.avatar != null
-                    ? NetworkImage(user.avatar!)
-                    : null,
-                backgroundColor: Colors.black,
-                child: user.avatar == null
-                    ? Icon(
-                        Icons.person_outline,
-                        size: 24.w,
-                        color: Colors.grey[400],
-                      )
-                    : null,
               ),
             ),
           ),
@@ -230,13 +205,53 @@ Widget _buildBannerContainer(user) {
   );
 }
 
+Widget _buildOverlapProfilePicture(user) {
+  return Positioned(
+    top: 70.h, // Adjusted for 120h banner (120 - 50 = 70)
+    left: 24.w,
+    child: Container(
+      width: 100.w,
+      height: 100.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white,
+          width: 4.w,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: 48.w,
+        backgroundImage: user.avatar != null
+            ? NetworkImage(user.avatar!)
+            : null,
+        backgroundColor: Colors.grey[300],
+        child: user.avatar == null
+            ? Icon(
+                Icons.person_outline,
+                size: 40.w,
+                color: Colors.grey[600],
+              )
+            : null,
+      ),
+    ),
+  );
+}
+
 Widget _buildInfoContainer(user) {
   return Container(
-
-    margin: EdgeInsets.symmetric(horizontal: 8.w),
     decoration: BoxDecoration(
       color: AppColors.accent1,
-      borderRadius: BorderRadius.circular(16.r),
+      borderRadius: BorderRadius.only(
+        bottomLeft: Radius.circular(16.r),
+        bottomRight: Radius.circular(16.r),
+      ),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withOpacity(0.04),
@@ -246,24 +261,28 @@ Widget _buildInfoContainer(user) {
       ],
     ),
     child: Column(
-
       children: [
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.only(
-            // left: 16.w,
-            top: 12.h,
-             right: 150.w,
-            bottom: 12.h,
-          ),
-          child: Center(
-            child: Text(
-              '${user.firstName} ${user.lastName}',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+        // Name section positioned below profile picture
+        SizedBox(height: 55.h), // Space for overlapping profile picture
+        
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0,0,200,0),
+          child: SizedBox(
+            
+            width: double.infinity,
+            child: Column(
+              children: [
+                Text(
+                  '${user.firstName} ${user.lastName}',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+            
+              ],
             ),
           ),
         ),
@@ -273,13 +292,13 @@ Widget _buildInfoContainer(user) {
           height: 1.h,
           margin: EdgeInsets.symmetric(horizontal: 16.w),
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: Colors.grey[300],
           ),
         ),
         
         // Stats section
         Container(
-          padding: EdgeInsets.all(10.w),
+          padding: EdgeInsets.all(16.w),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

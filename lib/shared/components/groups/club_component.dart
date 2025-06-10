@@ -415,7 +415,6 @@ class JoinButton extends StatelessWidget {
               ? () async {
                   final success = await groupController.joinGroup(data.id);
                   if (success) {
-                    // Show success message
                     Get.snackbar(
                       'Success',
                       'Successfully joined the group!',

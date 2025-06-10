@@ -24,28 +24,6 @@ class ClubList extends StatelessWidget {
         );
       }
 
-//       if (groupController.errorMessage.value.isNotEmpty) {
-//         return Center(
-//           child: Column(
-//             children: [
-//               Icon(Icons.error_outline, color: Colors.red, size: 48.w),
-//               SizedBox(height: 15.w),
-//               Text(
-//                 groupController.errorMessage.value,
-//                 style: AppTextThemes.bodyMedium().copyWith(color: Colors.red),
-//                 textAlign: TextAlign.center,
-//               ),
-//               SizedBox(height: 15.w),
-//               ElevatedButton(
-//                 onPressed: () { groupController.fetchGroups();
-//                             groupController.errorMessage.value = ''; // Clear error
-// },
-//                 child: const Text("Retry"),
-//               ),
-//             ],
-//           ),
-//         );
-//       }
 
       if (groupController.allGroups.isEmpty) {
         return Center(

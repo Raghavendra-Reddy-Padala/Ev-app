@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/account/views/editprofile.dart';
 import 'package:mjollnir/features/authentication/controller/auth_controller.dart';
-import 'package:mjollnir/features/authentication/views/login_view.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 
 class Profiledetails extends StatelessWidget {

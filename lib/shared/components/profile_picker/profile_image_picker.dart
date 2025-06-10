@@ -23,19 +23,30 @@ class ProfileImagePicker extends StatelessWidget {
 
   // Predefined avatar images - Cloudinary hosted URLs
   static const Map<String, String> predefinedAvatars = {
-        'Avengers':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273812/icons8-avengers-480_v6dvmf.png',
-    'Black Widow': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272523/icons8-black-widow-480_gogwm9.png',
-    'Spider-Man New': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272532/icons8-spider-man-new-512_ct4cgf.png',
-    'Spider-Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272543/icons8-spider-man-500_b60vnv.png',
-    'Iron Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272554/icons8-iron-man-480_tt9icn.png',
-    'Thanos': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272612/icons8-thanos-480_m1vszd.png',
-    'Groot': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749272621/icons8-groot-480_jg6zgw.png',
-    'storm-marvel':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273781/icons8-storm-marvel-500_kuwc5z.png',
-    'DeadPool':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273788/icons8-deadpool-480_wsac4a.png',
-    'Magneto':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273796/icons8-magneto-480_ljsx5o.png',
-    'Batman':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273801/icons8-batman-144_tpnasu.png',
-    'Joker':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749273806/icons8-joker-suicide-squad-240_gyxsg0.png',
-
+        'Avengers':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474061/475409-3840x2160-desktop-4k-mjolnir-thor-background_sy9bik.jpg',
+    'Black Widow': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473989/476112-3840x2160-desktop-4k-valkyrie-thor-wallpaper_wzetqs.jpg',
+    'Spider-Man New': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg',
+    'Spider-Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474048/51983-1920x1080-desktop-full-hd-loki-background_izkwel.jpg',
+    'Iron Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474046/79564-3840x2160-desktop-4k-hulk-background-photo_nifdrh.jpg',
+    'Thanos': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474043/453718-1080x1920-iphone-1080p-nanaue-king-shark-wallpaper_aln7m0.jpg',
+    'Groot': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474040/325932-3840x2160-desktop-4k-wonder-woman-movie-background_kidhec.jpg',
+    'storm-marvel':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474028/486909-3840x2160-desktop-4k-tony-stark-iron-man-background-image_bdt1xu.jpg',
+    'DeadPool':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg',
+    'Magneto':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474000/475892-1125x2436-samsung-hd-heimdall-thor-background_wxvp9u.jpg',
+    'Batman':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473994/475857-1125x2436-iphone-hd-hela-thor-wallpaper-photo_ycjt4k.jpg',
+    'Joker':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473991/475721-1920x1080-desktop-1080p-hela-thor-wallpaper-photo_ioxzil.jpg',
+    'a':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473984/Untitled_design-15_ezndnm.png',
+    'b':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473981/Untitled_design-16_ptodd9.png',
+    'c':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473978/Untitled_design_pptozx.png',
+    'd'  : 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473977/Untitled_design-18_rvjidz.png',
+    'e':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473974/Untitled_design-14_jgsuia.png',
+    'f':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473971/Untitled_design-10_scipkm.png',
+    'g':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473963/Untitled_design-5_cpp6sc.png',
+    'h':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473957/Untitled_design-8_qcxsen.png',
+    'i':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473960/Untitled_design-9_nddt2w.png',
+    'j':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473953/Untitled_design-4_rbjo2r.png',
+    "k":"https://res.cloudinary.com/djyny0qqn/image/upload/v1749473950/Untitled_design-3_evvd0h.png",
+    "l":"https://res.cloudinary.com/djyny0qqn/image/upload/v1749473947/Untitled_design-2_ams8zg.png"
   };
 
   @override
