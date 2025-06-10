@@ -19,6 +19,8 @@ class EditProfileView extends StatefulWidget {
 
 class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
+    final LocalStorage localStorage = Get.find<LocalStorage>();
+
   final Map<String, dynamic> _formData = {};
   final ProfileController userController = Get.find<ProfileController>();
   bool _isLoading = false;
@@ -66,6 +68,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       _formData['gender'] = userController.userData.value!.data.gender ?? '';
       _formData['invite_code'] =
           userController.userData.value!.data.inviteCode ?? '';
+        
     }
   }
 
@@ -77,16 +80,14 @@ class _EditProfileViewState extends State<EditProfileView> {
       });
 
       try {
-        var token = LocalStorage().getToken();
-        token ??=
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZSI6Iis5MTkzNDc1NzI1NTYiLCJ1aWQiOiJhMWIyYzNkNGZzIn0.EuHFvVhlm9QrKQdIp1v_6FDa5aEyMd_UCro-rjjwdhU';
+final token = await getToken();
+      if (token == null) return;        
 
         final userData = userController.userData.value!.data;
 
         final Map<String, dynamic> jsonData = {
           'TableName': ' ',
           'uid': userData.uid ?? ' ',
-          'phone': userData.phone ?? ' ',
           'password': 'abcd',
           'type': userData.type ?? '  ',
           'employee_id': userData.employeeId ?? '  ',
@@ -96,11 +97,10 @@ class _EditProfileViewState extends State<EditProfileView> {
           'age': userData.age.toString() ?? '',
           'points': userData.points ?? 0,
           'invite_code': userData.inviteCode ?? '',
-          'gender': userData.gender ?? '',
+          'gender': userData.gender ,
           'first_name': _formData['first_name'],
           'last_name': _formData['last_name'],
           'date_of_birth': _formData['date_of_birth'],
-          'email': _formData['email'],
           'weight': _formData['weight']?.toString() ?? '',
           'height': _formData['height']?.toString() ?? '',
           'weight_units': _formData['weight_units'] ?? 'kg',
@@ -112,6 +112,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           'country': _formData['country'] ?? '',
           'avatar': _formData['avatar'] ?? '',
           'banner': _formData['banner'] ?? '',
+          'created_at':userData.createdAt ?? '',
         };
 
         jsonData.removeWhere((key, value) => value == null);
@@ -133,11 +134,13 @@ class _EditProfileViewState extends State<EditProfileView> {
         AppLogger.i('Response received');
         AppLogger.i('Response body: ${response.toString()}');
 
-        // Check if response is successful
+        
         if (response != null && response['success'] == true) {
           await userController.fetchUserDetails();
           _showSnackBar('Profile updated successfully', Colors.green);
+
           Navigator.pop(context);
+          
         } else {
           throw Exception(
               'Failed to update profile: ${response?['message'] ?? 'Unknown error'}');
@@ -208,6 +211,10 @@ class _EditProfileViewState extends State<EditProfileView> {
   //     });
   //   }
   // }
+    Future<String?> getToken() async {
+    return localStorage.getToken();
+  }
+
 
   Widget _buildTextField(String label, String key,
       {String? initialValue,

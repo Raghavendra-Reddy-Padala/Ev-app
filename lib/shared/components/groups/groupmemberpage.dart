@@ -28,16 +28,77 @@ class GroupMembersPage extends StatelessWidget {
               children: [
                 SizedBox(height: 0.01),
                 Header(heading: "$name Members"),
+                                MembersStatisticsSection(groupMembers: groupMembers),
+
                 SizedBox(height: 10.h),
                 // Members leaderboard table
                 LeaderboardTable(groupMembers: groupMembers),
                 SizedBox(height: 15.h),
+
+                          _buildTopPerformerSection(),
+
                 // Members Statistics section
-                MembersStatisticsSection(groupMembers: groupMembers),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  
+  Widget _buildTopPerformerSection() {
+    final sortedMembers = [...groupMembers.members];
+    sortedMembers.sort((a, b) => b.kmTraveled.compareTo(a.kmTraveled));
+    
+    final topPerformer = sortedMembers.isNotEmpty ? sortedMembers.first : null;
+    
+    if (topPerformer == null) {
+      return SizedBox();
+    }
+    
+    return Container(
+      padding: EdgeInsets.all(10.r),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.r),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 25.r,
+            backgroundImage: NetworkImage(topPerformer.avatar),
+          ),
+          SizedBox(width: 10.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Top Performer',
+                style: AppTextThemes.bodySmall().copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                '${topPerformer.firstName} ${topPerformer.lastName}',
+                style: AppTextThemes.bodyMedium(),
+              ),
+              Text(
+                '${topPerformer.kmTraveled} km',
+                style: AppTextThemes.bodySmall().copyWith(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          Spacer(),
+          Icon(
+            Icons.emoji_events,
+            color: Colors.amber,
+            size: 30,
+          ),
+        ],
       ),
     );
   }
@@ -172,7 +233,6 @@ class MembersStatisticsSection extends StatelessWidget {
           ),
           SizedBox(height: 15.h),
           // Top performers section
-          _buildTopPerformerSection(),
         ],
       ),
     );
@@ -207,61 +267,4 @@ class MembersStatisticsSection extends StatelessWidget {
     );
   }
   
-  Widget _buildTopPerformerSection() {
-    // Sort members by distance traveled
-    final sortedMembers = [...groupMembers.members];
-    sortedMembers.sort((a, b) => b.kmTraveled.compareTo(a.kmTraveled));
-    
-    // Get top performer
-    final topPerformer = sortedMembers.isNotEmpty ? sortedMembers.first : null;
-    
-    if (topPerformer == null) {
-      return SizedBox();
-    }
-    
-    return Container(
-      padding: EdgeInsets.all(10.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 25.r,
-            backgroundImage: NetworkImage(topPerformer.avatar),
-          ),
-          SizedBox(width: 10.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Top Performer',
-                style: AppTextThemes.bodySmall().copyWith(
-                  color: Colors.grey,
-                ),
-              ),
-              Text(
-                '${topPerformer.firstName} ${topPerformer.lastName}',
-                style: AppTextThemes.bodyMedium(),
-              ),
-              Text(
-                '${topPerformer.kmTraveled} km',
-                style: AppTextThemes.bodySmall().copyWith(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          Spacer(),
-          Icon(
-            Icons.emoji_events,
-            color: Colors.amber,
-            size: 30,
-          ),
-        ],
-      ),
-    );
-  }
 }
