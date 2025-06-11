@@ -160,6 +160,7 @@ class TripControlService extends BaseController {
       String? workingTripId = _getWorkingTripId();
 
       if (workingTripId == null || workingTripId.isEmpty) {
+        Get.to(() => RideSummary());
         print('❌ CRITICAL ERROR - No trip ID found!');
         handleError('No active trip found');
         return false;

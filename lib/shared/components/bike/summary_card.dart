@@ -16,6 +16,7 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      backgroundColor: AppColors.accent1,
       padding: EdgeInsets.zero,
       child: Column(
         children: [
@@ -98,14 +99,14 @@ class RideDetailsSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 10.h),
-        Text(
-          '₹${details.price}',
-          style: TextStyle(
-            fontSize: 22.sp,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
-          ),
-        ),
+        // Text(
+        //   '₹${details.price}',
+        //   style: TextStyle(
+        //     fontSize: 22.sp,
+        //     fontWeight: FontWeight.w700,
+        //     color: AppColors.primary,
+        //   ),
+        // ),
       ],
     );
   }
