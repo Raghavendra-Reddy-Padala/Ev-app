@@ -15,6 +15,7 @@ class FAQ extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    controller.fetchFaqs(); 
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: PreferredSize(

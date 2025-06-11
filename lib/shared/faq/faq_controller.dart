@@ -12,11 +12,7 @@ class FaqController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxList<bool> expandedStates = <bool>[].obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchFaqs(); // Call once when controller initializes
-  }
+  
 
   Future<void> fetchFaqs() async {
     // Prevent multiple simultaneous calls

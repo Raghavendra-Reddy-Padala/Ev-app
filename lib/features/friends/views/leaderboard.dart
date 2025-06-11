@@ -176,6 +176,10 @@ class LeaderBoardList extends StatelessWidget {
             onTap: () {
               Get.to(()=>
                 IndividualUserPage(
+                  uid: item.uid,
+                  trips: item.trips,
+                  followers: item.followers,
+                  avatharurl: item.avatar,
                   name: item.firstName,
                   distance: item.distance.toString(),
                   points:item.points

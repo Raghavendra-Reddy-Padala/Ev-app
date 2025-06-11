@@ -37,10 +37,10 @@ class ApiConstants {
   static const String groupsJoin = 'groups/join';
   static const String groupsMembers = 'groups/members';
   static const String groupDetails = 'groups';
-  static const String walletGet = 'wallet/get';
+  static const String walletGet = 'wallet/my';
   static const String walletTopup = 'wallet/topup';
 
-  static const String transactionsGetAll = 'transactions/getAll';
+  static const String transactionsGetAll = 'transactions';
 
   static const String subscriptionsCreate = 'subscriptions/create';
   static const String userSubscriptions = 'user_subscription';

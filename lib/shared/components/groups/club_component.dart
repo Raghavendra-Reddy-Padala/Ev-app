@@ -140,7 +140,7 @@ class _UnifiedGroupData {
       totalTrips: group.totalTrips,
       averageSpeed: group.averageSpeed,
       aggregatedData: group.aggregatedData,
-      Avatharurl: group.Avatharurl, 
+      Avatharurl: group.avatharurl, 
     );
   }
 
@@ -150,7 +150,7 @@ class _UnifiedGroupData {
 
     return _UnifiedGroupData(
       id: group.id,
-      Avatharurl: "assets/images/club.png",
+      Avatharurl:group.avatarUrl,
       name: group.name,
       description: group.description,
       createdBy: group.createdBy,
@@ -193,7 +193,9 @@ class ClubHeader extends StatelessWidget {
           child: CircleAvatar(
             radius: 16.r,
             backgroundColor: AppColors.primary.withOpacity(0.1),
-            backgroundImage: const AssetImage('assets/images/club.png'),
+            backgroundImage: NetworkImage(data.Avatharurl.isNotEmpty
+                ? data.Avatharurl
+                : 'https://via.placeholder.com/150'),
           ),
         ),
 
