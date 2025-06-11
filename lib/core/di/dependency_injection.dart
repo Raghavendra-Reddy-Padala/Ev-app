@@ -19,7 +19,7 @@ import '../../features/wallet/controller/wallet_controller.dart';
 import '../storage/local_storage.dart';
 
 Future<void> setupDependencies() async {
-  final localStorage = LocalStorage();
+  final localStorage = Get.put(LocalStorage());
   await localStorage.init();
   Get.put(localStorage);
   Get.put(LocationController());
@@ -39,4 +39,8 @@ Future<void> setupDependencies() async {
   Get.put(FollowController());
   Get.put(FaqController());
   Get.put(IssueController());
+  final tripControlService = Get.find<TripControlService>();
+  tripControlService.initializeFromStorage();
+
+  print('✅ All controllers initialized');
 }

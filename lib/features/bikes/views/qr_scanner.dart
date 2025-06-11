@@ -12,6 +12,7 @@ import '../../../../shared/components/buttons/app_button.dart';
 import '../../../../shared/constants/colors.dart';
 import '../../main_page_controller.dart';
 import '../controller/qr_controller.dart';
+import '../controller/trips_control_service.dart';
 import 'qr_camera_view.dart';
 
 class QrScannerView extends StatelessWidget {
@@ -140,26 +141,14 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
           Padding(
             padding: EdgeInsets.only(bottom: 8.h),
             child: CircularProgressIndicator(color: AppColors.primary),
-          )
-        else
-          // TextButton(
-          //   onPressed: _handleOwnBikeTap,
-          //   child: Text(
-          //     "Riding your own bike?",
-          //     style: TextStyle(
-          //       color: AppColors.primary,
-          //       decoration: TextDecoration.underline,
-          //     ),
-          //   ),
-          // ),
-          AppButton(
-            text: "Riding your own bike?",
-            type: ButtonType.dark,
-
-            fullWidth: true,
-            // isLoading: controller.isProcessing.value,
-            onPressed: () => _handleOwnBikeTap(),
-          )
+          ),
+        AppButton(
+          text: "Riding your own bike?",
+          type: ButtonType.dark,
+          fullWidth: true,
+          isLoading: _isLoading,
+          onPressed: _isLoading ? null : _handleOwnBikeTap,
+        ),
       ],
     );
   }
@@ -168,40 +157,70 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
     setState(() => _isLoading = true);
 
     try {
+      print("🚴 Starting personal bike trip...");
+
       final tripsController = Get.find<TripsController>();
       final bikeController = Get.find<BikeMetricsController>();
+      final tripControlService = Get.find<TripControlService>();
       final storage = Get.find<LocalStorage>();
 
       // First check if there's already an active trip
+      print("🔍 Checking for existing active trip...");
       final activeTrip = await tripsController.fetchActiveTrip();
+
       bool shouldSetupBike = false;
       String notificationTitle = "";
 
       if (activeTrip != null) {
-        // User already has an active trip, just setup bike tracking
+        print("✅ Found existing active trip: ${activeTrip.id}");
+        // User already has an active trip
         tripsController.tripId.value = activeTrip.id;
         tripsController.activeTripData.value = activeTrip;
+        tripControlService.currentTripId.value = activeTrip.id;
+
+        // Load existing metrics
+        bikeController.totalDistance.value = activeTrip.distanceKm;
+        bikeController.currentSpeed.value = activeTrip.speedKmh;
+        bikeController.calculatedCalories.value = activeTrip.caloriesTrip;
+        bikeController.maxElevation.value = activeTrip.maxElevationM;
+        bikeController.totalDuration.value = activeTrip.totalTimeHours * 3600;
+
+        // Save to storage
+        await storage.setTripMetrics(
+          distance: activeTrip.distanceKm,
+          duration: activeTrip.totalTimeHours * 3600,
+          speed: activeTrip.speedKmh,
+          calories: activeTrip.caloriesTrip,
+          elevation: activeTrip.maxElevationM,
+        );
+
         shouldSetupBike = true;
         notificationTitle = "Resumed tracking your bike!";
+        print("🔄 Resuming existing trip with metrics loaded");
       } else {
+        print("🆕 No existing trip found, starting new trip...");
         // Try to start a new trip
-        final success = await tripsController.startTrip(
-          StartTrip(
-            bikeId: "_3a0ienbqx",
-            stationId: "6xugln92qx",
-            personal: true,
-          ),
+        final startTripData = StartTrip(
+          bikeId: "_3a0ienbqx",
+          stationId: "6xugln92qx",
+          personal: true,
+        );
+
+        final success = await tripControlService.startTrip(
+          startTripData,
           personal: true,
         );
 
         if (success) {
           shouldSetupBike = true;
           notificationTitle = "Started tracking your bike!";
+          print("✅ New personal trip started successfully");
         } else {
-          // Show error message from the controller
+          print(
+              "❌ Failed to start new trip: ${tripControlService.errorMessage.value}");
           Toast.show(
-            message: tripsController.errorMessage.value.isNotEmpty
-                ? tripsController.errorMessage.value
+            message: tripControlService.errorMessage.value.isNotEmpty
+                ? tripControlService.errorMessage.value
                 : "Failed to start trip",
             type: ToastType.error,
           );
@@ -211,11 +230,18 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
 
       // Setup bike tracking if everything went well
       if (shouldSetupBike) {
+        print("🔧 Setting up bike tracking...");
+
         bikeController.bikeSubscribed.value = true;
         bikeController.bikeID.value = "_3a0ienbqx";
+
         await storage.setBikeSubscribed(true);
         await storage.setBikeCode("_3a0ienbqx");
-        await bikeController.startTracking();
+
+        // Start or resume tracking
+        if (!bikeController.isTracking.value) {
+          await bikeController.startTracking();
+        }
 
         // Update main page
         Get.find<MainPageController>().isBikeSubscribed.value = true;
@@ -226,17 +252,25 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
             id: 1,
             channelKey: "tracking_channel",
             title: notificationTitle,
+            body: "Your ride metrics are being tracked automatically",
           ),
         );
+
+        print("🎉 Personal bike setup completed successfully");
+
+        // Navigate back or close modal
+        Get.back();
       }
     } catch (e) {
-      print('Error in _handleOwnBikeTap: $e');
+      print('❌ Error in _handleOwnBikeTap: $e');
       Toast.show(
         message: "Failed to start bike tracking: $e",
         type: ToastType.error,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }
