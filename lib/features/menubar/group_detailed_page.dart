@@ -179,6 +179,7 @@ class _GroupHeaderSection extends StatelessWidget {
         ],
       ),
       child: Column(
+        
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -187,7 +188,8 @@ class _GroupHeaderSection extends StatelessWidget {
               CircleAvatar(
                 radius: 30.r,
                 backgroundColor: Colors.white.withOpacity(0.2),
-                backgroundImage: const AssetImage('assets/images/club.png'),
+                backgroundImage:  NetworkImage ( allGroup?.avatharurl ?? groupData!.avatarUrl 
+                ),
               ),
               SizedBox(width: 16.w),
               Expanded(

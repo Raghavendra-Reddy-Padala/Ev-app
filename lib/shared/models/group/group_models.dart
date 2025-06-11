@@ -1,7 +1,7 @@
 class AllGroup {
   String id;
   String name;
-  String Avatharurl;
+  String avatharurl;
   String description;
   DateTime? createdAt;
   String createdBy;
@@ -17,7 +17,7 @@ class AllGroup {
   AllGroup({
     required this.id,
     required this.name,
-   required this.Avatharurl,
+   required this.avatharurl,
     required this.description,
     this.createdAt, // Made nullable
     required this.createdBy,
@@ -34,7 +34,7 @@ class AllGroup {
   factory AllGroup.fromJson(Map<String, dynamic> json) {
     return AllGroup(
       id: json['id'],
-      Avatharurl: json['Avatharurl'] ?? '',
+      avatharurl: json['avatar_url'] ?? '',
       name: json['name'],
       description: json['description'],
       createdAt:
@@ -342,6 +342,7 @@ class GroupData {
   final String description;
   final String createdAt;
   final String createdBy;
+  final String avatarUrl;
 
   GroupData({
     required this.id,
@@ -349,6 +350,7 @@ class GroupData {
     required this.description,
     required this.createdAt,
     required this.createdBy,
+    required this.avatarUrl,
   });
 
   factory GroupData.fromJson(Map<String, dynamic> json) {
@@ -358,6 +360,7 @@ class GroupData {
       description: json['description'] ?? '',
       createdAt: json['created_at'] ?? '',
       createdBy: json['created_by'] ?? '',
+      avatarUrl: json['avatar_url'] ?? '',
     );
   }
 

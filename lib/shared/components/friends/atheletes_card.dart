@@ -53,11 +53,9 @@ class UserLeaderboardItem extends StatelessWidget {
               child: _buildUserInfo(),
             ),
 
-            // Points section
             _buildPointsSection(),
             SizedBox(width: 16.w),
 
-            // Follow button
             _buildFollowButton(),
           ],
         ),
@@ -230,7 +228,7 @@ class UserLeaderboardItem extends StatelessWidget {
   Widget _buildFollowButton() {
   return Obx(() {
     bool isFollowed = followController.followedUsers[item.uid] ?? false;
-    bool isLoading = followController.isUserLoading(item.uid); // Use the new method
+    bool isLoading = followController.isUserLoading(item.uid); 
 
     if (isLoading) {
       return Container(
