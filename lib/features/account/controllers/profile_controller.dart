@@ -96,7 +96,6 @@ class ProfileController extends BaseController {
       }
     } catch (e) {
       handleError(e);
-      // Fallback to dummy data on error
       activityGraphData.value = ActivityGraphData.dummy(dateRange, metric);
     } finally {
       isLoading.value = false;

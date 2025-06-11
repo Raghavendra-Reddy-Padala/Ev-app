@@ -101,52 +101,64 @@ class WalletController extends BaseController {
       isLoading.value = false;
     }
   }
+Future<String?> topUpWallet(String amount) async {
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
 
-  Future<String?> topUpWallet(String amount) async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = '';
+    final result = await useApiOrDummy(
+      apiCall: () async {
+        final String? authToken = await getToken();
+        if (authToken == null) {
+          throw Exception('Authentication token not found');
+        }
 
-      final result = await useApiOrDummy(
-        apiCall: () async {
-          final String? authToken = await getToken();
-          if (authToken == null) {
-            throw Exception('Authentication token not found');
-          }
-
-          final response =
-              await apiService.post(endpoint: 'wallet/topup', headers: {
+        final response = await apiService.post(
+          endpoint: 'wallet/topup', 
+          headers: {
             'Authorization': 'Bearer $authToken',
-                          'X-Karma-App': 'dafjcnalnsjn',
-
-          }, body: {
+            'X-Karma-App': 'dafjcnalnsjn',
+          }, 
+          body: {
             "balance": amount
-          });
+          }
+        );
 
-          if (response != null) {
+        print("Full API Response: $response"); // Debug print
+        print("Response type: ${response.runtimeType}"); // Debug print
+
+        if (response != null) {
+          // The response is already the parsed JSON Map, not a response object with .data
+          if (response['success'] == true && response['data'] != null) {
             await fetchWalletBalance();
-            return response.data['data'];
+            return response['data'].toString(); // Access directly from the Map
+          } else {
+            throw Exception(response['message'] ?? 'Payment initiation failed');
           }
-          return null;
-        },
-        dummyData: () {
-          final dummyData = DummyDataService.getWalletTopupResponse();
+        }
+        throw Exception('No response from server');
+      },
+      dummyData: () {
+        final dummyData = DummyDataService.getWalletTopupResponse();
 
-          if (walletData.value != null) {
-            walletData.value = WalletData(
-                userId: walletData.value!.userId,
-                balance: walletData.value!.balance + double.parse(amount));
-          }
-          return dummyData['data'];
-        },
-      );
+        if (walletData.value != null) {
+          walletData.value = WalletData(
+            userId: walletData.value!.userId,
+            balance: walletData.value!.balance + double.parse(amount)
+          );
+        }
+        return dummyData['data']?.toString();
+      },
+    );
 
-      return result;
-    } catch (e) {
-      handleError(e);
-      return null;
-    } finally {
-      isLoading.value = false;
-    }
+    return result;
+  } catch (e) {
+    print("Error in topUpWallet: $e"); // Debug print
+    handleError(e);
+    return null;
+  } finally {
+    isLoading.value = false;
   }
+}
+
 }

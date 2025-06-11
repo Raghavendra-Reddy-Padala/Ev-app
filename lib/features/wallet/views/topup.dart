@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mjollnir/features/wallet/controller/wallet_controller.dart';
+import 'package:mjollnir/shared/components/logger/logger.dart';
 import 'package:mjollnir/shared/components/payment/payment_web.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
@@ -105,33 +106,35 @@ class _WalletTopupState extends State<WalletTopup> {
       },
     );
   }
+Future<void> _processTopUp() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-  Future<void> _processTopUp() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final String? response = await controller.topUpWallet(_amountController.text);
+  try {
+    final String? response = await controller.topUpWallet(_amountController.text);
+    
+    print("Response from controller: $response"); // Debug print
+    
+    if (response != null && response.isNotEmpty) {
+      Logger.e(response);
+      String url = "https://payments.avidia.in/payments/$response";
+      print("Payment URL: $url");
       
-      if (response != null && response.isNotEmpty) {
-        String url = "https://payments.avidia.in/payments/$response";
-        print("Payment URL: $url");
-        
-        // Navigate to payment web view
-        Get.to(() => paymentWeb(url: url));
-      } else {
-        Get.snackbar("Error", "Failed to initiate payment");
-      }
-    } catch (e) {
-      print("Top-up error: $e");
-      Get.snackbar("Error", "Failed to process top-up: $e");
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      Get.to(() => paymentWeb(url: url));
+    } else {
+      print("Response is null or empty: $response"); // Debug print
+      Get.snackbar("Error", "Failed to initiate payment");
     }
+  } catch (e) {
+    print("Top-up error: $e");
+    Get.snackbar("Error", "Failed to process top-up: $e");
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   Widget _buildQuickAmountButtons() {
     final amounts = ['50', '100', '200', '300'];

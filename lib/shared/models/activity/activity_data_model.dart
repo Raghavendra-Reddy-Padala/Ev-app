@@ -41,7 +41,6 @@ class ActivityGraphData {
     );
   }
 
-  // Generate dummy data for different metrics
   factory ActivityGraphData.dummy(DateTimeRange dateRange, String metric) {
     final days = dateRange.end.difference(dateRange.start).inDays + 1;
     final Map<int, double> data = {};
