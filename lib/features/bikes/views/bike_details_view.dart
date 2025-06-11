@@ -1,11 +1,7 @@
 import 'dart:async';
-
-import 'package:bolt_ui_kit/components/toast/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:location/location.dart';
-import 'package:mjollnir/features/account/controllers/trips_controller.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../shared/components/bike/trip_control_panel.dart';
 import '../../../../shared/constants/colors.dart';
@@ -22,24 +18,19 @@ class BikeDetailsView extends StatefulWidget {
 
 class _BikeDetailsViewState extends State<BikeDetailsView>
     with WidgetsBindingObserver {
-  final Location _location = Location();
-  final TripsController _tripsController = Get.find<TripsController>();
   final LocalStorage _localStorage = Get.find<LocalStorage>();
   final BikeMetricsController _bikeController =
       Get.find<BikeMetricsController>();
 
-  LocationData? _currentLocation;
-  bool _isLocationServiceEnabled = false;
-  bool _isListening = false;
   Timer? _uiRefreshTimer;
-  static const String _backgroundTrackingKey = 'background_location_tracking';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeLocationTracking();
     _startUIRefreshTimer();
+
+    // Force initial update
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _bikeController.update();
       setState(() {});
@@ -49,125 +40,17 @@ class _BikeDetailsViewState extends State<BikeDetailsView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _stopLocationTracking();
     _uiRefreshTimer?.cancel();
     super.dispose();
   }
 
   void _startUIRefreshTimer() {
-    _uiRefreshTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    _uiRefreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted && _bikeController.isTracking.value) {
         setState(() {});
-        _bikeController
-            .update(['main_metrics', 'speed_display', 'battery_display']);
+        _bikeController.update();
       }
     });
-  }
-
-  Future<void> _initializeLocationTracking() async {
-    try {
-      bool serviceEnabled = await _location.serviceEnabled();
-      if (!serviceEnabled) {
-        serviceEnabled = await _location.requestService();
-        if (!serviceEnabled) {
-          Toast.show(
-              message: '❌ Location service not enabled', type: ToastType.error);
-          return;
-        }
-      }
-
-      var permissionStatus = await _location.hasPermission();
-      if (permissionStatus == PermissionStatus.denied) {
-        permissionStatus = await _location.requestPermission();
-        if (permissionStatus != PermissionStatus.granted) {
-          Toast.show(
-              message: '❌ Location service not enabled', type: ToastType.error);
-          return;
-        }
-      }
-      _isLocationServiceEnabled = true;
-      bool shouldTrack = _localStorage.getBool(_backgroundTrackingKey) ?? false;
-      if (shouldTrack && _bikeController.isTracking.value) {
-        await _startLocationTracking();
-      }
-      print('✅ Location services initialized');
-    } catch (e) {
-      print('❌ Error initializing location: $e');
-    }
-  }
-
-  Future<void> _startLocationTracking() async {
-    if (!_isLocationServiceEnabled || _isListening) return;
-
-    try {
-      await _location.enableBackgroundMode(enable: true);
-
-      await _location.changeSettings(
-        accuracy: LocationAccuracy.high,
-        interval: 5000,
-        distanceFilter: 3,
-      );
-
-      _location.onLocationChanged.listen(
-        (LocationData locationData) {
-          _onLocationChanged(locationData);
-        },
-        onError: (error) {
-          print('❌ Location tracking error: $error');
-        },
-      );
-
-      _isListening = true;
-      _localStorage.setBool(_backgroundTrackingKey, true);
-      print('🗺️ Background location tracking started');
-    } catch (e) {
-      print('❌ Error starting location tracking: $e');
-    }
-  }
-
-  void _stopLocationTracking() {
-    if (_isListening) {
-      _location.enableBackgroundMode(enable: false);
-      _isListening = false;
-      _localStorage.setBool(_backgroundTrackingKey, false);
-      print('🛑 Location tracking stopped');
-    }
-  }
-
-  Future<void> _onLocationChanged(LocationData locationData) async {
-    try {
-      if (locationData.latitude == null || locationData.longitude == null) {
-        return;
-      }
-      _currentLocation = locationData;
-      if (_tripsController.tripId.value.isEmpty) {
-        String? storedTripId = _localStorage.getString("tripId");
-        if (storedTripId == null || storedTripId.isEmpty) {
-          print('⚠️ No active trip found, stopping location tracking');
-          _stopLocationTracking();
-          return;
-        }
-        _tripsController.tripId.value = storedTripId;
-      }
-
-      double elevation = locationData.altitude ?? 0.0;
-      bool success = await _tripsController.updateTripLocation(
-        tripId: _tripsController.tripId.value,
-        lat: locationData.latitude!,
-        long: locationData.longitude!,
-        elevation: elevation,
-      );
-
-      if (success) {
-        _localStorage.setString(
-            'last_location_update', DateTime.now().toIso8601String());
-        if (mounted) {
-          setState(() {});
-        }
-      }
-    } catch (e) {
-      print('❌ Error in _onLocationChanged: $e');
-    }
   }
 
   @override
@@ -305,62 +188,148 @@ class _BikeImage extends StatelessWidget {
 }
 
 class _BikeMetrics extends StatelessWidget {
+  Widget _buildTrackingStatus() {
+    return GetBuilder<BikeMetricsController>(
+      builder: (controller) {
+        return Obx(() {
+          if (controller.bikeSubscribed.value && !controller.isTracking.value) {
+            // Bike is subscribed but tracking is paused - show resume button
+            return Container(
+              width: double.infinity,
+              margin: EdgeInsets.only(bottom: 16.h),
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.pause_circle_outline,
+                    color: Colors.orange,
+                    size: 32.w,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    "Trip Paused",
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await controller.startTracking();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Text(
+                      "Resume Tracking",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return SizedBox.shrink();
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<BikeMetricsController>(
-      id: 'main_metrics',
       builder: (controller) {
         return Column(
           children: [
-            Obx(() {
-              return Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _getSpeedColor(controller.currentSpeed.value)
-                          .withOpacity(0.1),
-                      _getSpeedColor(controller.currentSpeed.value)
-                          .withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: _getSpeedColor(controller.currentSpeed.value)
-                        .withOpacity(0.2),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.speed,
-                      color: _getSpeedColor(controller.currentSpeed.value),
-                      size: 18.w,
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      "${controller.currentSpeed.value.toStringAsFixed(1)}",
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.w700,
-                        color: _getSpeedColor(controller.currentSpeed.value),
+            // Speed Display - Main metric
+            GetBuilder<BikeMetricsController>(
+              builder: (controller) {
+                return Obx(() {
+                  return Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _getSpeedColor(controller.currentSpeed.value)
+                              .withOpacity(0.1),
+                          _getSpeedColor(controller.currentSpeed.value)
+                              .withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: _getSpeedColor(controller.currentSpeed.value)
+                            .withOpacity(0.2),
                       ),
                     ),
-                    Text(
-                      "km/h",
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
-                      ),
+                    child: Column(
+                      children: [
+                        _buildTrackingStatus(),
+                        Icon(
+                          Icons.speed,
+                          color: _getSpeedColor(controller.currentSpeed.value),
+                          size: 18.w,
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          "${controller.currentSpeed.value.toStringAsFixed(1)}",
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                _getSpeedColor(controller.currentSpeed.value),
+                          ),
+                        ),
+                        Text(
+                          "km/h",
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        if (controller.isTracking.value &&
+                            controller.currentSpeed.value > 0) ...[
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Text(
+                              "MOVING",
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                });
+              },
+            ),
 
             SizedBox(height: 16.h),
 
@@ -368,32 +337,41 @@ class _BikeMetrics extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Obx(() {
-                    return _CompactMetricCard(
-                      title: "Time",
-                      value: _formatDuration(controller.totalDuration.value),
-                      icon: Icons.access_time,
-                      iconColor: Colors.blue,
-                      onTap: () => Get.to(() => TimeDetailsView(
-                            duration: controller.totalDuration.value,
-                          )),
-                    );
-                  }),
+                  child: GetBuilder<BikeMetricsController>(
+                    builder: (controller) {
+                      return Obx(() {
+                        return _CompactMetricCard(
+                          title: "Time",
+                          value:
+                              _formatDuration(controller.totalDuration.value),
+                          icon: Icons.access_time,
+                          iconColor: Colors.blue,
+                          onTap: () => Get.to(() => TimeDetailsView(
+                                duration: controller.totalDuration.value,
+                              )),
+                        );
+                      });
+                    },
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: Obx(() {
-                    return _CompactMetricCard(
-                      title: "Distance",
-                      value:
-                          "${controller.totalDistance.value.toStringAsFixed(2)} km",
-                      icon: Icons.route,
-                      iconColor: Colors.green,
-                      onTap: () => Get.to(() => SpeedDetailsView(
-                            speed: controller.currentSpeed.value.toInt(),
-                          )),
-                    );
-                  }),
+                  child: GetBuilder<BikeMetricsController>(
+                    builder: (controller) {
+                      return Obx(() {
+                        return _CompactMetricCard(
+                          title: "Distance",
+                          value:
+                              "${controller.totalDistance.value.toStringAsFixed(2)} km",
+                          icon: Icons.route,
+                          iconColor: Colors.green,
+                          onTap: () => Get.to(() => SpeedDetailsView(
+                                speed: controller.currentSpeed.value.toInt(),
+                              )),
+                        );
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
@@ -404,7 +382,6 @@ class _BikeMetrics extends StatelessWidget {
               children: [
                 Expanded(
                   child: GetBuilder<BikeMetricsController>(
-                    id: 'battery_display',
                     builder: (controller) {
                       return Obx(() {
                         return _CompactBatteryCard(
@@ -416,15 +393,19 @@ class _BikeMetrics extends StatelessWidget {
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: Obx(() {
-                    return _CompactMetricCard(
-                      title: "Calories",
-                      value:
-                          "${controller.calculatedCalories.value.toStringAsFixed(0)} kcal",
-                      icon: Icons.local_fire_department,
-                      iconColor: Colors.orange,
-                    );
-                  }),
+                  child: GetBuilder<BikeMetricsController>(
+                    builder: (controller) {
+                      return Obx(() {
+                        return _CompactMetricCard(
+                          title: "Calories",
+                          value:
+                              "${controller.calculatedCalories.value.toStringAsFixed(0)} kcal",
+                          icon: Icons.local_fire_department,
+                          iconColor: Colors.orange,
+                        );
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
@@ -537,7 +518,6 @@ class _CompactBatteryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Extract numeric value for battery level
     final numericValue = RegExp(r'\d+').stringMatch(batteryPercentage) ?? "0";
     final batteryLevel = int.tryParse(numericValue) ?? 0;
 

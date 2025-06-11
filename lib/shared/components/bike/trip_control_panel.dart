@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:mjollnir/core/storage/local_storage.dart';
 import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
 import 'package:mjollnir/features/main_page_controller.dart';
 import '../../../core/navigation/navigation_service.dart';
@@ -77,7 +76,6 @@ class _TripControlButtons extends StatelessWidget {
                   icon: Icons.stop_circle_outlined,
                   type: ButtonType.danger,
                   onPressed: () {
-                    // Debug current state before showing slider
                     tripControlService.debugTripStatus();
                     tripControlService.showEndTripSlider();
                   },
@@ -118,8 +116,6 @@ class _EndTripSliderState extends State<_EndTripSlider>
 
   late AnimationController _floatingController;
   late Animation<double> _floatingAnimation;
-  late AnimationController _scaleController;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -136,24 +132,11 @@ class _EndTripSliderState extends State<_EndTripSlider>
       parent: _floatingController,
       curve: Curves.easeInOut,
     ));
-
-    _scaleController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
   }
 
   @override
   void dispose() {
     _floatingController.dispose();
-    _scaleController.dispose();
     super.dispose();
   }
 
@@ -167,139 +150,136 @@ class _EndTripSliderState extends State<_EndTripSlider>
         final double maxSlideDistance = _containerWidth - 60.w;
 
         return AnimatedBuilder(
-          animation: Listenable.merge([_floatingAnimation, _scaleAnimation]),
+          animation: _floatingAnimation,
           builder: (context, child) {
             return Transform.translate(
               offset: Offset(0, _floatingAnimation.value),
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Container(
-                  height: 60.h,
-                  decoration: BoxDecoration(
-                    color: _isCompleted ? Colors.green : Colors.red,
-                    borderRadius: BorderRadius.circular(30.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _isCompleted
-                            ? Colors.green.withOpacity(0.4)
-                            : Colors.red.withOpacity(0.3),
-                        blurRadius: _isCompleted ? 15 : 8,
-                        spreadRadius: _isCompleted ? 2 : 0,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: AnimatedSwitcher(
-                          duration: Duration(milliseconds: 300),
-                          child: _isEndingTrip
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 20.w,
-                                      height: 20.h,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
+              child: Container(
+                height: 60.h,
+                decoration: BoxDecoration(
+                  color: _isCompleted ? Colors.green : Colors.red,
+                  borderRadius: BorderRadius.circular(30.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _isCompleted
+                          ? Colors.green.withOpacity(0.4)
+                          : Colors.red.withOpacity(0.3),
+                      blurRadius: _isCompleted ? 15 : 8,
+                      spreadRadius: _isCompleted ? 2 : 0,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        child: _isEndingTrip
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20.w,
+                                    height: 20.h,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
                                     ),
-                                    SizedBox(width: 10.w),
-                                    Text(
-                                      "Ending Trip...",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Text(
-                                  _isCompleted
-                                      ? "Trip Ending!"
-                                      : "Slide to End Trip",
-                                  key: ValueKey(_isCompleted),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                        ),
-                      ),
-                      AnimatedPositioned(
-                        duration: _isSliding
-                            ? Duration.zero
-                            : Duration(milliseconds: 200),
-                        left: 4.w + _sliderPosition,
-                        top: 4.h,
-                        bottom: 4.h,
-                        child: GestureDetector(
-                          onPanStart: (details) {
-                            if (!_isCompleted && !_isEndingTrip) {
-                              _isSliding = true;
-                            }
-                          },
-                          onPanUpdate: (details) {
-                            if (!_isCompleted && !_isEndingTrip) {
-                              setState(() {
-                                _sliderPosition += details.delta.dx;
-                                _sliderPosition = _sliderPosition.clamp(
-                                    0.0, maxSlideDistance);
-                              });
-
-                              if (_sliderPosition >= maxSlideDistance * 0.85) {
-                                _completeSlide(tripControlService);
-                              }
-                            }
-                          },
-                          onPanEnd: (details) {
-                            _isSliding = false;
-                            if (!_isCompleted &&
-                                _sliderPosition < maxSlideDistance * 0.85) {
-                              setState(() {
-                                _sliderPosition = 0.0;
-                              });
-                            }
-                          },
-                          child: Container(
-                            width: 52.w,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(26.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: _isCompleted ? 8 : 4,
-                                  spreadRadius: _isCompleted ? 1 : 0,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: Duration(milliseconds: 200),
-                              child: _isCompleted
-                                  ? Icon(
-                                      Icons.check,
-                                      key: ValueKey('check'),
-                                      color: Colors.green,
-                                      size: 24.w,
-                                    )
-                                  : Icon(
-                                      Icons.arrow_forward_ios,
-                                      key: ValueKey('arrow'),
-                                      color: Colors.red,
-                                      size: 24.w,
+                                  SizedBox(width: 10.w),
+                                  Text(
+                                    "Ending Trip...",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                            ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                _isCompleted
+                                    ? "Trip Ending!"
+                                    : "Slide to End Trip",
+                                key: ValueKey(_isCompleted),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: _isSliding
+                          ? Duration.zero
+                          : Duration(milliseconds: 200),
+                      left: 4.w + _sliderPosition,
+                      top: 4.h,
+                      bottom: 4.h,
+                      child: GestureDetector(
+                        onPanStart: (details) {
+                          if (!_isCompleted && !_isEndingTrip) {
+                            _isSliding = true;
+                          }
+                        },
+                        onPanUpdate: (details) {
+                          if (!_isCompleted && !_isEndingTrip) {
+                            setState(() {
+                              _sliderPosition += details.delta.dx;
+                              _sliderPosition =
+                                  _sliderPosition.clamp(0.0, maxSlideDistance);
+                            });
+
+                            if (_sliderPosition >= maxSlideDistance * 0.85) {
+                              _completeSlide(tripControlService);
+                            }
+                          }
+                        },
+                        onPanEnd: (details) {
+                          _isSliding = false;
+                          if (!_isCompleted &&
+                              _sliderPosition < maxSlideDistance * 0.85) {
+                            setState(() {
+                              _sliderPosition = 0.0;
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: 52.w,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(26.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: _isCompleted ? 8 : 4,
+                                spreadRadius: _isCompleted ? 1 : 0,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 200),
+                            child: _isCompleted
+                                ? Icon(
+                                    Icons.check,
+                                    key: ValueKey('check'),
+                                    color: Colors.green,
+                                    size: 24.w,
+                                  )
+                                : Icon(
+                                    Icons.arrow_forward_ios,
+                                    key: ValueKey('arrow'),
+                                    color: Colors.red,
+                                    size: 24.w,
+                                  ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -317,7 +297,6 @@ class _EndTripSliderState extends State<_EndTripSlider>
     });
 
     _floatingController.repeat(reverse: true);
-    _scaleController.forward();
 
     HapticFeedback.mediumImpact();
 
@@ -332,23 +311,17 @@ class _EndTripSliderState extends State<_EndTripSlider>
     });
 
     try {
-      print('🏁 Starting trip end process...');
-
       final BikeMetricsController bikeMetricsController =
           Get.find<BikeMetricsController>();
       final MainPageController mainPageController =
           Get.find<MainPageController>();
 
-      // Print current state before ending
       service.debugTripStatus();
       bikeMetricsController.printTripSummary();
 
       final success = await service.endTrip();
-      print('📊 End trip result: $success');
 
       if (success) {
-        print('✅ Trip ended successfully!');
-
         AwesomeNotifications().createNotification(
           content: NotificationContent(
             id: 3,
@@ -363,34 +336,32 @@ class _EndTripSliderState extends State<_EndTripSlider>
         mainPageController.updateSubscriptionStatus(false);
 
         _floatingController.stop();
-        _scaleController.reverse();
 
         await Future.delayed(Duration(milliseconds: 500));
 
         try {
-          Get.to(() => RideSummary());
-        } catch (e) {
-          print('❌ Navigation error: $e');
-          try {
-            NavigationService.pushReplacementTo(RideSummary());
-          } catch (e2) {
-            print('❌ NavigationService failed: $e2');
-            Get.to(() => RideSummary(), transition: Transition.rightToLeft);
+          final result = await Get.to(() => RideSummary());
+
+          if (Get.isRegistered<MainPageController>()) {
+            final mainController = Get.find<MainPageController>();
+            await mainController.refreshSubscriptionStatus();
+
+            if (mainController.selectedIndex.value == 1) {
+              mainController.updateSelectedIndex(1);
+            }
           }
+        } catch (e) {
+          Get.offAll(() => RideSummary());
         }
       } else {
-        print('❌ Trip end failed');
         _handleEndTripFailure();
       }
     } catch (e) {
-      print('❌ Exception in _endTrip: $e');
       _handleEndTripFailure();
     }
   }
 
   void _handleEndTripFailure() {
-    print('⚠️ Handling trip end failure...');
-
     AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: 4,
@@ -408,7 +379,6 @@ class _EndTripSliderState extends State<_EndTripSlider>
     });
 
     _floatingController.stop();
-    _scaleController.reverse();
 
     Get.dialog(
       AlertDialog(
