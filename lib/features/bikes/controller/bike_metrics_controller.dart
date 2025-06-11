@@ -8,7 +8,6 @@ import 'package:location/location.dart' as loc;
 import 'package:mjollnir/features/main_page_controller.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
-import '../../../core/utils/kalman_filter.dart';
 import '../../../main.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
@@ -28,19 +27,16 @@ class BikeMetricsController extends BaseController {
   final RxString bikeEncoded = ''.obs;
   final RxString bikeID = ''.obs;
 
-  // Trip data
   final RxDouble calculatedCalories = 0.0.obs;
   final RxDouble maxElevation = 0.0.obs;
   final RxDouble lastTripCalories = 0.0.obs;
   final RxDouble avgSpeed = 0.0.obs;
 
-  // History data - Make these more reactive
   final RxList<double> speedHistoryData = <double>[].obs;
   final RxList<double> durationHistoryData = <double>[].obs;
   final RxList<double> calorieHistoryData = <double>[].obs;
   final RxList<DateTime> timePoints = <DateTime>[].obs;
 
-  // Location data
   final RxList<List<double>> pathPoints = <List<double>>[].obs;
   final RxString startLocationName = ''.obs;
   final RxString endLocationName = ''.obs;
@@ -52,18 +48,17 @@ class BikeMetricsController extends BaseController {
   Timer? _historyUpdateTimer;
   Timer? _dataUpdateTimer;
 
-  final KalmanFilter _speedFilter = KalmanFilter();
-  final List<_LocationPoint> _locationBuffer = [];
-  final List<double> _speedReadings = [];
+  _LocationPoint? _lastLocationPoint;
+  final List<double> _recentSpeeds = [];
   final List<double> _elevationList = [];
-  final List<double> _instantSpeedHistory = [];
 
   bool _isFirstLocationUpdate = true;
-  static const int _maxSpeedReadings = 10;
-  static const double _minDistanceThreshold = 2.0;
-  static const double _maxReasonableSpeed = 60.0;
+  static const int _maxSpeedReadings = 3;
+  static const double _minDistanceThreshold = 0.5;
+  static const double _maxReasonableSpeed = 100.0;
+  static const double _minAccuracy = 50.0;
+  static const double _minTimeInterval = 1.0;
 
-  @override
   Future<void> onInit() async {
     super.onInit();
     _location = loc.Location();
@@ -71,6 +66,79 @@ class BikeMetricsController extends BaseController {
     _initializeHistoryData();
     _updateAverageSpeed();
     _startDataUpdateTimer();
+
+    // Check if there was an active trip and restore tracking state
+    await _checkAndRestoreActiveTrip();
+  }
+
+  Future<void> _checkAndRestoreActiveTrip() async {
+    try {
+      final bool wasBikeSubscribed = localStorage.getBool("bikeSubscribed");
+      final String? storedTripId = localStorage.getString("tripId");
+      final String? storedBikeId = localStorage.getString("bikeCode");
+
+      print("🔍 Checking for active trip on app restart...");
+      print("   wasBikeSubscribed: $wasBikeSubscribed");
+      print("   storedTripId: $storedTripId");
+      print("   storedBikeId: $storedBikeId");
+
+      if (wasBikeSubscribed &&
+          storedTripId != null &&
+          storedTripId.isNotEmpty &&
+          storedBikeId != null &&
+          storedBikeId.isNotEmpty) {
+        print("✅ Found active trip data, restoring...");
+
+        // Restore bike subscription state
+        bikeSubscribed.value = true;
+        bikeID.value = storedBikeId;
+
+        // Check if there's actually an active trip via API
+        try {
+          final TripsController tripsController = Get.find<TripsController>();
+          final activeTrip = await tripsController.fetchActiveTrip();
+
+          if (activeTrip != null) {
+            print("✅ Confirmed active trip exists, resuming tracking...");
+            tripsController.tripId.value = activeTrip.id;
+
+            // Resume tracking automatically
+            if (!isTracking.value) {
+              await startTracking();
+            }
+
+            // Update main page controller
+            if (Get.isRegistered<MainPageController>()) {
+              final mainController = Get.find<MainPageController>();
+              mainController.isBikeSubscribed.value = true;
+            }
+          } else {
+            print("⚠️ No active trip found via API, clearing stored data...");
+            await _clearStoredTripData();
+          }
+        } catch (e) {
+          print("⚠️ Error checking active trip: $e");
+          // Keep local state but don't auto-resume tracking
+        }
+      } else {
+        print("ℹ️ No active trip found in storage");
+      }
+    } catch (e) {
+      print("❌ Error in _checkAndRestoreActiveTrip: $e");
+    }
+  }
+
+  Future<void> _clearStoredTripData() async {
+    await localStorage.setBool('bikeSubscribed', false);
+    await localStorage.setString('bikeCode', '');
+    await localStorage.setString('tripId', '');
+    bikeSubscribed.value = false;
+    bikeID.value = '';
+
+    if (Get.isRegistered<MainPageController>()) {
+      final mainController = Get.find<MainPageController>();
+      mainController.isBikeSubscribed.value = false;
+    }
   }
 
   Future<void> _loadMetricsFromStorage() async {
@@ -84,41 +152,33 @@ class BikeMetricsController extends BaseController {
           localStorage.getDouble("lastTripCalories") ?? 0.0;
       bikeID.value = localStorage.getString("bikeId") ?? '';
       bikeSubscribed.value = localStorage.getBool("bikeSubscribed");
-
-      print("📊 Loaded metrics from storage:");
-      print("   Duration: ${totalDuration.value}s");
-      print("   Distance: ${totalDistance.value}km");
-      print("   Speed: ${currentSpeed.value}km/h");
-      print("   Calories: ${calculatedCalories.value}");
-      print("   BikeID: ${bikeID.value}");
     } catch (e) {
-      print("❌ Error loading metrics: $e");
+      print("Error loading metrics: $e");
     }
   }
 
   void _startDataUpdateTimer() {
-    _dataUpdateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _dataUpdateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (isTracking.value) {
         _updateInstantaneousData();
         _persistMetrics();
-        update(); // Force UI update
+        currentSpeed.refresh();
+        totalDistance.refresh();
+        totalDuration.refresh();
+        calculatedCalories.refresh();
+        update();
       }
     });
   }
 
   List<double> _generateInitialData() {
-    // Generate some realistic initial data instead of zeros
     final random = Random();
-    return List.generate(7, (index) => random.nextDouble() * 10);
+    return List.generate(7, (index) => random.nextDouble() * 5);
   }
 
   void _updateInstantaneousData() {
-    if (currentSpeed.value > 0) {
-      _instantSpeedHistory.add(currentSpeed.value);
-      if (_instantSpeedHistory.length > 20) {
-        _instantSpeedHistory.removeAt(0);
-      }
-    }
+    _updateAverageSpeed();
+    _calculateCalories();
     currentSpeed.refresh();
     totalDistance.refresh();
     totalDuration.refresh();
@@ -131,15 +191,12 @@ class BikeMetricsController extends BaseController {
     final savedCalorieHistory = localStorage.getDoubleList("calorieHistory");
     final savedTimePoints = localStorage.getStringList("timePoints");
 
-    // Initialize with some default data if empty
     speedHistoryData.value = savedSpeedHistory.isNotEmpty
         ? savedSpeedHistory
         : _generateInitialData();
-
     durationHistoryData.value = savedDurationHistory.isNotEmpty
         ? savedDurationHistory
         : _generateInitialData();
-
     calorieHistoryData.value = savedCalorieHistory.isNotEmpty
         ? savedCalorieHistory
         : _generateInitialData();
@@ -153,11 +210,6 @@ class BikeMetricsController extends BaseController {
       timePoints.value = List.generate(
           7, (index) => now.subtract(Duration(minutes: (6 - index) * 10)));
     }
-
-    print("📈 Initialized history data:");
-    print("   Speed history: ${speedHistoryData.length} points");
-    print("   Duration history: ${durationHistoryData.length} points");
-    print("   Calorie history: ${calorieHistoryData.length} points");
   }
 
   void _persistMetrics() {
@@ -176,20 +228,9 @@ class BikeMetricsController extends BaseController {
       localStorage.setDoubleList("calorieHistory", calorieHistoryData);
       localStorage.setStringList("timePoints",
           timePoints.map((time) => time.toIso8601String()).toList());
-
-      // Debug print every 30 seconds
-      if (totalDuration.value.toInt() % 30 == 0) {
-        if (kDebugMode) {
-          print("💾 Persisted metrics at ${DateTime.now()}");
-        }
-        if (kDebugMode) {
-          print(
-              "   Current values: Speed=${currentSpeed.value}, Distance=${totalDistance.value}, Duration=${totalDuration.value}");
-        }
-      }
     } catch (e) {
       if (kDebugMode) {
-        print("❌ Error persisting metrics: $e");
+        print("Error persisting metrics: $e");
       }
     }
   }
@@ -198,7 +239,6 @@ class BikeMetricsController extends BaseController {
   void onReady() {
     super.onReady();
 
-    // Enhanced listeners with better reactivity
     totalDuration.listen((value) {
       _persistMetrics();
       _updateAverageSpeed();
@@ -229,21 +269,13 @@ class BikeMetricsController extends BaseController {
     }
 
     try {
-      print("🚀 Starting bike tracking...");
-
-      // Only reset if completely new trip
       if (totalDistance.value == 0.0 && totalDuration.value == 0.0) {
-        print("   New trip - resetting data");
         _resetTripData();
-      } else {
-        print("   Continuing existing trip");
-        print(
-            "   Current: Distance=${totalDistance.value}km, Duration=${totalDuration.value}s");
       }
 
       await _location.changeSettings(
-        interval: 1000, // More frequent updates
-        distanceFilter: 2, // Smaller distance filter
+        interval: 1000,
+        distanceFilter: 0,
         accuracy: loc.LocationAccuracy.high,
       );
 
@@ -251,14 +283,13 @@ class BikeMetricsController extends BaseController {
 
       _locationSubscription = _location.onLocationChanged
           .listen(_handleLocationUpdate, onError: (error) {
-        print("❌ Location tracking error: $error");
+        print("Location tracking error: $error");
         handleError('Location tracking error: $error');
       });
 
       isTracking.value = true;
-      print("✅ Tracking started successfully");
     } catch (e) {
-      print("❌ Failed to start tracking: $e");
+      print("Failed to start tracking: $e");
       handleError('Failed to start tracking: $e');
     }
   }
@@ -268,10 +299,9 @@ class BikeMetricsController extends BaseController {
     localStorage.savePathPoints(pathPoints);
     localStorage.saveLocationList([]);
     _isFirstLocationUpdate = true;
-    _locationBuffer.clear();
-    _speedReadings.clear();
+    _lastLocationPoint = null;
+    _recentSpeeds.clear();
     _elevationList.clear();
-    _instantSpeedHistory.clear();
   }
 
   void _startTimers() {
@@ -283,14 +313,13 @@ class BikeMetricsController extends BaseController {
     _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (isTracking.value) {
         totalDuration.value++;
-        // Update UI every second
         totalDuration.refresh();
       }
     });
   }
 
   void _startHistoryTimer() {
-    _historyUpdateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _historyUpdateTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (isTracking.value) {
         _updateHistoryData();
         _calculateCalories();
@@ -301,55 +330,36 @@ class BikeMetricsController extends BaseController {
   void pauseTracking() {
     _locationSubscription?.pause();
     _stopTimers();
-    print("Tracking paused");
   }
 
   void resumeTracking() {
     _locationSubscription?.resume();
     _startTimers();
-    print("Tracking resumed");
   }
 
   void _handleLocationUpdate(loc.LocationData locationData) {
-    if (!_isValidLocationData(locationData)) return;
+    if (!_isValidLocationData(locationData)) {
+      return;
+    }
 
     final newLocation = _LocationPoint.fromLocationData(locationData);
-    _locationBuffer.add(newLocation);
-
-    if (_locationBuffer.length > 10) {
-      // Keep more points for better accuracy
-      _locationBuffer.removeAt(0);
-    }
-
     _processLocationData(newLocation);
     _updatePathAndElevation(newLocation);
-
-    // Debug location updates
-    if (_locationBuffer.length % 10 == 0) {
-      if (kDebugMode) {
-        print(
-            "📍 Location update: ${locationData.latitude}, ${locationData.longitude}");
-      }
-      if (kDebugMode) {
-        print(
-            "   Speed: ${currentSpeed.value}km/h, Distance: ${totalDistance.value}km");
-      }
-    }
+    _updateTripLocation(locationData);
   }
 
   bool _isValidLocationData(loc.LocationData data) {
     return data.accuracy != null &&
-        data.accuracy! <= 20 && // Slightly relaxed accuracy
+        data.accuracy! <= _minAccuracy &&
         data.latitude != null &&
-        data.longitude != null;
+        data.longitude != null &&
+        data.latitude! != 0.0 &&
+        data.longitude! != 0.0;
   }
 
   void _processLocationData(_LocationPoint newLocation) {
-    if (_locationBuffer.length >= 2) {
-      final currentPoint = _locationBuffer.last;
-      final previousPoint = _locationBuffer[_locationBuffer.length - 2];
-
-      _updateSpeedAndDistance(previousPoint, currentPoint);
+    if (_lastLocationPoint != null) {
+      _updateSpeedAndDistance(_lastLocationPoint!, newLocation);
     }
 
     if (_isFirstLocationUpdate) {
@@ -358,48 +368,45 @@ class BikeMetricsController extends BaseController {
     }
 
     _setEndLocation(newLocation);
+    _lastLocationPoint = newLocation;
   }
 
   void _updateSpeedAndDistance(
       _LocationPoint previous, _LocationPoint current) {
-    final distance =
-        _calculateHaversineDistance(previous, current) * 1000; // meters
-    final timeDiff = (current.time - previous.time) / 1000; // seconds
+    final distance = _calculateHaversineDistance(previous, current) * 1000;
+    final timeDiff = (current.time - previous.time) / 1000;
 
-    if (timeDiff > 0 && distance >= _minDistanceThreshold) {
-      final speedKmh = (distance / timeDiff) * 3.6;
-      _updateSpeed(speedKmh);
-      _updateDistance(distance / 1000); // convert to km
+    if (timeDiff >= _minTimeInterval && distance >= _minDistanceThreshold) {
+      final speedMs = distance / timeDiff;
+      final speedKmh = speedMs * 3.6;
+
+      if (speedKmh <= _maxReasonableSpeed) {
+        _updateSpeed(speedKmh);
+        _updateDistance(distance / 1000);
+      }
     }
   }
 
   void _updateSpeed(double newSpeed) {
-    if (newSpeed > _maxReasonableSpeed) return;
-
-    _speedReadings.add(newSpeed);
-    if (_speedReadings.length > _maxSpeedReadings) {
-      _speedReadings.removeAt(0);
+    _recentSpeeds.add(newSpeed);
+    if (_recentSpeeds.length > _maxSpeedReadings) {
+      _recentSpeeds.removeAt(0);
     }
 
-    final smoothedSpeed = _calculateSmoothedSpeed();
-    currentSpeed.value = _speedFilter.update(smoothedSpeed);
+    double filteredSpeed;
+    if (_recentSpeeds.length == 1) {
+      filteredSpeed = newSpeed;
+    } else {
+      _recentSpeeds.sort();
+      if (_recentSpeeds.length == 2) {
+        filteredSpeed = (_recentSpeeds[0] + _recentSpeeds[1]) / 2;
+      } else {
+        filteredSpeed = _recentSpeeds[1];
+      }
+    }
 
+    currentSpeed.value = filteredSpeed;
     currentSpeed.refresh();
-  }
-
-  double _calculateSmoothedSpeed() {
-    if (_speedReadings.isEmpty) return 0.0;
-
-    double totalWeight = 0;
-    double weightedSum = 0;
-
-    for (int i = 0; i < _speedReadings.length; i++) {
-      final weight = (i + 1) * 1.5;
-      weightedSum += _speedReadings[i] * weight;
-      totalWeight += weight;
-    }
-
-    return weightedSum / totalWeight;
   }
 
   void _updateDistance(double distanceKm) {
@@ -421,6 +428,28 @@ class BikeMetricsController extends BaseController {
     localStorage.saveLocationList(locations);
   }
 
+  Future<void> _updateTripLocation(loc.LocationData locationData) async {
+    try {
+      if (tripsController.tripId.value.isEmpty) {
+        String? storedTripId = localStorage.getString("tripId");
+        if (storedTripId != null && storedTripId.isNotEmpty) {
+          tripsController.tripId.value = storedTripId;
+        } else {
+          return;
+        }
+      }
+
+      await tripsController.updateTripLocation(
+        tripId: tripsController.tripId.value,
+        lat: locationData.latitude!,
+        long: locationData.longitude!,
+        elevation: locationData.altitude ?? 0.0,
+      );
+    } catch (e) {
+      print('Error updating trip location: $e');
+    }
+  }
+
   void _setStartLocation(_LocationPoint location) {
     startPosition = LatLng(location.lat, location.lng);
     _getLocationName(location.lat, location.lng, true);
@@ -428,6 +457,7 @@ class BikeMetricsController extends BaseController {
 
   void _setEndLocation(_LocationPoint location) {
     endPosition = LatLng(location.lat, location.lng);
+    _getLocationName(location.lat, location.lng, false);
   }
 
   Future<void> _getLocationName(double lat, double lng, bool isStart) async {
@@ -435,7 +465,8 @@ class BikeMetricsController extends BaseController {
       final placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        final locationName = '${place.street}, ${place.locality}';
+        final locationName =
+            '${place.street ?? 'Unknown'}, ${place.locality ?? 'Unknown'}';
 
         if (isStart) {
           startLocationName.value = locationName;
@@ -449,14 +480,10 @@ class BikeMetricsController extends BaseController {
   }
 
   void _updateHistoryData() {
-    if (kDebugMode) {
-      print("📊 Updating history data...");
-    }
     _updateSpeedHistory(currentSpeed.value);
-    _updateDurationHistory(totalDuration.value / 60); // Convert to minutes
+    _updateDurationHistory(totalDuration.value / 60);
     _updateCalorieHistory(calculatedCalories.value);
 
-    // Force refresh of all history data
     speedHistoryData.refresh();
     durationHistoryData.refresh();
     calorieHistoryData.refresh();
@@ -481,32 +508,20 @@ class BikeMetricsController extends BaseController {
 
     speedHistoryData.add(newSpeed);
     timePoints.add(DateTime.now());
-
-    if (kDebugMode) {
-      print("   Speed history updated: ${speedHistoryData.last}");
-    }
   }
 
   void _updateDurationHistory(double minutes) {
     if (durationHistoryData.length >= 7) {
       durationHistoryData.removeAt(0);
     }
-
     durationHistoryData.add(minutes);
-    if (kDebugMode) {
-      print("   Duration history updated: ${durationHistoryData.last}");
-    }
   }
 
   void _updateCalorieHistory(double newCalories) {
     if (calorieHistoryData.length >= 7) {
       calorieHistoryData.removeAt(0);
     }
-
     calorieHistoryData.add(newCalories);
-    if (kDebugMode) {
-      print("   Calorie history updated: ${calorieHistoryData.last}");
-    }
   }
 
   void _calculateCalories() {
@@ -515,35 +530,35 @@ class BikeMetricsController extends BaseController {
     final userWeight = localStorage.getDouble('userWeight') ?? 70.0;
     final durationInHours = totalDuration.value / 3600;
 
-    final oldCalories = calculatedCalories.value;
     calculatedCalories.value =
         met * userWeight * durationInHours * elevationFactor;
-
-    if ((calculatedCalories.value - oldCalories).abs() > 1) {
-      print(
-          "🔥 Calories updated: ${calculatedCalories.value.toStringAsFixed(1)}");
-      calculatedCalories.refresh();
-    }
-
+    calculatedCalories.refresh();
     lastTripCalories.value = calculatedCalories.value;
   }
 
   double _getMetValue(double speed) {
-    if (speed < 8) return 3.0;
-    if (speed < 16) return 4.0;
-    if (speed < 20) return 6.0;
-    if (speed < 25) return 8.0;
-    if (speed < 30) return 10.0;
-    return 12.0;
+    if (speed < 8) return 4.0;
+    if (speed < 16) return 6.0;
+    if (speed < 20) return 8.0;
+    if (speed < 25) return 10.0;
+    if (speed < 30) return 12.0;
+    return 14.0;
   }
 
   double _getElevationFactor() {
-    if (_elevationList.length < 10) return 1.0;
+    if (_elevationList.length < 5) return 1.0;
 
-    final recentElevations = _elevationList.sublist(_elevationList.length - 10);
+    final recentElevations = _elevationList.length >= 10
+        ? _elevationList.sublist(_elevationList.length - 10)
+        : _elevationList;
+
+    if (recentElevations.length < 2) return 1.0;
+
     final elevationChange = recentElevations.last - recentElevations.first;
 
+    if (elevationChange > 10) return 1.3;
     if (elevationChange > 5) return 1.2;
+    if (elevationChange < -10) return 0.8;
     if (elevationChange < -5) return 0.9;
     return 1.0;
   }
@@ -552,13 +567,10 @@ class BikeMetricsController extends BaseController {
     try {
       bikeEncoded.value = encodedId;
       final response =
-          await apiService.get(endpoint: '/v1/metal/status/$encodedId');
-
-
-        final batteryData = response['data'];
-        batteryPercentage.value = batteryData;
-        return batteryData;
-
+          await apiService.get(endpoint: '/v1/metal/status/${bikeID.value}');
+      final batteryData = response['data'];
+      batteryPercentage.value = batteryData;
+      return batteryData;
     } catch (e) {
       handleError('Failed to fetch battery info: $e');
     }
@@ -591,9 +603,9 @@ class BikeMetricsController extends BaseController {
     timePoints.value = List.generate(
         7, (index) => now.subtract(Duration(minutes: (6 - index) * 10)));
 
-    _speedReadings.clear();
+    _recentSpeeds.clear();
     _elevationList.clear();
-    _locationBuffer.clear();
+    _lastLocationPoint = null;
 
     _stopTimers();
     _persistMetrics();
@@ -611,7 +623,7 @@ class BikeMetricsController extends BaseController {
   }
 
   double _calculateHaversineDistance(_LocationPoint p1, _LocationPoint p2) {
-    const double earthRadius = 6371.0; // km
+    const double earthRadius = 6371000;
 
     final lat1Rad = p1.lat * pi / 180;
     final lat2Rad = p2.lat * pi / 180;
@@ -622,7 +634,7 @@ class BikeMetricsController extends BaseController {
         cos(lat1Rad) * cos(lat2Rad) * sin(deltaLng / 2) * sin(deltaLng / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return earthRadius * c;
+    return earthRadius * c / 1000;
   }
 
   Future<bool> _requestLocationPermissions() async {
@@ -647,50 +659,21 @@ class BikeMetricsController extends BaseController {
   }
 
   void printTripSummary() {
-    print("\n🏁 =============== TRIP SUMMARY ===============");
-    print("📊 BASIC METRICS:");
-    print("   🚴 Total Distance: ${totalDistance.value.toStringAsFixed(2)} km");
-    print("   ⏱️  Total Duration: ${_formatDuration(totalDuration.value)}");
+    print("TRIP SUMMARY");
+    print("Total Distance: ${totalDistance.value.toStringAsFixed(2)} km");
+    print("Total Duration: ${_formatDuration(totalDuration.value)}");
+    print("Current Speed: ${currentSpeed.value.toStringAsFixed(1)} km/h");
+    print("Average Speed: ${avgSpeed.value.toStringAsFixed(1)} km/h");
     print(
-        "   🏎️  Current Speed: ${currentSpeed.value.toStringAsFixed(1)} km/h");
-    print("   📈 Average Speed: ${avgSpeed.value.toStringAsFixed(1)} km/h");
-    print(
-        "   🔥 Calories Burned: ${calculatedCalories.value.toStringAsFixed(1)} kcal");
-    print("   🏔️  Max Elevation: ${maxElevation.value.toStringAsFixed(1)} m");
-    print("   🔋 Battery: ${batteryPercentage.value}");
-
-    print("\n📍 LOCATION DATA:");
-    print("   🛣️  Path Points: ${pathPoints.length} points");
-    print("   📍 Start Location: ${startLocationName.value}");
-    print("   🏁 End Location: ${endLocationName.value}");
-
-    if (pathPoints.isNotEmpty) {
-      print("   📊 Path Sample:");
-      final sampleSize = min(5, pathPoints.length);
-      for (int i = 0; i < sampleSize; i++) {
-        final point = pathPoints[i];
-        print(
-            "     Point $i: [${point[0].toStringAsFixed(6)}, ${point[1].toStringAsFixed(6)}]");
-      }
-      if (pathPoints.length > 5) {
-        print("     ... and ${pathPoints.length - 5} more points");
-      }
-    }
-
-    print("\n📈 HISTORY DATA:");
-    print(
-        "   🏎️  Speed History: ${speedHistoryData.map((s) => s.toStringAsFixed(1)).join(', ')} km/h");
-    print(
-        "   ⏱️  Duration History: ${durationHistoryData.map((d) => d.toStringAsFixed(1)).join(', ')} min");
-    print(
-        "   🔥 Calorie History: ${calorieHistoryData.map((c) => c.toStringAsFixed(1)).join(', ')} kcal");
-
-    print("\n🚴 BIKE INFO:");
-    print("   🆔 Bike ID: ${bikeID.value}");
-    print("   🔗 Encoded ID: ${bikeEncoded.value}");
-    print("   ✅ Subscribed: ${bikeSubscribed.value}");
-
-    print("===============================================\n");
+        "Calories Burned: ${calculatedCalories.value.toStringAsFixed(1)} kcal");
+    print("Max Elevation: ${maxElevation.value.toStringAsFixed(1)} m");
+    print("Battery: ${batteryPercentage.value}");
+    print("Path Points: ${pathPoints.length} points");
+    print("Start Location: ${startLocationName.value}");
+    print("End Location: ${endLocationName.value}");
+    print("Bike ID: ${bikeID.value}");
+    print("Encoded ID: ${bikeEncoded.value}");
+    print("Subscribed: ${bikeSubscribed.value}");
   }
 
   String _formatDuration(double seconds) {
@@ -708,19 +691,18 @@ class BikeMetricsController extends BaseController {
   }
 
   void stopTracking() {
-    print("🛑 Stopping bike tracking...");
     printTripSummary();
 
     _locationSubscription?.cancel();
     _stopTimers();
     isTracking.value = false;
+
     final MainPageController controller = Get.find();
-    if(controller.isBikeSubscribed.value){
+    if (controller.isBikeSubscribed.value) {
       controller.isBikeSubscribed.value = false;
     }
 
     _persistMetrics();
-    print("✅ Tracking stopped");
   }
 
   void _stopTimers() {

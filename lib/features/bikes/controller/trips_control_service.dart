@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mjollnir/features/bikes/controller/qr_controller.dart';
-import 'package:mjollnir/features/bikes/views/qr_scanner.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../core/storage/local_storage.dart';
+import '../../../shared/components/bike/ride_summary.dart';
 import '../../../shared/models/trips/active_trip_model.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
+import '../../main_page_controller.dart';
 import '../controller/bike_metrics_controller.dart';
 
 class TripControlService extends BaseController {
@@ -28,44 +27,62 @@ class TripControlService extends BaseController {
       print("   Station ID: ${startTripData.stationId}");
       print("   Personal: $personal");
 
-      final success =
-          await tripsController.startTrip(startTripData, personal: personal);
+      // First check if there's already an active trip
+      print("🔍 Checking for existing active trip...");
+      final activeTrip = await tripsController.fetchActiveTrip();
 
-      if (success) {
-        currentTripId.value = tripsController.tripId.value;
-        print("✅ Trip started successfully. Trip ID: ${currentTripId.value}");
+      if (activeTrip != null) {
+        print("✅ Found existing active trip: ${activeTrip.id}");
+        // User already has an active trip - continue it
+        tripsController.tripId.value = activeTrip.id;
+        tripsController.activeTripData.value = activeTrip;
+        currentTripId.value = activeTrip.id;
 
-        // Check if we have active trip data (continuing existing trip)
-        if (tripsController.activeTripData.value != null) {
-          print("🔄 Continuing existing trip with previous data");
-          await _continueExistingTrip(tripsController.activeTripData.value!);
-        } else {
-          print("🆕 Starting fresh trip");
-          // Start new trip tracking
-          await bikeMetricsController.startTracking();
-        }
+        await _continueExistingTrip(activeTrip);
 
         // Set bike subscription status
         bikeMetricsController.bikeSubscribed.value = true;
         bikeMetricsController.bikeID.value = startTripData.bikeId;
 
-        // Persist trip data
         await localStorage.setBool('bikeSubscribed', true);
         await localStorage.setString('bikeCode', startTripData.bikeId);
         await localStorage.setString('tripId', currentTripId.value);
 
-        print("💾 Trip data persisted to local storage");
-
-        // Start tracking if not already started
-        if (!bikeMetricsController.isTracking.value) {
-          await bikeMetricsController.startTracking();
-        }
-
         return true;
       } else {
-        print("❌ Failed to start trip: ${tripsController.errorMessage.value}");
-        errorMessage.value = tripsController.errorMessage.value;
-        return false;
+        print("🆕 No existing trip found, starting fresh trip...");
+
+        // Reset all metrics before starting new trip
+        await _resetMetricsForNewTrip();
+
+        // Start new trip
+        final success =
+            await tripsController.startTrip(startTripData, personal: personal);
+
+        if (success) {
+          currentTripId.value = tripsController.tripId.value;
+          print(
+              "✅ New trip started successfully. Trip ID: ${currentTripId.value}");
+
+          // Set bike subscription status
+          bikeMetricsController.bikeSubscribed.value = true;
+          bikeMetricsController.bikeID.value = startTripData.bikeId;
+
+          // Persist trip data
+          await localStorage.setBool('bikeSubscribed', true);
+          await localStorage.setString('bikeCode', startTripData.bikeId);
+          await localStorage.setString('tripId', currentTripId.value);
+
+          // Start fresh tracking
+          await bikeMetricsController.startTracking();
+
+          return true;
+        } else {
+          print(
+              "❌ Failed to start trip: ${tripsController.errorMessage.value}");
+          errorMessage.value = tripsController.errorMessage.value;
+          return false;
+        }
       }
     } catch (e) {
       print("❌ Exception in startTrip: $e");
@@ -76,6 +93,34 @@ class TripControlService extends BaseController {
     }
   }
 
+  Future<void> _resetMetricsForNewTrip() async {
+    print("🔄 Resetting metrics for new trip...");
+
+    // Reset all bike metrics
+    bikeMetricsController.totalDistance.value = 0.0;
+    bikeMetricsController.totalDuration.value = 0.0;
+    bikeMetricsController.currentSpeed.value = 0.0;
+    bikeMetricsController.calculatedCalories.value = 0.0;
+    bikeMetricsController.maxElevation.value = 0.0;
+    bikeMetricsController.lastTripCalories.value = 0.0;
+
+    // Clear path data
+    bikeMetricsController.pathPoints.clear();
+    bikeMetricsController.startLocationName.value = '';
+    bikeMetricsController.endLocationName.value = '';
+
+    // Reset storage
+    await localStorage.setDouble("totalDistance", 0.0);
+    await localStorage.setDouble("currentSpeed", 0.0);
+    await localStorage.setDouble("calories", 0.0);
+    await localStorage.setDouble("maxElevation", 0.0);
+    await localStorage.setTime(0);
+    await localStorage.saveLocationList([]);
+    await localStorage.savePathPoints([]);
+
+    print("✅ Metrics reset completed");
+  }
+
   Future<void> _continueExistingTrip(ActiveTripResponse activeTrip) async {
     print("📊 Loading existing trip metrics:");
     print("   Distance: ${activeTrip.distanceKm} km");
@@ -83,8 +128,6 @@ class TripControlService extends BaseController {
     print("   Calories: ${activeTrip.caloriesTrip} kcal");
     print("   Duration: ${activeTrip.totalTimeHours} hours");
     print("   Max Elevation: ${activeTrip.maxElevationM} m");
-
-    // Load existing metrics from active trip
     bikeMetricsController.totalDistance.value = activeTrip.distanceKm;
     bikeMetricsController.currentSpeed.value = activeTrip.speedKmh;
     bikeMetricsController.calculatedCalories.value = activeTrip.caloriesTrip;
@@ -98,15 +141,11 @@ class TripControlService extends BaseController {
     localStorage.setDouble("calories", activeTrip.caloriesTrip);
     localStorage.setDouble("maxElevation", activeTrip.maxElevationM);
     localStorage.setTime((activeTrip.totalTimeHours * 3600).toInt());
-
-    // Force UI updates
     bikeMetricsController.totalDistance.refresh();
     bikeMetricsController.currentSpeed.refresh();
     bikeMetricsController.calculatedCalories.refresh();
     bikeMetricsController.maxElevation.refresh();
     bikeMetricsController.totalDuration.refresh();
-
-    // Start tracking with existing data
     await bikeMetricsController.startTracking();
 
     print("✅ Successfully loaded existing trip data");
@@ -116,88 +155,28 @@ class TripControlService extends BaseController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-
       print('🏁 ========== ENDING TRIP ==========');
-
-      // Print comprehensive trip summary before ending
       bikeMetricsController.printTripSummary();
-
-      print('🔍 Trip ID Resolution:');
-      print('   TripControlService.currentTripId: "${currentTripId.value}"');
-      print('   TripsController.tripId: "${tripsController.tripId.value}"');
-
-      final storedTripId = localStorage.getString('tripId');
-      print('   localStorage tripId: "$storedTripId"');
-
-      final bikeId = bikeMetricsController.bikeID.value;
-      print('   BikeMetricsController.bikeID: "$bikeId"');
-
-      // Try multiple sources for trip ID
-      String? workingTripId;
-
-      if (currentTripId.value.isNotEmpty) {
-        workingTripId = currentTripId.value;
-        print('✅ Using TripControlService.currentTripId');
-      } else if (tripsController.tripId.value.isNotEmpty) {
-        workingTripId = tripsController.tripId.value;
-        currentTripId.value = workingTripId;
-        print('✅ Using TripsController.tripId');
-      } else if (storedTripId != null && storedTripId.isNotEmpty) {
-        workingTripId = storedTripId;
-        currentTripId.value = workingTripId;
-        tripsController.tripId.value = workingTripId;
-        print('✅ Using localStorage tripId');
-      } else {
-        print('🔍 No trip ID found, attempting to fetch active trip...');
-        final activeTrip = await tripsController.fetchActiveTrip();
-        if (activeTrip != null && activeTrip.id.isNotEmpty) {
-          workingTripId = activeTrip.id;
-          currentTripId.value = workingTripId;
-          tripsController.tripId.value = workingTripId;
-          await localStorage.setString('tripId', workingTripId);
-          print('✅ Retrieved active trip ID: "$workingTripId"');
-        }
-      }
+      String? workingTripId = _getWorkingTripId();
 
       if (workingTripId == null || workingTripId.isEmpty) {
-        print('❌ CRITICAL ERROR - No trip ID found from any source!');
+        print('❌ CRITICAL ERROR - No trip ID found!');
         handleError('No active trip found');
         return false;
       }
-
       print('🎯 Final working trip ID: "$workingTripId"');
-      print('📡 Calling tripsController.dataSend(true)...');
-
-      // Save trip summary before ending
       bikeMetricsController.saveTripSummary();
+      final endTripData = _prepareEndTripData();
 
+      print('📡 Calling tripsController.dataSend(true)...');
       final success = await tripsController.dataSend(true);
       print('📊 dataSend result: $success');
 
-      if (tripsController.errorMessage.value.isNotEmpty) {
-        print(
-            '⚠️ TripsController error: "${tripsController.errorMessage.value}"');
-      }
-
       if (success) {
         print('✅ Trip ended successfully via API');
+        //await _tryStopDevice();
+        await _showTripSummaryAndCleanup(endTripData);
 
-        // Try to stop device if we have encoded ID
-        try {
-          final QrScannerController qrScannerController = Get.find();
-          if (qrScannerController.encodedDeviceId.value.isNotEmpty) {
-            print(
-                '🔌 Attempting to stop device: ${qrScannerController.encodedDeviceId.value}');
-            await qrScannerController.toggleDevice(
-                qrScannerController.encodedDeviceId.value, false);
-            print('✅ Device stopped successfully');
-          }
-        } catch (e) {
-          print('⚠️ Device stop error (non-critical): $e');
-        }
-
-        await _cleanupAfterTripEnd();
-        print('🧹 Cleanup completed');
         return true;
       } else {
         print('❌ dataSend returned false');
@@ -214,34 +193,110 @@ class TripControlService extends BaseController {
     }
   }
 
+  String? _getWorkingTripId() {
+    if (currentTripId.value.isNotEmpty) {
+      return currentTripId.value;
+    } else if (tripsController.tripId.value.isNotEmpty) {
+      return tripsController.tripId.value;
+    } else {
+      final storedTripId = localStorage.getString('tripId');
+      if (storedTripId != null && storedTripId.isNotEmpty) {
+        return storedTripId;
+      }
+    }
+    return null;
+  }
+
+  EndTrip _prepareEndTripData() {
+    final pathPoints = localStorage.getPathPoints();
+    final locationList = localStorage.getLocationList();
+
+    // Get all metrics from SharedPreferences and controller
+    final totalDistance = localStorage.getDouble("totalDistance") ??
+        bikeMetricsController.totalDistance.value;
+    final totalDuration = localStorage.getTime().toDouble();
+    final currentSpeed = localStorage.getDouble("currentSpeed") ??
+        bikeMetricsController.currentSpeed.value;
+    final calories = localStorage.getDouble("calories") ??
+        bikeMetricsController.calculatedCalories.value;
+    final maxElevation = localStorage.getDouble("maxElevation") ??
+        bikeMetricsController.maxElevation.value;
+    final bikeId = localStorage.getString("bikeCode") ??
+        bikeMetricsController.bikeID.value;
+    final tripId = localStorage.getString("tripId") ?? currentTripId.value;
+
+    final endTimestamp = DateTime.now();
+    final startTimestamp =
+        endTimestamp.subtract(Duration(seconds: totalDuration.toInt()));
+    final startLocationName = bikeMetricsController.startLocationName.value;
+    final endLocationName = bikeMetricsController.endLocationName.value;
+
+    return EndTrip(
+      path: pathPoints,
+      stationId: '',
+      id: tripId,
+      bikeId: bikeId,
+      startTimestamp: startTimestamp,
+      endTimestamp: endTimestamp,
+      distance: totalDistance,
+      duration: totalDuration,
+      averageSpeed: bikeMetricsController.avgSpeed.value,
+      // maxSpeed: currentSpeed,
+      // totalCalories: calories,
+      // maxElevation: maxElevation,
+      // pathPoints: pathPoints,
+      // locationList: locationList,
+      // startLocationName: startLocationName,
+      // endLocationName: endLocationName,
+      // speedHistory: localStorage.getDoubleList("speedHistory"),
+      // durationHistory: localStorage.getDoubleList("durationHistory"),
+      // calorieHistory: localStorage.getDoubleList("calorieHistory"),
+    );
+  }
+
+  Future<void> _showTripSummaryAndCleanup(EndTrip endTripData) async {
+    try {
+      print('🎯 Showing trip summary...');
+      await Future.delayed(Duration(milliseconds: 500));
+      await Get.to(
+        () => RideSummary(tripData: endTripData),
+        transition: Transition.rightToLeft,
+        duration: Duration(milliseconds: 300),
+      );
+      await _cleanupAfterTripEnd();
+    } catch (e) {
+      print('❌ Error showing trip summary: $e');
+      await _cleanupAfterTripEnd();
+    }
+  }
+
   Future<void> _cleanupAfterTripEnd() async {
     print('🧹 Starting trip cleanup...');
-
-    // Stop tracking and print final summary
     bikeMetricsController.stopTracking();
-
-    // Save final trip summary
     bikeMetricsController.saveTripSummary();
-
-    // Reset bike subscription status
     bikeMetricsController.bikeSubscribed.value = false;
     bikeMetricsController.bikeID.value = "";
 
-    // Clear local storage
     await localStorage.remove('locations');
     await localStorage.setBool('bikeSubscribed', false);
+    await localStorage.setBool('bike_subscribed', false);
     await localStorage.setString('bikeCode', "");
     await localStorage.setString('encodedId', '');
     await localStorage.setString('deviceId', "");
     await localStorage.setInt('time', 0);
     await localStorage.setString('tripId', '');
 
-    // Reset trip data (but preserve last trip for summary)
     bikeMetricsController.resetTripData();
-
-    // Reset control service state
     currentTripId.value = '';
     isEndTripSliderVisible.value = false;
+    try {
+      final MainPageController mainPageController =
+          Get.find<MainPageController>();
+      await mainPageController.handleTripEnded();
+      print('✅ MainPageController updated after trip end');
+    } catch (e) {
+      print('⚠️ Could not update MainPageController: $e');
+    }
 
     print('✅ Cleanup completed successfully');
   }

@@ -12,10 +12,40 @@ import '../shared/components/navigation/app_bottom_navbar.dart';
 import 'bikes/views/bike_details_view.dart';
 import 'main_page_controller.dart';
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   final MainPageController mainPageController = Get.put(MainPageController());
 
-  MainPage({super.key});
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Force initial check
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      mainPageController.refreshSubscriptionStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Refresh subscription status when app becomes active
+    if (state == AppLifecycleState.resumed) {
+      mainPageController.refreshSubscriptionStatus();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,35 +57,50 @@ class MainPage extends StatelessWidget {
       ProfileMainView()
     ];
 
-    _checkBikeSubscription();
+    return GetBuilder<MainPageController>(
+      builder: (controller) {
+        return Obx(() {
+          print('🏗️ MainPage rebuilding...');
+          print('   - Selected index: ${controller.selectedIndex.value}');
+          print(
+              '   - Is bike subscribed: ${controller.isBikeSubscribed.value}');
 
-    return Obx(() {
-      return Scaffold(
-        body: IndexedStack(
-          index: mainPageController.selectedIndex.value,
-          children: [
-            pages[0],
-            mainPageController.isBikeSubscribed.value
-                ? const BikeDetailsView()
-                : pages[1],
-            pages[2],
-            pages[3],
-            pages[4],
-          ],
-        ),
-        bottomNavigationBar: Navbar(
-          currentIndex: mainPageController.selectedIndex.value,
-          onTap: (index) => mainPageController.updateSelectedIndex(index),
-          primaryColor: AppColors.primary,
-        ),
-      );
-    });
+          return Scaffold(
+            body: IndexedStack(
+              index: controller.selectedIndex.value,
+              children: [
+                pages[0], // Home
+                _getSecondPageContent(controller), // QR Scanner or Bike Details
+                pages[2], // Wallet
+                pages[3], // Friends
+                pages[4], // Profile
+              ],
+            ),
+            bottomNavigationBar: Navbar(
+              currentIndex: controller.selectedIndex.value,
+              onTap: (index) {
+                print('🔄 Nav item tapped: $index');
+                controller.updateSelectedIndex(index);
+              },
+              primaryColor: AppColors.primary,
+            ),
+          );
+        });
+      },
+    );
   }
 
-  void _checkBikeSubscription() async {
-    LocalStorage sharedPreferencesService = Get.find();
+  Widget _getSecondPageContent(MainPageController controller) {
+    // Debug logging
+    print('🔍 Determining second page content:');
+    print('   - isBikeSubscribed: ${controller.isBikeSubscribed.value}');
 
-    mainPageController.updateSubscriptionStatus(
-        await sharedPreferencesService.isBikeSubscribed());
+    if (controller.isBikeSubscribed.value) {
+      print('   - Showing BikeDetailsView');
+      return const BikeDetailsView();
+    } else {
+      print('   - Showing QrScannerView');
+      return QrScannerView();
+    }
   }
 }

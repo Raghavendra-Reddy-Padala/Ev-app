@@ -118,102 +118,112 @@ class _CurrentSpeedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final speed = controller.currentSpeed.value;
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: Colors.grey.shade200,
-            width: 0.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return GetBuilder<BikeMetricsController>(
+      builder: (controller) {
+        return Obx(() {
+          final speed = controller.currentSpeed.value;
+          return Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade200, width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              "CURRENT SPEED",
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: speed.toStringAsFixed(1),
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      fontWeight: FontWeight.w300,
-                      color: _getSpeedColor(speed),
-                      height: 1.0,
-                    ),
+            child: Column(
+              children: [
+                Text(
+                  "CURRENT SPEED",
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
                   ),
-                  TextSpan(
-                    text: " km/h",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[500],
+                ),
+                SizedBox(height: 8.h),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: speed.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 36.sp,
+                          fontWeight: FontWeight.w300,
+                          color: _getSpeedColor(speed),
+                          height: 1.0,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " km/h",
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (controller.isTracking.value) ...[
+                  SizedBox(height: 10.h),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: speed > 0
+                          ? const Color(0xFF10B981).withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: speed > 0
+                            ? const Color(0xFF10B981).withOpacity(0.3)
+                            : Colors.grey.withOpacity(0.3),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: BoxDecoration(
+                            color: speed > 0
+                                ? const Color(0xFF10B981)
+                                : Colors.grey,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          speed > 0 ? "MOVING" : "STATIONARY",
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: speed > 0
+                                ? const Color(0xFF10B981)
+                                : Colors.grey,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-            if (controller.isTracking.value) ...[
-              SizedBox(height: 10.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(
-                    color: const Color(0xFF10B981).withOpacity(0.3),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6.w,
-                      height: 6.w,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      "LIVE",
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: const Color(0xFF10B981),
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    });
+          );
+        });
+      },
+    );
   }
 
   Color _getSpeedColor(double speed) {
@@ -231,31 +241,35 @@ class _SpeedMetricsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      return Row(
-        children: [
-          Expanded(
-            child: _MetricCard(
-              title: "DISTANCE",
-              value: controller.totalDistance.value.toStringAsFixed(2),
-              unit: "km",
-              icon: Icons.straighten,
-              color: const Color(0xFF3B82F6),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: _MetricCard(
-              title: "AVG SPEED",
-              value: controller.avgSpeed.value.toStringAsFixed(1),
-              unit: "km/h",
-              icon: Icons.speed,
-              color: const Color(0xFF10B981),
-            ),
-          ),
-        ],
-      );
-    });
+    return GetBuilder<BikeMetricsController>(
+      builder: (controller) {
+        return Obx(() {
+          return Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  title: "DISTANCE",
+                  value: controller.totalDistance.value.toStringAsFixed(2),
+                  unit: "km",
+                  icon: Icons.straighten,
+                  color: const Color(0xFF3B82F6),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _MetricCard(
+                  title: "AVG SPEED",
+                  value: controller.avgSpeed.value.toStringAsFixed(1),
+                  unit: "km/h",
+                  icon: Icons.speed,
+                  color: const Color(0xFF10B981),
+                ),
+              ),
+            ],
+          );
+        });
+      },
+    );
   }
 }
 
