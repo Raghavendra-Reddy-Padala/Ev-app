@@ -2,7 +2,7 @@ name: mjollnir
 description: "A new Flutter project."
 
 publish_to: "none"
-version: 1.0.0+22
+version: 1.0.0+20
 
 environment:
   sdk: ^3.6.2
@@ -35,23 +35,17 @@ dependencies:
   path: ^1.8.3
   shared_preferences: ^2.5.3
   dio: ^5.8.0+1
+  flutter_launcher_icons: ^0.14.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_native_splash: ^2.4.1  
 
-  
-
-
-flutter_native_splash:
+flutter_launcher_icons:
   android: true
   ios: true
-  web: false
-  color: "#FFFFFF"
-  image: "assets/company/Logo-Black.png"
-  color_dark: "#000000"
-  image_dark: "assets/company/Logo.png"
+  image_path: "assets/company/LauncherLogo.png"
 
 
 flutter:

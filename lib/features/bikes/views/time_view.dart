@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -9,33 +11,64 @@ import '../../../../shared/components/header/header.dart';
 import '../../../../shared/constants/colors.dart';
 import '../controller/bike_metrics_controller.dart';
 
-class TimeDetailsView extends StatelessWidget {
+class TimeDetailsView extends StatefulWidget {
   final double duration;
 
   const TimeDetailsView({super.key, required this.duration});
 
   @override
-  Widget build(BuildContext context) {
-    final BikeMetricsController controller = Get.find();
+  State<TimeDetailsView> createState() => _TimeDetailsViewState();
+}
 
+class _TimeDetailsViewState extends State<TimeDetailsView> {
+  late BikeMetricsController controller;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<BikeMetricsController>();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && controller.isTracking.value) {
+        setState(() {});
+        controller.update(['time_display', 'metrics_row', 'calorie_chart']);
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.update();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFAFBFC),
       body: SafeArea(
         child: Column(
           children: [
             const Header(heading: "Time Details"),
             _BikeIdHeader(),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(20.w),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 child: Column(
                   children: [
                     _DurationDisplay(controller: controller),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 16.h),
                     _TimeMetricsRow(controller: controller),
-                    SizedBox(height: 20.h),
-                    Expanded(child: _CaloriesChart(controller: controller)),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 16.h),
+                    _CaloriesChart(controller: controller),
+                    SizedBox(height: 16.h),
                     const TripControlPanel(),
+                    SizedBox(height: 16.h),
                   ],
                 ),
               ),
@@ -51,21 +84,46 @@ class _BikeIdHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final LocalStorage localStorage = Get.find();
-    final cycleId = localStorage.getString('deviceId');
 
-    return Padding(
-      padding: EdgeInsets.only(left: 20.w, bottom: 10.h),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          "Cycle ID: ${cycleId ?? 'Unknown'}",
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+    return GetBuilder<BikeMetricsController>(
+      builder: (controller) {
+        final cycleId =
+            localStorage.getString('deviceId') ?? controller.bikeID.value;
+        final isValidCycleId =
+            cycleId.isNotEmpty && cycleId != "null" && cycleId != "0";
+
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.2),
+              width: 0.5,
+            ),
           ),
-        ),
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.directions_bike,
+                size: 14.sp,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                "ID: ${isValidCycleId ? cycleId : 'Demo'}",
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -77,17 +135,93 @@ class _DurationDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      return Text(
-        _formatDuration(controller.totalDuration.value),
-        style: TextStyle(
-          fontSize: 48.sp,
-          fontWeight: FontWeight.w700,
-          color: Colors.black,
-        ),
-        textAlign: TextAlign.center,
-      );
-    });
+    return GetBuilder<BikeMetricsController>(
+      id: 'time_display',
+      builder: (controller) {
+        return Obx(() {
+          final duration = controller.totalDuration.value;
+          return Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 0.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "TRIP DURATION",
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  _formatDuration(duration),
+                  style: TextStyle(
+                    fontSize: 36.sp,
+                    fontWeight: FontWeight.w300,
+                    color: const Color(0xFF1E293B),
+                    height: 1.0,
+                  ),
+                ),
+                if (controller.isTracking.value) ...[
+                  SizedBox(height: 10.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: const Color(0xFF10B981).withOpacity(0.3),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          "ACTIVE",
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: const Color(0xFF10B981),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        });
+      },
+    );
   }
 
   String _formatDuration(double seconds) {
@@ -96,11 +230,11 @@ class _DurationDisplay extends StatelessWidget {
     final int secs = (seconds % 60).toInt();
 
     if (hours > 0) {
-      return '$hours hr ${minutes}m ${secs}s';
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     } else if (minutes > 0) {
-      return '${minutes}m ${secs}s';
+      return '${minutes}:${secs.toString().padLeft(2, '0')}';
     } else {
-      return '${secs}s';
+      return '0:${secs.toString().padLeft(2, '0')}';
     }
   }
 }
@@ -112,28 +246,121 @@ class _TimeMetricsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Obx(() {
-            return MetricInfoCard(
-              type: MetricType.calories,
-              value: controller.calculatedCalories.value.toInt().toString(),
-              unit: "kcal",
-            );
-          }),
+    return GetBuilder<BikeMetricsController>(
+      id: 'metrics_row',
+      builder: (controller) {
+        return Obx(() {
+          return Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  title: "CALORIES",
+                  value: controller.calculatedCalories.value.toInt().toString(),
+                  unit: "kcal",
+                  icon: Icons.local_fire_department_outlined,
+                  color: const Color(0xFFEF4444),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _MetricCard(
+                  title: "ELEVATION",
+                  value: controller.maxElevation.value.toInt().toString(),
+                  unit: "m",
+                  icon: Icons.terrain_outlined,
+                  color: const Color(0xFF3B82F6),
+                ),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String unit;
+  final IconData icon;
+  final Color color;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 0.5,
         ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Obx(() {
-            return MetricInfoCard(
-              type: MetricType.elevation,
-              value: controller.maxElevation.value.toInt().toString(),
-              unit: "m",
-            );
-          }),
-        ),
-      ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 14.sp,
+                color: color,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10.sp,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: value,
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF1E293B),
+                    height: 1.0,
+                  ),
+                ),
+                TextSpan(
+                  text: " $unit",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -146,15 +373,19 @@ class _CaloriesChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 280.h,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 0.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -162,117 +393,166 @@ class _CaloriesChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Calories History",
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Calories History",
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              GetBuilder<BikeMetricsController>(
+                builder: (controller) {
+                  return Obx(() {
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        "${controller.calculatedCalories.value.toStringAsFixed(1)} kcal",
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: const Color(0xFFEF4444),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  });
+                },
+              ),
+            ],
           ),
           SizedBox(height: 16.h),
           Expanded(
-            child: Obx(() {
-              if (controller.calorieHistoryData.isEmpty ||
-                  controller.calorieHistoryData
-                      .every((element) => element == 0)) {
-                return Center(
-                  child: Text(
-                    "Start your ride to see calorie data",
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
-                );
-              }
+            child: GetBuilder<BikeMetricsController>(
+              id: 'calorie_chart',
+              builder: (controller) {
+                return Obx(() {
+                  if (controller.calorieHistoryData.isEmpty) {
+                    return _buildEmptyState("No data available");
+                  }
 
-              return BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: _calculateMaxY(controller.calorieHistoryData),
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        if (groupIndex >=
-                            controller.calorieHistoryData.length) {
-                          return null;
-                        }
+                  if (controller.calorieHistoryData.every((element) => element == 0)) {
+                    return _buildEmptyState("Start your ride to see data");
+                  }
 
-                        final calories = controller
-                            .calorieHistoryData[groupIndex]
-                            .toStringAsFixed(1);
-                        final timeLabel = _formatTimeLabel(
-                            _getCurrentHourMinus(6 - groupIndex));
+                  return BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: _calculateMaxY(controller.calorieHistoryData),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          //tooltipBgColor: const Color(0xFF1E293B),
+                          tooltipRoundedRadius: 6.r,
+                          tooltipPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            if (groupIndex >= controller.calorieHistoryData.length) {
+                              return null;
+                            }
 
-                        return BarTooltipItem(
-                          '$calories cal\n$timeLabel',
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final hour = _getCurrentHourMinus(6 - value.toInt());
-                          return Padding(
-                            padding: EdgeInsets.only(top: 8.h),
-                            child: Text(
-                              _formatTimeLabel(hour),
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey[600],
+                            final calories = controller.calorieHistoryData[groupIndex].toStringAsFixed(1);
+                            final timeLabel = _formatTimeLabel(_getCurrentHourMinus(6 - groupIndex));
+
+                            return BarTooltipItem(
+                              '$calories cal\n$timeLabel',
+                              TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 11.sp,
                               ),
-                            ),
-                          );
-                        },
-                        reservedSize: 28,
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value % 10 != 0) return const SizedBox();
-                          return Text(
-                            '${value.toInt()}',
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey[600],
-                            ),
-                          );
-                        },
-                        reservedSize: 28,
+                      titlesData: FlTitlesData(
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final hour = _getCurrentHourMinus(6 - value.toInt());
+                              return Padding(
+                                padding: EdgeInsets.only(top: 8.h),
+                                child: Text(
+                                  _formatTimeLabel(hour),
+                                  style: TextStyle(
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              );
+                            },
+                            reservedSize: 24.h,
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              if (value % 10 != 0) return const SizedBox();
+                              return Text(
+                                '${value.toInt()}',
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.grey[400],
+                                ),
+                              );
+                            },
+                            reservedSize: 24.w,
+                          ),
+                        ),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawHorizontalLine: true,
+                        horizontalInterval: 10,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.grey.shade200,
+                          strokeWidth: 0.5,
+                        ),
+                        drawVerticalLine: false,
+                      ),
+                      borderData: FlBorderData(show: false),
+                      barGroups: _generateBarGroups(controller.calorieHistoryData),
                     ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawHorizontalLine: true,
-                    horizontalInterval: 10,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey[300],
-                      strokeWidth: 0.5,
-                    ),
-                    drawVerticalLine: false,
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: _generateBarGroups(controller.calorieHistoryData),
-                ),
-              );
-            }),
+                  );
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.bar_chart_outlined,
+            size: 32.w,
+            color: Colors.grey[300],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -281,9 +561,9 @@ class _CaloriesChart extends StatelessWidget {
 
   double _calculateMaxY(List<double> data) {
     if (data.isEmpty) return 10.0;
-
     final maxValue = data.reduce((a, b) => a > b ? a : b);
-    return ((maxValue * 1.2) / 10).ceil() * 10.0;
+    final calculatedMax = ((maxValue * 1.2) / 10).ceil() * 10.0;
+    return calculatedMax < 10 ? 10.0 : calculatedMax;
   }
 
   String _formatTimeLabel(int hour) {
@@ -303,18 +583,19 @@ class _CaloriesChart extends StatelessWidget {
         : [...data, ...List.filled(7 - data.length, 0.0)];
 
     return List.generate(validData.length, (index) {
+      final value = validData[index];
       return BarChartGroupData(
         x: index,
         barRods: [
           BarChartRodData(
-            toY: validData[index],
-            color: Colors.orange,
-            width: 16.w,
-            borderRadius: BorderRadius.circular(8.r),
+            toY: value,
+            color: _getBarColor(value),
+            width: 12.w,
+            borderRadius: BorderRadius.circular(3.r),
             gradient: LinearGradient(
               colors: [
-                Colors.orange.withOpacity(0.3),
-                Colors.orange,
+                _getBarColor(value).withOpacity(0.6),
+                _getBarColor(value),
               ],
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
@@ -323,5 +604,12 @@ class _CaloriesChart extends StatelessWidget {
         ],
       );
     });
+  }
+
+  Color _getBarColor(double calories) {
+    if (calories < 10) return Colors.grey.shade300;
+    if (calories < 30) return const Color(0xFFF59E0B);
+    if (calories < 50) return const Color(0xFFEF4444);
+    return const Color(0xFFDC2626);
   }
 }
