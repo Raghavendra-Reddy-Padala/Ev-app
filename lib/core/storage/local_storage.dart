@@ -212,3 +212,93 @@ class LocalStorage {
     await setLoggedIn(false);
   }
 }
+
+extension BikeDataStorage on LocalStorage {
+  // Enhanced setters with validation and logging
+  Future<void> setBikeSubscribed(bool value) async {
+    await setBool('bikeSubscribed', value);
+    print('💾 Bike subscription status saved: $value');
+  }
+
+  Future<void> setBikeCode(String code) async {
+    await setString('bikeCode', code);
+    print('💾 Bike code saved: $code');
+  }
+
+  Future<void> setTripMetrics({
+    required double distance,
+    required double duration,
+    required double speed,
+    required double calories,
+    required double elevation,
+  }) async {
+    await setDouble('totalDistance', distance);
+    await setDouble('totalDuration', duration);
+    await setDouble('currentSpeed', speed);
+    await setDouble('calories', calories);
+    await setDouble('maxElevation', elevation);
+
+    print('💾 Trip metrics saved:');
+    print('   Distance: $distance km');
+    print('   Duration: $duration s');
+    print('   Speed: $speed km/h');
+    print('   Calories: $calories kcal');
+    print('   Elevation: $elevation m');
+  }
+
+  // Enhanced getters with fallbacks
+  double getTotalDistance() => getDouble('totalDistance') ?? 0.0;
+  double getTotalDuration() => getDouble('totalDuration') ?? 0.0;
+  double getCurrentSpeed() => getDouble('currentSpeed') ?? 0.0;
+  double getCalories() => getDouble('calories') ?? 0.0;
+  double getMaxElevation() => getDouble('maxElevation') ?? 0.0;
+
+  // History data management
+  void setDoubleList(String key, List<double> values) {
+    final stringList = values.map((v) => v.toString()).toList();
+    setStringList(key, stringList);
+  }
+
+  List<double> getDoubleList(String key) {
+    final stringList = getStringList(key) ?? [];
+    return stringList.map((s) => double.tryParse(s) ?? 0.0).toList();
+  }
+
+  // Path and location management
+  void savePathPoints(List<List<double>> pathPoints) {
+    final flatList = pathPoints.expand((point) => point).toList();
+    setDoubleList('pathPoints', flatList);
+    print('💾 Saved ${pathPoints.length} path points');
+  }
+
+  List<List<double>> getPathPoints() {
+    final flatList = getDoubleList('pathPoints');
+    final pathPoints = <List<double>>[];
+
+    for (int i = 0; i < flatList.length; i += 2) {
+      if (i + 1 < flatList.length) {
+        pathPoints.add([flatList[i], flatList[i + 1]]);
+      }
+    }
+
+    return pathPoints;
+  }
+
+  void saveLocationList(List<List<double>> locations) {
+    final flatList = locations.expand((location) => location).toList();
+    setDoubleList('locations', flatList);
+  }
+
+  List<List<double>> getLocationList() {
+    final flatList = getDoubleList('locations');
+    final locations = <List<double>>[];
+
+    for (int i = 0; i < flatList.length; i += 2) {
+      if (i + 1 < flatList.length) {
+        locations.add([flatList[i], flatList[i + 1]]);
+      }
+    }
+
+    return locations;
+  }
+}
