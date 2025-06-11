@@ -1,0 +1,37 @@
+stages:
+  - sync
+
+variables:
+  GITHUB_REPO: "Avidia-Cohort/ev.app.ext.git"
+
+sync_github:
+  stage: sync
+  only:
+    - main
+  script:
+    - echo "Setting up SSH Key"
+    - mkdir -p ~/.ssh
+    - echo "$GITHUB_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    - echo "Configuring Git"
+    - git config --global user.name "Maytri CI/CD"
+    - git config --global user.email "maytri@coffeecodes.in"
+
+    - echo "Fetching latest changes"
+    - git remote remove github || true
+    - git remote add github git@github.com:$GITHUB_REPO
+    - git fetch origin main
+    - git checkout main
+    - git pull origin main
+
+    - echo "Updating build branch"
+    - git fetch github build || echo "No build branch yet"
+    - git checkout build || git checkout -b build
+    - git reset --hard github/build || echo "First time setup of build branch"
+    - git merge main --no-edit
+
+    - echo "Pushing changes to GitHub"
+    - git push github main
+    - git push --force github build
