@@ -272,8 +272,7 @@ Future<bool> createGroup(String name, String description, [String? groupImage]) 
             createdAt: DateTime.now().toString(),
             createdBy: 'dummy-user-id',
             avatarUrl: groupImage ?? 'https://dummyimage.com/600x400/000/fff&text=Group+Image',
-            // Add groupImage to your GroupData model if needed
-            // groupImage: groupImage,
+           
           ),
         );
         return true;

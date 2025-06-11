@@ -396,7 +396,6 @@ class _ProfileContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Name section positioned below profile picture
           SizedBox(height: 55.h), // Space for overlapping profile picture
           
           Padding(
