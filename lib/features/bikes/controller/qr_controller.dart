@@ -20,17 +20,17 @@ class QrScannerController extends BaseController {
   final RxBool isProcessing = false.obs;
   final RxString scannedDeviceId = ''.obs;
   final RxString encodedDeviceId = ''.obs;
-  final RxString issueBikeID =''.obs;
-  Future<bool> issueScanner(String qrCode)async{
+  final RxString issueBikeID = ''.obs;
+  Future<bool> issueScanner(String qrCode) async {
     final deviceId = _extractDeviceId(qrCode);
-    if (deviceId!=null){
+    if (deviceId != null) {
       issueBikeID.value = deviceId;
       return true;
-    }else{
+    } else {
       return false;
     }
-
   }
+
   Future<bool> processQrCode(String qrCode) async {
     if (isProcessing.value) return false;
 
@@ -66,8 +66,9 @@ class QrScannerController extends BaseController {
         personal: false,
       );
 
-      final tripStarted =
-          await tripControlService.startTrip(startTripData, personal: false);
+      // Use startFreshTrip - it will handle existing active trips automatically
+      final tripStarted = await tripControlService.startFreshTrip(startTripData,
+          personal: false);
 
       if (tripStarted) {
         bikeMetricsController.bikeEncoded.value = encodedDeviceId;
@@ -98,8 +99,9 @@ class QrScannerController extends BaseController {
         personal: true,
       );
 
-      final success =
-          await tripControlService.startTrip(startTripData, personal: true);
+      // Use startFreshTrip - it will handle existing active trips automatically
+      final success = await tripControlService.startFreshTrip(startTripData,
+          personal: true);
 
       if (success) {
         scannedDeviceId.value = demoDeviceId;

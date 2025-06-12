@@ -169,7 +169,7 @@ class _BikeImage extends StatelessWidget {
     return GetBuilder<BikeMetricsController>(
       builder: (controller) {
         return Container(
-          height: 280.h,
+          height: 250.h,
           width: ScreenUtil().screenWidth,
           padding: EdgeInsets.symmetric(vertical: 8.h),
           child: Stack(
