@@ -5,7 +5,7 @@ class TripSummaryModel {
   final double carbonFootprintKg;
   final double highestSpeed;
   final LongestRide longestRide;
-  final int maxElevationM;
+  final double maxElevationM; // Changed from int to double
   final int totalCalories;
   final double totalTimeHours;
   final int totalTrips;
@@ -27,7 +27,8 @@ class TripSummaryModel {
       carbonFootprintKg: json['carbon_footprint_kg']?.toDouble() ?? 0.0,
       highestSpeed: json['highest_speed']?.toDouble() ?? 0.0,
       longestRide: LongestRide.fromJson(json['longest_ride']),
-      maxElevationM: json['max_elevation_m'] ?? 0,
+      maxElevationM:
+          json['max_elevation_m']?.toDouble() ?? 0.0, // Changed to toDouble()
       totalCalories: json['total_calories'] ?? 0,
       totalTimeHours: json['total_time_hours']?.toDouble() ?? 0.0,
       totalTrips: json['total_trips'] ?? 0,
@@ -203,7 +204,7 @@ class EndTrip {
 class StartTrip {
   final String bikeId;
   final String stationId;
-  final bool personal ;
+  final bool personal;
   //final DateTime startTimestamp;
 
   StartTrip({
@@ -213,13 +214,14 @@ class StartTrip {
     //required this.startTimestamp,
   });
 
-Map<String, dynamic> toJson() {
-  return {
-    'bike_id': bikeId,
-    'station_id': stationId,
-    'personal': personal, 
-  };
-}
+  Map<String, dynamic> toJson() {
+    return {
+      'bike_id': bikeId,
+      'station_id': stationId,
+      'personal': personal,
+    };
+  }
+
   factory StartTrip.fromJson(Map<String, dynamic> json) {
     return StartTrip(
       bikeId: json['bike_id'],

@@ -15,6 +15,10 @@ class TripControlService extends BaseController {
 
   final RxString currentTripId = ''.obs;
   final RxBool isEndTripSliderVisible = false.obs;
+  final RxBool _isEndingTrip =
+      false.obs; // Track if we're in the process of ending
+
+  bool get isEndingTrip => _isEndingTrip.value;
 
   Future<bool> startTrip(StartTrip startTripData,
       {required bool personal}) async {
@@ -238,6 +242,7 @@ class TripControlService extends BaseController {
     print("   Calories: ${activeTrip.caloriesTrip} kcal");
     print("   Duration: ${activeTrip.totalTimeHours} hours");
     print("   Max Elevation: ${activeTrip.maxElevationM} m");
+
     bikeMetricsController.totalDistance.value = activeTrip.distanceKm;
     bikeMetricsController.currentSpeed.value = activeTrip.speedKmh;
     bikeMetricsController.calculatedCalories.value = activeTrip.caloriesTrip;
@@ -251,11 +256,13 @@ class TripControlService extends BaseController {
     localStorage.setDouble("calories", activeTrip.caloriesTrip);
     localStorage.setDouble("maxElevation", activeTrip.maxElevationM);
     localStorage.setTime((activeTrip.totalTimeHours * 3600).toInt());
+
     bikeMetricsController.totalDistance.refresh();
     bikeMetricsController.currentSpeed.refresh();
     bikeMetricsController.calculatedCalories.refresh();
     bikeMetricsController.maxElevation.refresh();
     bikeMetricsController.totalDuration.refresh();
+
     await bikeMetricsController.startTracking();
 
     print("✅ Successfully loaded existing trip data");
@@ -319,21 +326,36 @@ class TripControlService extends BaseController {
   }
 
   Future<bool> endTrip() async {
+    // Prevent multiple simultaneous trip endings
+    if (_isEndingTrip.value) {
+      print('⚠️ Trip ending already in progress, ignoring duplicate request');
+      return false;
+    }
+
     try {
+      _isEndingTrip.value = true;
       isLoading.value = true;
       errorMessage.value = '';
+
       print('🏁 ========== ENDING TRIP ==========');
       bikeMetricsController.printTripSummary();
+
+      // CRITICAL: Stop tracking FIRST to prevent location updates
+      print('🛑 Stopping location tracking...');
+      bikeMetricsController.stopTracking();
+      await Future.delayed(Duration(milliseconds: 500)); // Give it time to stop
+
       String? workingTripId = _getWorkingTripId();
 
       if (workingTripId == null || workingTripId.isEmpty) {
-        Get.to(() => RideSummary());
         print('❌ CRITICAL ERROR - No trip ID found!');
         handleError('No active trip found');
         return false;
       }
+
       print('🎯 Final working trip ID: "$workingTripId"');
       bikeMetricsController.saveTripSummary();
+
       final endTripData = _prepareEndTripData();
 
       print('📡 Calling tripsController.dataSend(true)...');
@@ -342,9 +364,7 @@ class TripControlService extends BaseController {
 
       if (success) {
         print('✅ Trip ended successfully via API');
-        //await _tryStopDevice();
         await _showTripSummaryAndCleanup(endTripData);
-
         return true;
       } else {
         print('❌ dataSend returned false');
@@ -357,6 +377,7 @@ class TripControlService extends BaseController {
       handleError('Failed to end trip: $e');
       return false;
     } finally {
+      _isEndingTrip.value = false;
       isLoading.value = false;
     }
   }
@@ -396,8 +417,6 @@ class TripControlService extends BaseController {
     final endTimestamp = DateTime.now();
     final startTimestamp =
         endTimestamp.subtract(Duration(seconds: totalDuration.toInt()));
-    final startLocationName = bikeMetricsController.startLocationName.value;
-    final endLocationName = bikeMetricsController.endLocationName.value;
 
     return EndTrip(
       path: pathPoints,
@@ -409,16 +428,6 @@ class TripControlService extends BaseController {
       distance: totalDistance,
       duration: totalDuration,
       averageSpeed: bikeMetricsController.avgSpeed.value,
-      // maxSpeed: currentSpeed,
-      // totalCalories: calories,
-      // maxElevation: maxElevation,
-      // pathPoints: pathPoints,
-      // locationList: locationList,
-      // startLocationName: startLocationName,
-      // endLocationName: endLocationName,
-      // speedHistory: localStorage.getDoubleList("speedHistory"),
-      // durationHistory: localStorage.getDoubleList("durationHistory"),
-      // calorieHistory: localStorage.getDoubleList("calorieHistory"),
     );
   }
 
@@ -535,6 +544,7 @@ class TripControlService extends BaseController {
     print('🔍 ========== TRIP STATUS DEBUG ==========');
     print('   TripControlService.currentTripId: "${currentTripId.value}"');
     print('   TripControlService.hasActiveTrip: $hasActiveTrip');
+    print('   TripControlService.isEndingTrip: $_isEndingTrip');
     print('   TripsController.tripId: "${tripsController.tripId.value}"');
     print(
         '   BikeMetricsController.bikeID: "${bikeMetricsController.bikeID.value}"');

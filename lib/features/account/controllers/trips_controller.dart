@@ -15,6 +15,7 @@ import '../../../shared/models/trips/trips_model.dart'
 import '../../../shared/models/user/user_model.dart';
 import '../../../shared/services/dummy_data_service.dart';
 import '../../authentication/views/auth_view.dart';
+import '../../bikes/controller/bike_metrics_controller.dart';
 
 class TripsController extends BaseController {
   final RxList<Trip> trips = <Trip>[].obs;
@@ -348,13 +349,15 @@ class TripsController extends BaseController {
     }
   }
 
-  Future<bool> updateTripLocation(
-      {required String tripId,
-      required double lat,
-      required double long,
-      required double elevation}) async {
+  // 🔧 UPDATED METHOD WITH PROPER ERROR HANDLING
+  Future<bool> updateTripLocation({
+    required String tripId,
+    required double lat,
+    required double long,
+    required double elevation,
+  }) async {
     try {
-      isLoading.value = true;
+      // Don't set isLoading for location updates to avoid UI issues
       errorMessage.value = '';
       isLocationUpdated.value = false;
 
@@ -384,10 +387,12 @@ class TripsController extends BaseController {
             _updateTripMetrics(data);
             isLocationUpdated.value = true;
             saveTripMetricsToLocalStorage();
-
+            print('✅ Location updated successfully');
             return true;
+          } else {
+            print('⚠️ Failed to update location: ${response?['message']}');
+            return false;
           }
-          return false;
         },
         dummyData: () {
           final dummyData = DummyDataService.putTripLocationResponse();
@@ -397,7 +402,7 @@ class TripsController extends BaseController {
             isLocationUpdated.value = true;
             tripLocations.add(TripLocation(latitude: lat, longitude: long));
             saveTripMetricsToLocalStorage();
-
+            print('✅ Location updated successfully (dummy data)');
             return true;
           }
           return false;
@@ -406,10 +411,33 @@ class TripsController extends BaseController {
 
       return result;
     } catch (e) {
-      handleError(e);
-      return false;
-    } finally {
-      isLoading.value = false;
+      print('❌ Error updating trip location: $e');
+
+      // Handle specific error cases
+      if (e.toString().contains('Trip is not active') ||
+          e.toString().contains('Cannot update location') ||
+          e.toString().contains('400')) {
+        print('🛑 Trip is not active, cannot update location');
+
+        // Notify BikeMetricsController to stop tracking
+        if (Get.isRegistered<BikeMetricsController>()) {
+          try {
+            final metricsController = Get.find<BikeMetricsController>();
+            print('🛑 Stopping location tracking due to inactive trip');
+            metricsController.stopTracking();
+          } catch (controllerError) {
+            print(
+                '⚠️ Could not access BikeMetricsController: $controllerError');
+          }
+        }
+
+        // Don't treat this as a general error since it's expected when trip ends
+        return false;
+      } else {
+        // For other errors, handle normally
+        handleError(e);
+        return false;
+      }
     }
   }
 

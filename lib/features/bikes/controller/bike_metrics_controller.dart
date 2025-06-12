@@ -11,6 +11,7 @@ import '../../../core/storage/local_storage.dart';
 import '../../../main.dart';
 import '../../../shared/models/trips/trips_model.dart';
 import '../../account/controllers/trips_controller.dart';
+import 'trips_control_service.dart';
 
 class BikeMetricsController extends BaseController {
   final LocalStorage localStorage = Get.find<LocalStorage>();
@@ -69,6 +70,47 @@ class BikeMetricsController extends BaseController {
 
     // Check if there was an active trip and restore tracking state
     await _checkAndRestoreActiveTrip();
+  }
+
+  Future<void> _updateTripLocation(loc.LocationData locationData) async {
+    try {
+      if (Get.isRegistered<TripControlService>()) {
+        final tripControlService = Get.find<TripControlService>();
+        if (tripControlService.isEndingTrip) {
+          print('🛑 Trip is ending, skipping location update');
+          return;
+        }
+      }
+
+      if (tripsController.tripId.value.isEmpty) {
+        String? storedTripId = localStorage.getString("tripId");
+        if (storedTripId != null && storedTripId.isNotEmpty) {
+          tripsController.tripId.value = storedTripId;
+        } else {
+          print('⚠️ No trip ID available, skipping location update');
+          return;
+        }
+      }
+      if (!isTracking.value) {
+        print('⚠️ Tracking not active, skipping location update');
+        return;
+      }
+
+      await tripsController.updateTripLocation(
+        tripId: tripsController.tripId.value,
+        lat: locationData.latitude!,
+        long: locationData.longitude!,
+        elevation: locationData.altitude ?? 0.0,
+      );
+    } catch (e) {
+      if (e.toString().contains('Trip is not active')) {
+        print('🛑 Trip is not active, stopping location updates');
+        // Stop tracking if trip is not active
+        stopTracking();
+      } else {
+        print('Error updating trip location: $e');
+      }
+    }
   }
 
   Future<void> _checkAndRestoreActiveTrip() async {
@@ -428,27 +470,27 @@ class BikeMetricsController extends BaseController {
     localStorage.saveLocationList(locations);
   }
 
-  Future<void> _updateTripLocation(loc.LocationData locationData) async {
-    try {
-      if (tripsController.tripId.value.isEmpty) {
-        String? storedTripId = localStorage.getString("tripId");
-        if (storedTripId != null && storedTripId.isNotEmpty) {
-          tripsController.tripId.value = storedTripId;
-        } else {
-          return;
-        }
-      }
+  // Future<void> _updateTripLocation(loc.LocationData locationData) async {
+  //   try {
+  //     if (tripsController.tripId.value.isEmpty) {
+  //       String? storedTripId = localStorage.getString("tripId");
+  //       if (storedTripId != null && storedTripId.isNotEmpty) {
+  //         tripsController.tripId.value = storedTripId;
+  //       } else {
+  //         return;
+  //       }
+  //     }
 
-      await tripsController.updateTripLocation(
-        tripId: tripsController.tripId.value,
-        lat: locationData.latitude!,
-        long: locationData.longitude!,
-        elevation: locationData.altitude ?? 0.0,
-      );
-    } catch (e) {
-      print('Error updating trip location: $e');
-    }
-  }
+  //     await tripsController.updateTripLocation(
+  //       tripId: tripsController.tripId.value,
+  //       lat: locationData.latitude!,
+  //       long: locationData.longitude!,
+  //       elevation: locationData.altitude ?? 0.0,
+  //     );
+  //   } catch (e) {
+  //     print('Error updating trip location: $e');
+  //   }
+  // }
 
   void _setStartLocation(_LocationPoint location) {
     startPosition = LatLng(location.lat, location.lng);
