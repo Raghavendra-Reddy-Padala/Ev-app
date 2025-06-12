@@ -322,16 +322,6 @@ class _EndTripSliderState extends State<_EndTripSlider>
       final success = await service.endTrip();
 
       if (success) {
-        AwesomeNotifications().createNotification(
-          content: NotificationContent(
-            id: 3,
-            channelKey: 'ride_channel',
-            title: 'Trip Ended Successfully! 🎉',
-            body: 'Your trip has ended. Thanks for riding with us!',
-            notificationLayout: NotificationLayout.Default,
-          ),
-        );
-
         bikeMetricsController.bikeSubscribed.value = false;
         mainPageController.updateSubscriptionStatus(false);
 

@@ -96,8 +96,8 @@ class GroupView extends StatelessWidget {
   Widget _buildEmptyState(String title) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-        crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             title,

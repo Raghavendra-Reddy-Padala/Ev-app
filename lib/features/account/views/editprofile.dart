@@ -19,7 +19,7 @@ class EditProfileView extends StatefulWidget {
 
 class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
-    final LocalStorage localStorage = Get.find<LocalStorage>();
+  final LocalStorage localStorage = Get.find<LocalStorage>();
 
   final Map<String, dynamic> _formData = {};
   final ProfileController userController = Get.find<ProfileController>();
@@ -48,7 +48,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       _formData['pincode'] = userController.userData.value!.data.pincode ?? '';
       _formData['country'] = userController.userData.value!.data.country ?? '';
       _formData['avatar'] = userController.userData.value!.data.avatar;
-      _formData['banner'] = userController.userData.value!.data.banner ?? '';
+      _formData['banner'] = userController.userData.value!.data.banner ??
+          'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png';
 
       _formData['uid'] = userController.userData.value!.data.uid ?? '';
       _formData['phone'] = userController.userData.value!.data.phone ?? '';
@@ -68,7 +69,6 @@ class _EditProfileViewState extends State<EditProfileView> {
       _formData['gender'] = userController.userData.value!.data.gender ?? '';
       _formData['invite_code'] =
           userController.userData.value!.data.inviteCode ?? '';
-        
     }
   }
 
@@ -80,8 +80,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       });
 
       try {
-final token = await getToken();
-      if (token == null) return;        
+        final token = await getToken();
+        if (token == null) return;
 
         final userData = userController.userData.value!.data;
 
@@ -97,7 +97,7 @@ final token = await getToken();
           'age': userData.age.toString() ?? '',
           'points': userData.points ?? 0,
           'invite_code': userData.inviteCode ?? '',
-          'gender': userData.gender ,
+          'gender': userData.gender,
           'first_name': _formData['first_name'],
           'last_name': _formData['last_name'],
           'date_of_birth': _formData['date_of_birth'],
@@ -112,7 +112,7 @@ final token = await getToken();
           'country': _formData['country'] ?? '',
           'avatar': _formData['avatar'] ?? '',
           'banner': _formData['banner'] ?? '',
-          'created_at':userData.createdAt ?? '',
+          'created_at': userData.createdAt ?? '',
         };
 
         jsonData.removeWhere((key, value) => value == null);
@@ -134,13 +134,11 @@ final token = await getToken();
         AppLogger.i('Response received');
         AppLogger.i('Response body: ${response.toString()}');
 
-        
         if (response != null && response['success'] == true) {
           await userController.fetchUserDetails();
           _showSnackBar('Profile updated successfully', Colors.green);
 
           Navigator.pop(context);
-          
         } else {
           throw Exception(
               'Failed to update profile: ${response?['message'] ?? 'Unknown error'}');
@@ -190,31 +188,31 @@ final token = await getToken();
     }
   }
 
-  // Future<void> _pickAndUploadBanner() async {
-  //   setState(() {
-  //     _isBannerLoading = true;
-  //   });
+  Future<void> _pickAndUploadBanner() async {
+    setState(() {
+      _isBannerLoading = true;
+    });
 
-  //   try {
-  //     final url = await ImageService.pickAndUploadImage(type: ImageType.banner);
-  //     if (url != null) {
-  //       setState(() {
-  //         _formData['banner'] = url;
-  //       });
-  //       _showSnackBar('Banner image updated', AppColors.primary);
-  //     }
-  //   } catch (e) {
-  //     _showSnackBar('Failed to upload banner: ${e.toString()}', Colors.red);
-  //   } finally {
-  //     setState(() {
-  //       _isBannerLoading = false;
-  //     });
-  //   }
-  // }
-    Future<String?> getToken() async {
-    return localStorage.getToken();
+    try {
+      final url = await ImageService.pickAndUploadImage(type: ImageType.banner);
+      if (url != null) {
+        setState(() {
+          _formData['banner'] = url;
+        });
+        _showSnackBar('Banner image updated', AppColors.primary);
+      }
+    } catch (e) {
+      _showSnackBar('Failed to upload banner: ${e.toString()}', Colors.red);
+    } finally {
+      setState(() {
+        _isBannerLoading = false;
+      });
+    }
   }
 
+  Future<String?> getToken() async {
+    return localStorage.getToken();
+  }
 
   Widget _buildTextField(String label, String key,
       {String? initialValue,
@@ -342,10 +340,8 @@ final token = await getToken();
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // _buildBannerEditor(),
-                        // SizedBox(height: 16.h),
-                        _buildProfileAvatarEditor(),
-                        SizedBox(height: 24.h),
+                        _buildBannerWithProfileSection(),
+                        SizedBox(height: 90.h),
                         _buildPersonalInfoSection(),
                         SizedBox(height: 24.h),
                         _buildContactInfoSection(),
@@ -414,109 +410,171 @@ final token = await getToken();
     );
   }
 
-  // Widget _buildBannerEditor() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Padding(
-  //         padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
-  //         child: Text(
-  //           'Banner Image',
-  //           style: AppTextThemes.bodyLarge().copyWith(
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.black87,
-  //           ),
-  //         ),
-  //       ),
-  //       Card(
-  //         elevation: 2,
-  //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  //         child: Container(
-  //           width: double.infinity,
-  //           height: 150.h,
-  //           decoration: BoxDecoration(
-  //             borderRadius: BorderRadius.circular(12),
-  //             color: AppColors.offwhite,
-  //           ),
-  //           child: Stack(
-  //             children: [
-  //               Container(
-  //                 width: double.infinity,
-  //                 height: double.infinity,
-  //                 decoration: BoxDecoration(
-  //                   borderRadius: BorderRadius.circular(12),
-  //                   image: _formData['banner'] != null &&
-  //                           _formData['banner'].toString().isNotEmpty
-  //                       ? DecorationImage(
-  //                           image: NetworkImage(_formData['banner'].toString()),
-  //                           fit: BoxFit.cover,
-  //                         )
-  //                       : null,
-  //                 ),
-  //                 child: _formData['banner'] == null ||
-  //                         _formData['banner'].toString().isEmpty
-  //                     ? Center(
-  //                         child: Column(
-  //                           mainAxisAlignment: MainAxisAlignment.center,
-  //                           children: [
-  //                             Icon(
-  //                               Icons.image,
-  //                               size: 40.sp,
-  //                               color: Colors.black54,
-  //                             ),
-  //                             SizedBox(height: 8.h),
-  //                             Text(
-  //                               'No banner image',
-  //                               style: AppTextThemes.bodySmall().copyWith(
-  //                                 color: Colors.black54,
-  //                               ),
-  //                             ),
-  //                           ],
-  //                         ),
-  //                       )
-  //                     : null,
-  //               ),
-  //               if (_isBannerLoading)
-  //                 Container(
-  //                   width: double.infinity,
-  //                   height: double.infinity,
-  //                   decoration: BoxDecoration(
-  //                     borderRadius: BorderRadius.circular(12),
-  //                     color: Colors.black.withOpacity(0.5),
-  //                   ),
-  //                   child: Center(
-  //                     child: CircularProgressIndicator(
-  //                       valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               Positioned(
-  //                 top: 8.h,
-  //                 right: 8.w,
-  //                 child: GestureDetector(
-  //                   onTap: _pickAndUploadBanner,
-  //                   child: Container(
-  //                     padding: EdgeInsets.all(8.w),
-  //                     decoration: BoxDecoration(
-  //                       color: AppColors.primary,
-  //                       shape: BoxShape.circle,
-  //                       border: Border.all(color: Colors.white, width: 2),
-  //                     ),
-  //                     child: Icon(
-  //                       Icons.camera_alt,
-  //                       color: Colors.white,
-  //                       size: 16.sp,
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+  Widget _buildBannerWithProfileSection() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Banner Section
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
+              child: Text(
+                'Banner Image',
+                style: AppTextThemes.bodyLarge().copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                width: double.infinity,
+                height: 150.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.offwhite,
+                ),
+                child: Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: NetworkImage(
+                            _formData['banner'] != null &&
+                                    _formData['banner'].toString().isNotEmpty
+                                ? _formData['banner'].toString()
+                                : 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    if (_isBannerLoading)
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.black.withOpacity(0.5),
+                        ),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      top: 8.h,
+                      right: 8.w,
+                      child: GestureDetector(
+                        onTap: _pickAndUploadBanner,
+                        child: Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 16.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Positioned(
+          bottom: -70.h,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: _isAvatarLoading
+                          ? CircleAvatar(
+                              radius: 60.r,
+                              backgroundColor: AppColors.offwhite,
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.primary),
+                              ),
+                            )
+                          : CircleAvatar(
+                              radius: 60.r,
+                              backgroundColor: AppColors.offwhite,
+                              backgroundImage: _formData['avatar'] != null &&
+                                      _formData['avatar'].toString().isNotEmpty
+                                  ? NetworkImage(_formData['avatar'].toString())
+                                  : const AssetImage(
+                                          'assets/images/user_img.png')
+                                      as ImageProvider,
+                            ),
+                    ),
+                    GestureDetector(
+                      onTap: _pickAndUploadAvatar,
+                      child: Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Profile Photo',
+                  style: AppTextThemes.bodyMedium().copyWith(
+                    color: Colors.black54,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildPersonalInfoSection() {
     return Column(
@@ -691,74 +749,6 @@ final token = await getToken();
                 ),
               ],
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileAvatarEditor() {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: _isAvatarLoading
-                  ? CircleAvatar(
-                      radius: 60.r,
-                      backgroundColor: AppColors.offwhite,
-                      child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      ),
-                    )
-                  : CircleAvatar(
-                      radius: 60.r,
-                      backgroundColor: AppColors.offwhite,
-                      backgroundImage: _formData['avatar'] != null &&
-                              _formData['avatar'].toString().isNotEmpty
-                          ? NetworkImage(_formData['avatar'].toString())
-                          : const AssetImage('assets/images/user_img.png')
-                              as ImageProvider,
-                    ),
-            ),
-            GestureDetector(
-              onTap: _pickAndUploadAvatar,
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 20.sp,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Text(
-          'Profile Photo',
-          style: AppTextThemes.bodyMedium().copyWith(
-            color: Colors.black54,
-            fontSize: 14.sp,
           ),
         ),
       ],
