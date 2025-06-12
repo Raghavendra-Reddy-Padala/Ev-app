@@ -56,8 +56,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       _formData['type'] = userController.userData.value!.data.type ?? '';
       _formData['TableName'] = '';
       _formData['points'] = userController.userData.value!.data.points ?? 0;
-      _formData['password'] =
-          'abcd'; // You might need to handle this differently
+      _formData['password'] = 'abcd';
       _formData['employee_id'] =
           userController.userData.value!.data.employeeId ?? '';
       _formData['company'] = userController.userData.value!.data.company ?? '';
@@ -130,14 +129,12 @@ class _EditProfileViewState extends State<EditProfileView> {
           },
         );
 
-        // Fixed: response is already a Map, not an HTTP response object
         AppLogger.i('Response received');
         AppLogger.i('Response body: ${response.toString()}');
 
         if (response != null && response['success'] == true) {
           await userController.fetchUserDetails();
           _showSnackBar('Profile updated successfully', Colors.green);
-
           Navigator.pop(context);
         } else {
           throw Exception(
@@ -415,135 +412,84 @@ class _EditProfileViewState extends State<EditProfileView> {
       clipBehavior: Clip.none,
       children: [
         // Banner Section
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
-              child: Text(
-                'Banner Image',
-                style: AppTextThemes.bodyLarge().copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                width: double.infinity,
-                height: 150.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: AppColors.offwhite,
-                ),
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            _formData['banner'] != null &&
-                                    _formData['banner'].toString().isNotEmpty
-                                ? _formData['banner'].toString()
-                                : 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    if (_isBannerLoading)
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 8.h,
-                      right: 8.w,
-                      child: GestureDetector(
-                        onTap: _pickAndUploadBanner,
-                        child: Container(
-                          padding: EdgeInsets.all(8.w),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 16.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-
+        _buildBannerSection(),
+        // Profile Photo Section - Positioned to overlap banner
         Positioned(
-          bottom: -70.h,
+          bottom: -60.h, // Half the profile photo height
           left: 0,
           right: 0,
-          child: Center(
-            child: Column(
+          child: _buildProfilePhotoSection(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBannerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
+          child: Text(
+            'Banner Image',
+            style: AppTextThemes.bodyLarge().copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        Card(
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            width: double.infinity,
+            height: 150.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: AppColors.offwhite,
+            ),
+            child: Stack(
               children: [
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        _formData['banner'] != null &&
+                                _formData['banner'].toString().isNotEmpty
+                            ? _formData['banner'].toString()
+                            : 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
                       ),
-                      child: _isAvatarLoading
-                          ? CircleAvatar(
-                              radius: 60.r,
-                              backgroundColor: AppColors.offwhite,
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.primary),
-                              ),
-                            )
-                          : CircleAvatar(
-                              radius: 60.r,
-                              backgroundColor: AppColors.offwhite,
-                              backgroundImage: _formData['avatar'] != null &&
-                                      _formData['avatar'].toString().isNotEmpty
-                                  ? NetworkImage(_formData['avatar'].toString())
-                                  : const AssetImage(
-                                          'assets/images/user_img.png')
-                                      as ImageProvider,
-                            ),
+                      fit: BoxFit.cover,
                     ),
-                    GestureDetector(
-                      onTap: _pickAndUploadAvatar,
+                  ),
+                ),
+                if (_isBannerLoading)
+                  Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.black.withOpacity(0.5),
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  top: 8.h,
+                  right: 8.w,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isBannerLoading ? null : _pickAndUploadBanner,
+                      borderRadius: BorderRadius.circular(16.r),
                       child: Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
@@ -554,18 +500,10 @@ class _EditProfileViewState extends State<EditProfileView> {
                         child: Icon(
                           Icons.camera_alt,
                           color: Colors.white,
-                          size: 20.sp,
+                          size: 16.sp,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Profile Photo',
-                  style: AppTextThemes.bodyMedium().copyWith(
-                    color: Colors.black54,
-                    fontSize: 14.sp,
                   ),
                 ),
               ],
@@ -573,6 +511,102 @@ class _EditProfileViewState extends State<EditProfileView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProfilePhotoSection() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 136.w,
+            height: 136.w,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Profile Photo
+                Container(
+                  width: 120.w,
+                  height: 120.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _isAvatarLoading
+                      ? CircleAvatar(
+                          radius: 60.r,
+                          backgroundColor: AppColors.offwhite,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 60.r,
+                          backgroundColor: AppColors.offwhite,
+                          backgroundImage: _formData['avatar'] != null &&
+                                  _formData['avatar'].toString().isNotEmpty
+                              ? NetworkImage(_formData['avatar'].toString())
+                              : const AssetImage('assets/images/user_img.png')
+                                  as ImageProvider,
+                        ),
+                ),
+                // Camera Icon - Positioned with proper touch handling
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isAvatarLoading ? null : _pickAndUploadAvatar,
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Profile Photo',
+            style: AppTextThemes.bodyMedium().copyWith(
+              color: Colors.black54,
+              fontSize: 14.sp,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

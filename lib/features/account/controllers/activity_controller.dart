@@ -55,19 +55,25 @@ class ActivityController extends BaseController {
 
           if (response != null) {
             print("TRIP SUMMARY => ${response}");
+
+            // Check if response is successful
             if (response['success'] == true && response['data'] != null) {
-              tripSummary.value = TripSummaryModel.fromJson(response['data']);
-              generateGraphData();
-              saveCachedData();
-              return true;
+              try {
+                tripSummary.value = TripSummaryModel.fromJson(response['data']);
+                generateGraphData();
+                saveCachedData();
+                return true;
+              } catch (parseError) {
+                print("Error parsing trip summary: $parseError");
+                errorMessage.value = 'Failed to parse trip data';
+                return false;
+              }
             } else {
+              // Fix: Access message directly from response, not response.data
               errorMessage.value =
-                  response.data['message'] ?? 'Failed to load trip summary';
+                  response['message'] ?? 'Failed to load trip summary';
               return false;
             }
-          } else if (response?.statusCode == 401) {
-            NavigationService.pushReplacementTo(const AuthView());
-            return false;
           } else {
             errorMessage.value =
                 'Failed to fetch trip summary. Please try again.';
@@ -85,6 +91,7 @@ class ActivityController extends BaseController {
         },
       );
     } catch (e) {
+      print("Error in fetchTripSummary: $e");
       handleError(e);
     } finally {
       isLoading.value = false;

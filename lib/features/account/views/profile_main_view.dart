@@ -1,10 +1,8 @@
 // ignore_for_file: unnecessary_null_comparison
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/account/views/editprofile.dart';
-import 'package:mjollnir/features/account/views/profile_detials.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 import 'package:mjollnir/shared/components/profile/invite_friends.dart';
 import 'package:mjollnir/shared/components/indicators/loading_indicator.dart';
@@ -170,7 +168,7 @@ class _ProfileContent extends StatelessWidget {
                   topLeft: Radius.circular(16.r),
                   topRight: Radius.circular(16.r),
                 ),
-                onTap: () => Get.to(() => Profiledetails()),
+                onTap: () => Get.to(() => EditProfileView()),
                 child: Container(),
               ),
             ),
