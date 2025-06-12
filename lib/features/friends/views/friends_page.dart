@@ -67,24 +67,46 @@ class FriendsPage extends StatelessWidget {
                   padding: EdgeInsets.all(10.h),
                   child: Column(
                     children: [
-                      SizedBox(height: 10.h),
                       SimpleSearchField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
                       ),
-                      SizedBox(height: 10.w),
                       CarouselWithIndicator(imgList: imgList),
                       SizedBox(height: 10.w),
                     ],
                   ),
                 ),
               ),
+              // Sticky Tab Bar
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickyTabBarDelegate(
                   tabControllerX: tabControllerX,
                 ),
               ),
+              // Filter Section - Fixed positioning
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: Obx(() {
+                    final availableItems = tabControllerX.selectedIndex.value == 0
+                        ? const ['Pts', 'followers', 'Trips']
+                        : const ['Pts', 'Km', 'Carbon'];
+
+                    final filterController = Get.find<FilterController>();
+
+                    if (!availableItems.contains(filterController.selectedValue.value)) {
+                      filterController.selectedValue.value = availableItems[0];
+                    }
+
+                    return CustomDropdown(
+                      items: availableItems,
+                      controller: filterController,
+                    );
+                  }),
+                ),
+              ),
+              // Content Section
               SliverPadding(
                 padding: EdgeInsets.symmetric(horizontal: 11.w),
                 sliver: Obx(
@@ -120,13 +142,16 @@ class FriendsPage extends StatelessWidget {
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabControllerX tabControllerX;
   _StickyTabBarDelegate({required this.tabControllerX});
+  
   @override
-  double get minExtent => 90.h;
+  double get minExtent => 60.h; // Reduced height since filter is moved out
   @override
-  double get maxExtent => 90.h;
+  double get maxExtent => 65.h;
+  
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
+      
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -169,25 +194,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
               ),
             ),
           ),
-          Obx(() {
-            final availableItems = tabControllerX.selectedIndex.value == 0
-                ? const ['Pts','followers','Trips']
-                : const ['Pts', 'Km', 'Carbon'];
-
-            final filterController = Get.find<FilterController>();
-
-            if (!availableItems
-                .contains(filterController.selectedValue.value)) {
-              filterController.selectedValue.value = availableItems[0];
-            }
-
-            return SizedBox(
-              child: CustomDropdown(
-                items: availableItems,
-                controller: filterController,
-              ),
-            );
-          }),
+          SizedBox(height: 15.h),
         ],
       ),
     );

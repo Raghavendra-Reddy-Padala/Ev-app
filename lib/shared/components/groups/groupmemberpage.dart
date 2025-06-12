@@ -1,6 +1,7 @@
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mjollnir/features/friends/controller/follow_controller.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/constants/colors.dart' show AppColors;
 import 'package:mjollnir/shared/models/group/group_models.dart';
@@ -28,16 +29,11 @@ class GroupMembersPage extends StatelessWidget {
               children: [
                 SizedBox(height: 0.01),
                 Header(heading: "$name Members"),
-                                MembersStatisticsSection(groupMembers: groupMembers),
-
+                MembersStatisticsSection(groupMembers: groupMembers),
                 SizedBox(height: 10.h),
-                // Members leaderboard table
                 LeaderboardTable(groupMembers: groupMembers),
                 SizedBox(height: 15.h),
-
-                          _buildTopPerformerSection(),
-
-                // Members Statistics section
+                _buildTopPerformerSection(),
               ],
             ),
           ),
@@ -46,7 +42,6 @@ class GroupMembersPage extends StatelessWidget {
     );
   }
 
-  
   Widget _buildTopPerformerSection() {
     final sortedMembers = [...groupMembers.members];
     sortedMembers.sort((a, b) => b.kmTraveled.compareTo(a.kmTraveled));
@@ -109,6 +104,15 @@ class LeaderboardTable extends StatelessWidget {
 
   const LeaderboardTable({super.key, required this.groupMembers});
 
+  void _showUserBottomSheet(BuildContext context, dynamic member) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserProfileBottomSheet(member: member),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double listHeight = groupMembers.members.length * 60;
@@ -138,25 +142,32 @@ class LeaderboardTable extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 if (index < groupMembers.members.length) {
+                  final member = groupMembers.members[index];
                   return ListTile(
                     minTileHeight: 60,
+                    onTap: () => _showUserBottomSheet(context, member),
                     leading: CircleAvatar(
+                      radius: 20.r,
+                      backgroundImage: member.avatar.isNotEmpty 
+                        ? NetworkImage(member.avatar)
+                        : null,
                       backgroundColor: const Color.fromRGBO(234, 221, 255, 1),
-                      child: Text(
-                        groupMembers.members[index].firstName[0],
-                        style: AppTextThemes.bodyMedium()
-                            .copyWith(color: Colors.orange),
-                      ),
+                      child: member.avatar.isEmpty
+                        ? Text(
+                            member.firstName[0],
+                            style: AppTextThemes.bodyMedium()
+                                .copyWith(color: Colors.orange),
+                          )
+                        : null,
                     ),
                     title: Text(
-                      groupMembers
-                          .members[index].firstName,
+                      member.firstName,
                       style: AppTextThemes.bodyMedium()
                           .copyWith(fontWeight: FontWeight.w500),
                     ),
                     trailing: Text(
-                      '${groupMembers.members[index].kmTraveled} km',
-                      style:  AppTextThemes.bodyMedium()
+                      '${member.kmTraveled} km',
+                      style: AppTextThemes.bodyMedium()
                           .copyWith(color: Colors.black),
                     ),
                   );
@@ -167,6 +178,182 @@ class LeaderboardTable extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class UserProfileBottomSheet extends StatelessWidget {
+  final dynamic member;
+
+  const UserProfileBottomSheet({super.key, required this.member});
+
+  @override
+  Widget build(BuildContext context) {
+      final FollowController followController = FollowController();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.5,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20.r),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: EdgeInsets.only(top: 12.h),
+            width: 40.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+          
+          // Profile section
+          Padding(
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              children: [
+                // Profile picture with green border
+                Container(
+                  padding: EdgeInsets.all(4.r),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.green,
+                      width: 3.w,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 50.r,
+                    backgroundImage: member.avatar.isNotEmpty 
+                      ? NetworkImage(member.avatar)
+                      : null,
+                    backgroundColor: const Color.fromRGBO(234, 221, 255, 1),
+                    child: member.avatar.isEmpty
+                      ? Text(
+                          member.firstName[0],
+                          style: AppTextThemes.bodyMedium().copyWith(
+                            color: Colors.orange,
+                            fontSize: 24.sp,
+                          ),
+                        )
+                      : null,
+                  ),
+                ),
+                
+                SizedBox(height: 16.h),
+                
+                // User name
+                Text(
+                  '${member.firstName} ${member.lastName ?? ''}',
+                  style: AppTextThemes.bodyMedium().copyWith(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+                SizedBox(height: 30.h),
+                
+                // Stats row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatColumn(
+                      '${member.kmTraveled}',
+                      'Distance',
+                      'km',
+                      Colors.green,
+                    ),
+                    _buildStatColumn(
+                      '${member.points ?? 18}', // Fallback if trips not available
+                      'Points',
+                      '',
+                      Colors.green,
+                    ),
+                    _buildStatColumn(
+                      '${member.carbonFootprint ?? 0}', 
+                      'Carbon Saved',
+                      '',
+                      Colors.grey,
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: 30.h),
+
+                
+               
+                
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50.h,
+                  child: ElevatedButton(
+                    onPressed: () {
+followController.followUser(member.uid);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Follow',
+                      style: AppTextThemes.bodyMedium().copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStatColumn(String value, String label, String unit, Color color) {
+    return Column(
+      children: [
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: value,
+                style: AppTextThemes.bodyMedium().copyWith(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              if (unit.isNotEmpty)
+                TextSpan(
+                  text: ' $unit',
+                  style: AppTextThemes.bodySmall().copyWith(
+                    fontSize: 16.sp,
+                    color: color,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          label,
+          style: AppTextThemes.bodySmall().copyWith(
+            color: Colors.grey[600],
+            fontSize: 14.sp,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -205,7 +392,7 @@ class MembersStatisticsSection extends StatelessWidget {
         children: [
           Text(
             'Group Statistics',
-            style:  AppTextThemes.bodyMedium(),
+            style: AppTextThemes.bodyMedium(),
           ),
           SizedBox(height: 15.h),
           Row(
@@ -232,7 +419,6 @@ class MembersStatisticsSection extends StatelessWidget {
             ],
           ),
           SizedBox(height: 15.h),
-          // Top performers section
         ],
       ),
     );
@@ -266,5 +452,4 @@ class MembersStatisticsSection extends StatelessWidget {
       ),
     );
   }
-  
 }

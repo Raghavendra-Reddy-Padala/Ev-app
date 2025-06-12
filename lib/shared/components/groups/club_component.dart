@@ -23,7 +23,6 @@ class ClubComponent extends StatelessWidget {
           'Either allGroup or groupData must be provided, but not both',
         );
 
-  // Helper method to get unified data
   _UnifiedGroupData get _data {
     if (allGroup != null) {
       return _UnifiedGroupData.fromAllGroup(allGroup!);
@@ -41,7 +40,8 @@ class ClubComponent extends StatelessWidget {
         Get.to(() => GroupDetailPage(
               allGroup: allGroup,
               groupData: groupData,
-            ));
+            )
+            );
       },
       child: Container(
         width: double.infinity,

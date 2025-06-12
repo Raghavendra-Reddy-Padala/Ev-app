@@ -29,11 +29,7 @@ class InviteFriendsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Image.asset(
-                'assets/images/add_friend.png',
-                width: 40.w,
-                height: 40.w,
-              ),
+              Icon(Icons.person_add_alt_rounded, size: 24.w, color: Colors.black),
               SizedBox(width: 12.w),
               Expanded(
                 child: Column(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/features/friends/controller/follow_controller.dart';
+import 'package:mjollnir/features/friends/views/individualuser.dart';
+import 'package:mjollnir/features/menubar/group_detailed_page.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 import 'package:mjollnir/shared/models/group/group_models.dart';
 import 'package:mjollnir/shared/models/user/user_model.dart';
@@ -20,6 +22,7 @@ class SimpleSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return GetX<CustomSearchController>(
       builder: (searchController) {
         // Determine if we should show results
@@ -197,19 +200,24 @@ class SearchResultItem extends StatelessWidget {
               ),
         onTap: () {
           if (isUser) {
-            // NavigationService.pushTo(
-            //   IndividualUserPage(
-            //     name: (item as User).firstName,
-            //     distance: (item as User).points.toString(),
-            //   ),
-            // );
+            Get.to(()=>  IndividualUserPage(
+              followers: (item as User).followers,
+              trips: (item as User).trips,
+              avatharurl: (item as User).avatar,
+
+              uid: (item as User).uid,
+            points: (item as User).points,
+                name: (item as User).firstName,
+                distance: (item as User).points.toString(),
+              ),);
+
           } else {
-            // NavigationService.pushTo(
-            //   GroupUserPage(
-            //     name: (item as Group).name,
-            //     id: (item as Group).id,
-            //   ),
-            // );
+            Get.to(() => 
+            GroupDetailPage(
+              allGroup:item as AllGroup, 
+              groupData: null,
+            )
+            );
           }
         },
       ),
