@@ -1,3 +1,4 @@
+import 'package:bolt_ui_kit/components/toast/toast.dart';
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -83,7 +84,7 @@ class ClubComponent extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   child: JoinButton(
                     data: _data,
-isUserGroup: (allGroup?.isCreator ?? false) ? true : false,
+                    isUserGroup: (allGroup?.isCreator ?? false) ? true : false,
                   ),
                 ),
               ),
@@ -110,21 +111,20 @@ class _UnifiedGroupData {
   final double averageSpeed;
   final AggregatedData? aggregatedData;
 
-  _UnifiedGroupData({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.createdBy,
-    required this.memberCount,
-    required this.isMember,
-    required this.isCreator,
-    required this.lastActivity,
-    required this.totalDistance,
-    required this.totalTrips,
-    required this.averageSpeed,
-    this.aggregatedData,
-    required this.Avatharurl
-  });
+  _UnifiedGroupData(
+      {required this.id,
+      required this.name,
+      required this.description,
+      required this.createdBy,
+      required this.memberCount,
+      required this.isMember,
+      required this.isCreator,
+      required this.lastActivity,
+      required this.totalDistance,
+      required this.totalTrips,
+      required this.averageSpeed,
+      this.aggregatedData,
+      required this.Avatharurl});
 
   factory _UnifiedGroupData.fromAllGroup(AllGroup group) {
     return _UnifiedGroupData(
@@ -140,7 +140,7 @@ class _UnifiedGroupData {
       totalTrips: group.totalTrips,
       averageSpeed: group.averageSpeed,
       aggregatedData: group.aggregatedData,
-      Avatharurl: group.avatharurl, 
+      Avatharurl: group.avatharurl,
     );
   }
 
@@ -150,15 +150,15 @@ class _UnifiedGroupData {
 
     return _UnifiedGroupData(
       id: group.id,
-      Avatharurl:group.avatarUrl,
+      Avatharurl: group.avatarUrl,
       name: group.name,
       description: group.description,
       createdBy: group.createdBy,
-      memberCount: 0, 
-      isMember: true, 
+      memberCount: 0,
+      isMember: true,
       isCreator: group.createdBy == userId,
       lastActivity: group.createdAt,
-      totalDistance: 0.0, 
+      totalDistance: 0.0,
       totalTrips: 0,
       averageSpeed: 0.0,
       aggregatedData: details?.aggregatedData,
@@ -356,6 +356,7 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
+
 class JoinButton extends StatelessWidget {
   final _UnifiedGroupData data;
   final bool isUserGroup;
@@ -370,22 +371,23 @@ class JoinButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final groupController = Get.find<GroupController>();
     final userController = Get.find<UserController>();
-    
+
     return Obx(() {
       final userId = userController.userData.value?.data.uid;
       final isCreator = data.createdBy == userId;
-      
+
       final joinedGroupsList = groupController.joined_groups.value;
       final allGroupsList = groupController.allGroups.value;
-      
+
       // Check if user is joined using multiple methods
-      final isJoinedFromList = joinedGroupsList.any((joined) => 
-        joined.id.toString() == data.id || joined.id == data.id);
-      
-      final isJoinedFromAllGroups = allGroupsList.any((group) => 
-        group.id == data.id && group.isMember);
-      
-      final isJoined = data.isMember || isJoinedFromList || isJoinedFromAllGroups;
+      final isJoinedFromList = joinedGroupsList.any(
+          (joined) => joined.id.toString() == data.id || joined.id == data.id);
+
+      final isJoinedFromAllGroups =
+          allGroupsList.any((group) => group.id == data.id && group.isMember);
+
+      final isJoined =
+          data.isMember || isJoinedFromList || isJoinedFromAllGroups;
 
       Color backgroundColor;
       Color textColor;
@@ -417,22 +419,14 @@ class JoinButton extends StatelessWidget {
               ? () async {
                   final success = await groupController.joinGroup(data.id);
                   if (success) {
-                    Get.snackbar(
-                      'Success',
-                      'Successfully joined the group!',
-                      backgroundColor: Colors.green.withOpacity(0.8),
-                      colorText: Colors.white,
-                      duration: const Duration(seconds: 2),
+                    Toast.show(
+                      message: 'Successfully joined the group!',
+                      type: ToastType.success,
                     );
                   } else {
-                    // Show error message
-                    Get.snackbar(
-                      'Error',
-                      'Failed to join the group. Please try again.',
-                      backgroundColor: Colors.red.withOpacity(0.8),
-                      colorText: Colors.white,
-                      duration: const Duration(seconds: 2),
-                    );
+                    Toast.show(
+                        message: 'Failed to join the group. Please try again.',
+                        type: ToastType.error);
                   }
                 }
               : null,

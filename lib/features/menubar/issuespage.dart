@@ -16,7 +16,10 @@ class Issues extends StatelessWidget {
   Widget build(BuildContext context) {
     Get.put(IssueController());
     return Scaffold(
-      appBar: PreferredSize(preferredSize: Size.fromHeight(kToolbarHeight + 40.h), child:Header(heading: "Report an issue"),),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
+        child: Header(heading: "Report an issue"),
+      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(20.w),
@@ -33,12 +36,11 @@ class _UI extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-              height: ScreenUtil().screenHeight,
-
+      height: ScreenUtil().screenHeight,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-        SizedBox(),
+          SizedBox(),
           const _IssueOptions(),
           const _TextFieldAndSubmit()
         ],
@@ -149,7 +151,7 @@ class _IconGenerator extends StatelessWidget {
           ),
           child: Center(
             child: Padding(
-              padding:  EdgeInsets.all(20.h),
+              padding: EdgeInsets.all(20.h),
               child: image,
             ),
           ),
@@ -208,16 +210,24 @@ class _TextFieldAndSubmit extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () async {
               final controller = Get.find<QrScannerController>();
-              Get.to(QrCameraView(onScan: controller.issueScanner));
 
-               await issueController.submitIssue(
-                textController.text,
-                issueController.selectedIssues,
-                bikeId:controller.issueBikeID.value
-              );
+              // Navigate to QR scanner and wait for result
+              final scanResult = await Get.to<bool>(
+                  QrCameraView(onScan: controller.issueScanner));
 
-              Get.back();
-              textController.clear();
+              // Only proceed if scan was successful
+              if (scanResult == true &&
+                  controller.issueBikeID.value.isNotEmpty) {
+                // Submit the issue with the scanned bike ID
+                await issueController.submitIssue(
+                    textController.text, issueController.selectedIssues,
+                    bikeId: controller.issueBikeID.value);
+
+                // Clear the form and go back
+                textController.clear();
+                Get.back();
+              }
+              // If scan failed or was cancelled, just stay on the current page
             },
             child: const Text("Scan & Submit"),
           ),

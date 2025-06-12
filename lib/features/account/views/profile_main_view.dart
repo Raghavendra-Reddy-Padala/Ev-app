@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:mjollnir/features/account/views/editprofile.dart';
 import 'package:mjollnir/features/account/views/profile_detials.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 import 'package:mjollnir/shared/components/profile/invite_friends.dart';
@@ -71,7 +72,8 @@ class _ProfileContent extends StatelessWidget {
           child: EmptyState(
             title: 'Load Your Profile',
             subtitle: "Time to get back on track!",
-            icon: Icon(Icons.account_circle_sharp, size: 64.w, color: Colors.red),
+            icon:
+                Icon(Icons.account_circle_sharp, size: 64.w, color: Colors.red),
             buttonText: 'Profile',
             onButtonPressed: controller.refreshProfile,
           ),
@@ -82,8 +84,8 @@ class _ProfileContent extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: Column(
           children: [
-        _buildCompactProfileHeader()  ,
-        SizedBox(height: 16.h),
+            _buildCompactProfileHeader(),
+            SizedBox(height: 16.h),
             _buildUserProgressCard(),
             SizedBox(height: 16.h),
             _buildActivityGraph(),
@@ -95,7 +97,7 @@ class _ProfileContent extends StatelessWidget {
       );
     });
   }
-  
+
   Widget _buildCompactProfileHeader() {
     return Obx(() {
       final user = controller.userData.value?.data;
@@ -108,13 +110,10 @@ class _ProfileContent extends StatelessWidget {
           children: [
             Column(
               children: [
-                // Banner Container
                 _buildBannerContainer(user),
-                // White Info Container (positioned right below banner)
                 _buildInfoContainer(user),
               ],
             ),
-            // Profile picture positioned to overlap both containers
             _buildOverlapProfilePicture(user),
           ],
         ),
@@ -139,9 +138,8 @@ class _ProfileContent extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Banner Image
           Container(
-            height: 120.h,
+            height: 160.h,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
@@ -149,22 +147,21 @@ class _ProfileContent extends StatelessWidget {
                 topRight: Radius.circular(16.r),
               ),
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.shade300,
-                  Colors.green.shade500,
-                ]
-              ),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.green.shade300,
+                    Colors.green.shade500,
+                  ]),
               image: DecorationImage(
                 image: NetworkImage(
-                  'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
+                  user.banner! ??
+                      'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
                 ),
                 fit: BoxFit.fill,
               ),
             ),
           ),
-          
           Positioned.fill(
             child: Material(
               color: Colors.transparent,
@@ -178,7 +175,6 @@ class _ProfileContent extends StatelessWidget {
               ),
             ),
           ),
-          
           Positioned(
             top: 8.h,
             right: 8.w,
@@ -187,11 +183,11 @@ class _ProfileContent extends StatelessWidget {
                 color: Colors.black.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Container(
+              child: SizedBox(
                 height: 32.h,
                 width: 32.w,
                 child: IconButton(
-                  onPressed: () => Get.to(() => Profiledetails()),
+                  onPressed: () => Get.to(() => EditProfileView()),
                   icon: Icon(
                     Icons.edit_outlined,
                     color: Colors.white,
@@ -208,7 +204,7 @@ class _ProfileContent extends StatelessWidget {
 
   Widget _buildOverlapProfilePicture(user) {
     return Positioned(
-      top: 70.h, // Adjusted for 120h banner (120 - 50 = 70)
+      top: 100.h,
       left: 24.w,
       child: GestureDetector(
         onTap: () => _showFullProfileImage(user),
@@ -231,9 +227,8 @@ class _ProfileContent extends StatelessWidget {
           ),
           child: CircleAvatar(
             radius: 48.w,
-            backgroundImage: user.avatar != null
-                ? NetworkImage(user.avatar!)
-                : null,
+            backgroundImage:
+                user.avatar != null ? NetworkImage(user.avatar!) : null,
             backgroundColor: Colors.grey[300],
             child: user.avatar == null
                 ? Icon(
@@ -255,7 +250,6 @@ class _ProfileContent extends StatelessWidget {
         insetPadding: EdgeInsets.all(20.w),
         child: Stack(
           children: [
-            // Full image
             Center(
               child: Container(
                 constraints: BoxConstraints(
@@ -293,7 +287,8 @@ class _ProfileContent extends StatelessWidget {
                               ),
                             );
                           },
-                          errorBuilder: (context, error, stackTrace) => Container(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                             width: 300.w,
                             height: 300.w,
                             decoration: BoxDecoration(
@@ -323,8 +318,6 @@ class _ProfileContent extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Close button
             Positioned(
               top: 20.h,
               right: 20.w,
@@ -345,8 +338,6 @@ class _ProfileContent extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // User name at bottom
             Positioned(
               bottom: 20.h,
               left: 20.w,
@@ -396,40 +387,27 @@ class _ProfileContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SizedBox(height: 55.h), // Space for overlapping profile picture
-          
+          SizedBox(height: 45.h),
           Padding(
-            padding: const EdgeInsets.fromLTRB(0,0,200,0),
+            padding: const EdgeInsets.fromLTRB(0, 0, 200, 0),
             child: SizedBox(
-              
               width: double.infinity,
               child: Column(
                 children: [
                   Text(
                     '${user.firstName} ${user.lastName}',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                     textAlign: TextAlign.center,
                   ),
-              
                 ],
               ),
             ),
           ),
-          
-          // Divider
-          Container(
-            height: 1.h,
-            margin: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-            ),
-          ),
-          
-          // Stats section
+          Divider(color: Colors.grey.shade400),
           Container(
             padding: EdgeInsets.all(16.w),
             child: Row(
@@ -475,13 +453,13 @@ class _ProfileContent extends StatelessWidget {
         Icon(
           icon,
           color: color,
-          size: 20.w,
+          size: 18.w,
         ),
         SizedBox(height: 4.h),
         Text(
           value,
           style: TextStyle(
-            fontSize: 16.sp,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
