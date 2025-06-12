@@ -1,4 +1,4 @@
-import 'package:bolt_ui_kit/theme/text_themes.dart';
+import 'package:bolt_ui_kit/theme/text_themes.dart' show AppTextThemes;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -32,9 +32,17 @@ class GroupDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight + 40.h),
-        child: Header(heading: groupName),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Group',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -79,29 +87,17 @@ class _GroupDetailUI extends StatelessWidget {
     });
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 20.h),
-
-          _GroupHeaderSection(
-            allGroup: allGroup,
-            groupData: groupData,
-          ),
-
           SizedBox(height: 16.h),
-
-        
+          _buildCompactGroupHeader(),
+          SizedBox(height: 16.h),
           _buildUserProgressCard(),
-
           SizedBox(height: 16.h),
-
-      
           _buildActivityGraph(),
-
-          SizedBox(height: 20.h),
-
+          SizedBox(height: 16.h),
           Column(
             children: [
               _GroupMembersRow(groupId: groupId, groupName: groupName),
@@ -109,13 +105,375 @@ class _GroupDetailUI extends StatelessWidget {
               _GroupActivityRow(groupId: groupId, groupName: groupName),
             ],
           ),
-
           SizedBox(height: 20.h),
         ],
       ),
     );
   }
-}
+
+  Widget _buildCompactGroupHeader() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 8.w),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            children: [
+              _buildBannerContainer(),
+              _buildInfoContainer(),
+            ],
+          ),
+          _buildOverlapGroupPicture(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBannerContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16.r),
+          topRight: Radius.circular(16.r),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Container(
+            height: 160.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.r),
+                topRight: Radius.circular(16.r),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.green.shade300,
+                  Colors.green.shade500,
+                ]),
+              image: DecorationImage(
+                image: NetworkImage(
+                  'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
+                ),
+                fit: BoxFit.fill,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverlapGroupPicture() {
+    return Positioned(
+      top: 100.h,
+      left: 24.w,
+      child: GestureDetector(
+        onTap: () => _showFullGroupImage(),
+        child: Container(
+          width: 100.w,
+          height: 100.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 4.w,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: CircleAvatar(
+            radius: 48.w,
+            backgroundImage: (allGroup?.avatharurl != null || groupData?.avatarUrl != null)
+                ? NetworkImage(allGroup?.avatharurl ?? groupData!.avatarUrl)
+                : null,
+            backgroundColor: Colors.grey[300],
+            child: (allGroup?.avatharurl == null && groupData?.avatarUrl == null)
+                ? Icon(
+                    Icons.group,
+                    size: 40.w,
+                    color: Colors.grey[600],
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullGroupImage() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(20.w),
+        child: Stack(
+          children: [
+            Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: Get.width * 0.9,
+                  maxHeight: Get.height * 0.7,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15.r),
+                  child: (allGroup?.avatharurl != null || groupData?.avatarUrl != null)
+                      ? Image.network(
+                          allGroup?.avatharurl ?? groupData!.avatarUrl,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              width: 300.w,
+                              height: 300.w,
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            width: 300.w,
+                            height: 300.w,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(15.r),
+                            ),
+                            child: Icon(
+                              Icons.group,
+                              size: 100.w,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 300.w,
+                          height: 300.w,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(15.r),
+                          ),
+                          child: Icon(
+                            Icons.group,
+                            size: 100.w,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 20.h,
+              right: 20.w,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 24.w,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 20.h,
+              left: 20.w,
+              right: 20.w,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  groupName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierColor: Colors.black87,
+    );
+  }
+
+  Widget _buildInfoContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.accent1,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(16.r),
+          bottomRight: Radius.circular(16.r),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          SizedBox(height: 45.h),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 200, 0),
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 24.w),
+                    child: Text(
+                      groupName,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  if ((allGroup?.description?.isNotEmpty ?? false) || 
+                      (groupData?.description?.isNotEmpty ?? false))
+                    Padding(
+                      padding: EdgeInsets.only(left: 24.w, top: 4.h),
+                      child: Text(
+                        allGroup?.description ?? groupData?.description ?? '',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          Divider(color: Colors.grey.shade400),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildMinimalStat(
+                  icon: Icons.people_outline,
+                  value: allGroup?.memberCount.toString() ?? '0',
+                  label: 'Members',
+                  color: Colors.blue[600]!,
+                ),
+                _buildVerticalDivider(),
+                _buildMinimalStat(
+                  icon: Icons.route_outlined,
+                  value: allGroup?.totalDistance.toStringAsFixed(1) ?? '0.0',
+                  label: 'Distance',
+                  color: Colors.green[600]!,
+                ),
+                _buildVerticalDivider(),
+                _buildMinimalStat(
+                  icon: Icons.travel_explore_rounded,
+                  value: allGroup?.totalTrips.toStringAsFixed(1)??"0", // You might want to  activities count to your group model
+                  label: 'Trips',
+                  color: Colors.orange[600]!,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimalStat({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 18.w,
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.sp,
+            color: Colors.grey[500],
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 40.h,
+      width: 1.w,
+      decoration: BoxDecoration(
+        color: Colors.black,
+      ),
+    );
+  }
+
 
 Widget _buildUserProgressCard() {
   return Obx(() {
@@ -142,6 +500,7 @@ Widget _buildActivityGraph() {
       onDateRangeChanged: (dateRange) {},
     );
   });
+}
 }
 
 

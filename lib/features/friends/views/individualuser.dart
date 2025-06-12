@@ -1,11 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
+import 'package:mjollnir/shared/components/activity/activity_widget.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
 import 'package:mjollnir/shared/constants/colors.dart' show AppColors;
+import 'package:mjollnir/shared/models/user/user_model.dart';
 
 class IndividualUserPage extends StatelessWidget {
   final String name;
@@ -71,10 +76,83 @@ class _UI extends StatelessWidget {
     required this.uid,
   });
 
+  // Generate static trips data with Hyderabad locations
+  List<Trip> _generateStaticTrips() {
+    return [
+      Trip(
+        id: '1',
+        userId: uid,
+        bikeId: 'bike123',
+        stationId: 'station1',
+        startTimestamp: DateTime.now().subtract(const Duration(days: 2)),
+        endTimestamp: DateTime.now().subtract(const Duration(days: 2, hours: 1)),
+        distance: 8.5,
+        duration: 45.2,
+        averageSpeed: 11.3,
+        maxElevation: 520,
+        kcal: 320,
+        path: _generateHyderabadPathPoints(17.3850, 78.4867, 0.02), // Starting near Charminar
+      ),
+      Trip(
+        id: '2',
+        userId: uid,
+        bikeId: 'bike456',
+        stationId: 'station2',
+        startTimestamp: DateTime.now().subtract(const Duration(days: 5)),
+        endTimestamp: DateTime.now().subtract(const Duration(days: 5, hours: 2)),
+        distance: 15.2,
+        duration: 90.5,
+        averageSpeed: 10.1,
+        maxElevation: 540,
+        kcal: 580,
+        path: _generateHyderabadPathPoints(17.4065, 78.4772, 0.03), // Starting near Gachibowli
+      ),
+      Trip(
+        id: '3',
+        userId: uid,
+        bikeId: 'bike789',
+        stationId: 'station3',
+        startTimestamp: DateTime.now().subtract(const Duration(days: 7)),
+        endTimestamp: DateTime.now().subtract(const Duration(days: 7, hours: 1, minutes: 30)),
+        distance: 12.7,
+        duration: 75.8,
+        averageSpeed: 10.8,
+        maxElevation: 510,
+        kcal: 450,
+        path: _generateHyderabadPathPoints(17.4239, 78.4738, 0.025), // Starting near HITEC City
+      ),
+    ];
+  }
+
+  // Generate random path points around a central Hyderabad location
+  List<PathPoint> _generateHyderabadPathPoints(double startLat, double startLng, double range) {
+    final random = Random();
+    final points = <PathPoint>[];
+    
+    // Generate 10-20 random points around the starting location
+    final pointCount = 3 + random.nextInt(1);
+    
+    for (int i = 0; i < pointCount; i++) {
+      // Add small random variations to the coordinates
+      final lat = startLat + (random.nextDouble() * range * 2 - range);
+      final lng = startLng + (random.nextDouble() * range * 2 - range);
+      
+      points.add(PathPoint(
+        lat: lat,
+        long: lng,
+        timestamp: DateTime.now().subtract(Duration(minutes: i * 5)),
+        elevation: 500 + random.nextDouble(), // Hyderabad elevation ~500m
+      ));
+    }
+    
+    return points;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLevel = (points / 100).floor() + 1;
     final nextLevelPoints = currentLevel * 100;
+    final staticTrips = _generateStaticTrips();
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -99,9 +177,43 @@ class _UI extends StatelessWidget {
             }),
           ),
           SizedBox(height: 32.h),
+          
+          // Recent Trips Section
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Recent Trips',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          
+          // List of recent trips
+          Column(
+            children: [
+              for (final trip in staticTrips)
+                Column(
+                  children: [
+                    ActivityWidget(
+                          pathPoints: _convertToLatLng(trip.path),
+                      trip: trip,
+                    ),
+                    SizedBox(height: 16.h),
+                  ],
+                ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+   List<LatLng> _convertToLatLng(List<PathPoint> pathPoints) {
+    return pathPoints.map((point) => LatLng(point.lat, point.long)).toList();
   }
 
   Widget _buildCompactProfileHeader() {
@@ -373,7 +485,7 @@ class _UI extends StatelessWidget {
               children: [
                 _buildMinimalStat(
                   icon: Icons.route_outlined,
-                  value: distance,
+                  value: distance.toString(),
                   label: 'Distance',
                   color: Colors.blue[600]!,
                 ),

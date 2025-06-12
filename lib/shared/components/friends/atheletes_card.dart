@@ -38,7 +38,6 @@ class UserLeaderboardItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Row(
           children: [
-            // Rank indicator (optional)
             if (rank != null) ...[
               _buildRankIndicator(),
               SizedBox(width: 12.w),
@@ -113,11 +112,10 @@ class UserLeaderboardItem extends StatelessWidget {
             backgroundColor: Colors.grey[200],
             backgroundImage: item.avatar.isNotEmpty
                 ? NetworkImage(item.avatar)
-                : const AssetImage('assets/images/default_pfp.png')
+                : const NetworkImage('https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg',)
                     as ImageProvider,
           ),
         ),
-        // Online indicator (optional)
         Positioned(
           bottom: 0,
           right: 0,
