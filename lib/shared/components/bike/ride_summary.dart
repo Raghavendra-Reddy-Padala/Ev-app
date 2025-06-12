@@ -1,9 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../core/storage/local_storage.dart';
 import '../../../features/account/controllers/trips_controller.dart';
 import '../../../features/bikes/controller/bike_controller.dart';
@@ -12,7 +16,6 @@ import '../../../features/main_page_controller.dart';
 import '../../constants/colors.dart';
 import '../../models/trips/trips_model.dart';
 import '../map/path_view.dart';
-import '../misc/miscdownloader.dart';
 import 'summary_card.dart';
 
 class RideSummary extends StatefulWidget {
@@ -27,6 +30,7 @@ class RideSummary extends StatefulWidget {
 class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
   final ScreenshotController screenshotController = ScreenshotController();
   bool _isClosing = false;
+  bool _isSharing = false;
 
   @override
   void initState() {
@@ -69,59 +73,95 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.close,
-              color: Colors.black87,
-              size: 24.w,
-            ),
-            onPressed: _isClosing ? null : _handleClose,
-          ),
-          title: Text(
-            'Trip Summary',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          centerTitle: true,
-        ),
+        // Remove AppBar completely
         body: _isClosing
             ? _buildClosingIndicator()
-            : SingleChildScrollView(
-                child: Container(
-                  color: Colors.white,
-                  child: Screenshot(
-                    controller: screenshotController,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(20.w),
-                          child: Column(
-                            children: [
-                              _buildSummaryCard(
-                                bikeController,
-                                localStorage,
-                                tripsController,
-                                bikeDataController,
-                              ),
-                              SizedBox(height: 20.h),
-                              _buildMapSection(bikeController),
-                              SizedBox(height: 20.h),
-                              _buildMiscSection(),
-                              SizedBox(height: 20.h),
-                            ],
+            : Column(
+                children: [
+                  // Add custom header with back button
+                  _buildCustomHeader(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Container(
+                        color: Colors.white,
+                        child: Screenshot(
+                          controller: screenshotController,
+                          child: Container(
+                            // Add white background for screenshot
+                            color: Colors.white,
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(20.w),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(height: 20.h),
+                                      _buildSummaryCard(
+                                        bikeController,
+                                        localStorage,
+                                        tripsController,
+                                        bikeDataController,
+                                      ),
+                                      SizedBox(height: 20.h),
+                                      _buildMapSection(bikeController),
+                                      SizedBox(height: 20.h),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  _buildShareButton(),
+                ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildCustomHeader() {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 10.h,
+        left: 20.w,
+        right: 20.w,
+        bottom: 10.h,
+      ),
+      color: Colors.white,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _isClosing ? null : _handleClose,
+            child: Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 20.w,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Ride Summary',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          SizedBox(width: 40.w), // Balance the back button
+        ],
       ),
     );
   }
@@ -147,6 +187,93 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildShareButton() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Container(
+        width: double.infinity,
+        height: 56.h,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primary,
+              AppColors.primary.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16.r),
+            onTap: _isSharing ? null : _shareTrip,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isSharing) ...[
+                    SizedBox(
+                      width: 20.w,
+                      height: 20.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Sharing...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(
+                      Icons.file_download_outlined,
+                      color: Colors.white,
+                      size: 24.sp,
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Download',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummaryCard(
     BikeMetricsController bikeController,
     LocalStorage localStorage,
@@ -155,7 +282,7 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
   ) {
     return SummaryCard(
       rideDetails: RideDetails(
-        type: 'Electric Bike',
+        type: 'Maunal Bike',
         bikeImage: 'assets/images/bike.png',
         price: 0,
         rideId: widget.tripData?.bikeId ??
@@ -205,9 +332,10 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12.r),
-        child: SizedBox(
+        child: Container(
           width: double.infinity,
           height: 170.h,
+          color: Colors.white, // Ensure white background for map
           child: PathView(
             pathPoints: bikeController.pathPoints.isNotEmpty
                 ? bikeController.pathPoints
@@ -221,11 +349,81 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildMiscSection() {
-    return Miscellaneous(
-      diffPage: false,
-      screenshotController: screenshotController,
-    );
+  Future<void> _shareTrip() async {
+    if (_isSharing) return;
+
+    setState(() {
+      _isSharing = true;
+    });
+
+    try {
+      print('📤 Capturing and sharing trip summary...');
+      
+      // Add delay to ensure UI is fully rendered
+      await Future.delayed(Duration(milliseconds: 300));
+      
+      final Uint8List? image = await screenshotController.capture(
+        delay: Duration(milliseconds: 500),
+        pixelRatio: 2.0, // High quality screenshot
+      );
+      
+      if (image != null) {
+        // Get temporary directory
+        final directory = await getTemporaryDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final imagePath = '${directory.path}/trip_summary_$timestamp.png';
+        
+        // Save image to file
+        final File imageFile = File(imagePath);
+        await imageFile.writeAsBytes(image);
+        
+        print('✅ Screenshot saved to: $imagePath');
+        
+        // Share the image with a nice message
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: 'Check out my amazing trip! 🚴‍♂️\n'
+                '#Mjollnir #CyclingLife #FitnessJourney',
+        );
+        
+        print('✅ Trip summary shared successfully');
+        
+        // Show success feedback
+        Get.snackbar(
+          'Success! 🎉',
+          'Trip summary shared successfully',
+          backgroundColor: Colors.green.withOpacity(0.9),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: EdgeInsets.all(16.w),
+          borderRadius: 12.r,
+          duration: Duration(seconds: 2),
+        );
+        
+      } else {
+        throw Exception('Failed to capture screenshot');
+      }
+    } catch (e) {
+      print('❌ Error sharing trip: $e');
+      
+      // Show error feedback
+      Get.snackbar(
+        'Oops! 😔',
+        'Could not share trip summary. Please try again.',
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: EdgeInsets.all(16.w),
+        borderRadius: 12.r,
+        duration: Duration(seconds: 3),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSharing = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleClose() async {
@@ -268,58 +466,6 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       print('❌ Error in _handleClose: $e');
       // Force navigation even if there's an error
       Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _handleShare() async {
-    try {
-      print('📤 Sharing trip summary...');
-      // You can implement share functionality here
-      // For now, just take a screenshot and show a message
-
-      final image = await screenshotController.capture();
-      if (image != null) {
-        // Implement your share logic here
-        Get.snackbar(
-          'Success',
-          'Trip summary prepared for sharing',
-          backgroundColor: Colors.green.withOpacity(0.8),
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      print('❌ Error sharing: $e');
-      Get.snackbar(
-        'Error',
-        'Could not prepare trip summary for sharing',
-        backgroundColor: Colors.red.withOpacity(0.8),
-        colorText: Colors.white,
-      );
-    }
-  }
-
-  Future<void> _handleSaveImage() async {
-    try {
-      print('💾 Saving trip summary image...');
-
-      final image = await screenshotController.capture();
-      if (image != null) {
-        // You can implement save to gallery functionality here
-        Get.snackbar(
-          'Success',
-          'Trip summary saved to gallery',
-          backgroundColor: Colors.green.withOpacity(0.8),
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      print('❌ Error saving image: $e');
-      Get.snackbar(
-        'Error',
-        'Could not save trip summary',
-        backgroundColor: Colors.red.withOpacity(0.8),
-        colorText: Colors.white,
-      );
     }
   }
 

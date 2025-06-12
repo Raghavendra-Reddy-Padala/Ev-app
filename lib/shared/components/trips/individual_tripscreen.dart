@@ -26,8 +26,6 @@ class IndividualTripScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Enhanced Header with better spacing
-            const Header(heading: "My Trip"),
             
             Expanded(
               child: SingleChildScrollView(
@@ -68,7 +66,6 @@ class UI extends StatelessWidget {
       }
     } catch (e) {
       print('Error sharing trip: $e');
-    
     }
   }
 
@@ -80,9 +77,9 @@ class UI extends StatelessWidget {
           controller: screenshotController,
           child: Container(
             color: const Color(0xFFF8FAFB),
-            padding: EdgeInsets.all(16.w),
             child: Column(
               children: [
+                // Logo at top
                 Container(
                   padding: EdgeInsets.symmetric(vertical: 16.h),
                   child: Image.asset(
@@ -92,10 +89,72 @@ class UI extends StatelessWidget {
                   ),
                 ),
                 
+                // Graph Section
+                Container(
+                  width: double.infinity,
+                  height: 200.h,
+                  margin: EdgeInsets.only(bottom: 24.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    child: GraphView(
+                      data: const {
+                        0: 8.0,
+                        1: 10.0,
+                        2: 12.0,
+                      },
+                      xLabels: const {
+                        0: '8 Hr',
+                        1: '10 Hr',
+                        2: '12 Hr',
+                      },
+                      showYAxisLabels: true,
+                      showHorizontalLines: true,
+                      showLogo: true,
+                      useParentColor: true,
+                    ),
+                  ),
+                ),
+                
+                // Trip Details Section
                 EnhancedTripDetails(trip: trip),
                 SizedBox(height: 24.h),
                 
-                EnhancedGraphAndPath(trip: trip),
+                // Map Section
+                Container(
+                  width: double.infinity,
+                  height: 250.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFAFAFA),
+                      ),
+                      child: PathViewSection(trip: trip),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -142,15 +201,12 @@ class UI extends StatelessWidget {
                       size: 24.sp,
                     ),
                     SizedBox(width: 12.w),
-                    GestureDetector(
-                      onTap: _shareTrip,
-                      child: Text(
-                        'Share Trip Summary',
-                        style: AppTextThemes.bodyLarge().copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16.sp,
-                        ),
+                    Text(
+                      'Share Trip Summary',
+                      style: AppTextThemes.bodyLarge().copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ],
@@ -159,119 +215,31 @@ class UI extends StatelessWidget {
             ),
           ),
         ),
-        
-        // SizedBox(height: 16.h),
-        
-        // Row(
-        //   children: [
-        //     Expanded(
-        //       child: _buildQuickShareButton(
-        //         icon: Icons.facebook,
-        //         label: 'WhatsApp',
-        //         color: const Color(0xFF25D366),
-        //         onTap: () => _shareToSpecificPlatform('whatsapp'),
-        //       ),
-        //     ),
-        //     SizedBox(width: 12.w),
-        //     Expanded(
-        //       child: _buildQuickShareButton(
-        //         icon: Icons.telegram,
-        //         label: 'Telegram',
-        //         color: const Color(0xFF0088CC),
-        //         onTap: () => _shareToSpecificPlatform('telegram'),
-        //       ),
-        //     ),
-        //     SizedBox(width: 12.w),
-        //     Expanded(
-        //       child: _buildQuickShareButton(
-        //         icon: Icons.more_horiz,
-        //         label: 'More',
-        //         color: const Color(0xFF6B7280),
-        //         onTap: _shareTrip,
-        //       ),
-        //     ),
-        //   ],
-        // ),
       ],
     );
   }
+}
 
-  Widget _buildQuickShareButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      height: 48.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.r),
-          onTap: onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 20.sp,
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                label,
-                style: AppTextThemes.bodySmall().copyWith(
-                  color: const Color(0xFF6B7280),
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+class PathViewSection extends StatelessWidget {
+  final Trip trip;
+  const PathViewSection({super.key, required this.trip});
 
-  Future<void> _shareToSpecificPlatform(String platform) async {
+  @override
+  Widget build(BuildContext context) {
+    final TripsController tripController = Get.find<TripsController>();
+    List<LatLng> pathPoints = [];
+    
     try {
-      final Uint8List? image = await screenshotController.capture();
-      if (image != null) {
-        final directory = await getTemporaryDirectory();
-        final imagePath = '${directory.path}/trip_summary_$platform.png';
-        
-        final File imageFile = File(imagePath);
-        await imageFile.writeAsBytes(image);
-        
-        String shareText = '🚴‍♂️ Just completed an amazing ride!\n\n'
-                          
-                          '#Mjollnir #CyclingLife #FitnessGoals';
-        
-        await Share.shareXFiles(
-          [XFile(imagePath)],
-          text: shareText,
-        );
-        
-        // Show success feedback
-        Get.snackbar(
-          'Shared Successfully! 🎉',
-          'Your trip summary has been shared',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
+      if (trip.path.isNotEmpty) {
+        pathPoints = tripController.convertToLatLng(
+          trip.path.map((point) => [point.lat, point.long]).toList()
         );
       }
     } catch (e) {
-      print('Error sharing to $platform: $e');
+      print("Error converting path points: $e");
     }
+
+    return PathView(pathPoints: pathPoints);
   }
 }
 
@@ -433,157 +401,6 @@ class EnhancedTripDetails extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class EnhancedGraphAndPath extends StatelessWidget {
-  final Trip trip;
-  const EnhancedGraphAndPath({super.key, required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x0A000000),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            // Enhanced Tab Bar
-            Container(
-              margin: EdgeInsets.all(16.w),
-              height: 48.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: TabBar(
-                labelColor: Colors.white,
-                unselectedLabelColor: const Color(0xFF6B7280),
-                indicator: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                indicatorPadding: EdgeInsets.all(2.w),
-                labelPadding: EdgeInsets.zero,
-                dividerColor: Colors.transparent,
-                tabs: [
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Text(
-                        "Riding Path",
-                        style: AppTextThemes.bodyMedium().copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Text(
-                        "Graph",
-                        style: AppTextThemes.bodyMedium().copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Content Area
-            Container(
-              height: 300.h,
-              margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.w),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: const Color(0xFFE5E7EB),
-                  width: 1,
-                ),
-              ),
-              child: BorderedContainer(trip: trip),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BorderedContainer extends StatelessWidget {
-  final Trip trip;
-  const BorderedContainer({super.key, required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    final TripsController tripController = Get.find<TripsController>();
-    List<LatLng> pathPoints = [];
-    
-    try {
-      if (trip.path.isNotEmpty) {
-        pathPoints = tripController.convertToLatLng(
-          trip.path.map((point) => [point.lat, point.long]).toList()
-        );
-      }
-    } catch (e) {
-      print("Error converting path points: $e");
-    }
-
-    final Map<int, double> graphData = {
-      0: 8.0,
-      1: 10.0,
-      2: 12.0,
-    };
-    
-    final Map<int, String> xLabels = {
-      0: '8 Hr',
-      1: '10 Hr',
-      2: '12 Hr',
-    };
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12.r),
-      child: TabBarView(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFFAFAFA),
-            ),
-            child: PathView(pathPoints: pathPoints),
-          ),
-          
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: GraphView(
-              data: graphData,
-              xLabels: xLabels,
-              showYAxisLabels: true,
-              showHorizontalLines: true,
-              showLogo: true,
-              useParentColor: true,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
