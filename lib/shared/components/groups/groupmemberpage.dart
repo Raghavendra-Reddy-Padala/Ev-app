@@ -1,7 +1,9 @@
 import 'package:bolt_ui_kit/theme/text_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:mjollnir/features/friends/controller/follow_controller.dart';
+import 'package:mjollnir/features/friends/views/individualuser.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
 import 'package:mjollnir/shared/constants/colors.dart' show AppColors;
 import 'package:mjollnir/shared/models/group/group_models.dart';
@@ -31,9 +33,9 @@ class GroupMembersPage extends StatelessWidget {
                 Header(heading: "$name Members"),
                 MembersStatisticsSection(groupMembers: groupMembers),
                 SizedBox(height: 10.h),
-                LeaderboardTable(groupMembers: groupMembers),
+                                _buildTopPerformerSection(),
                 SizedBox(height: 15.h),
-                _buildTopPerformerSection(),
+                LeaderboardTable(groupMembers: groupMembers),
               ],
             ),
           ),
@@ -227,21 +229,27 @@ class UserProfileBottomSheet extends StatelessWidget {
                       width: 3.w,
                     ),
                   ),
-                  child: CircleAvatar(
-                    radius: 50.r,
-                    backgroundImage: member.avatar.isNotEmpty 
-                      ? NetworkImage(member.avatar)
-                      : null,
-                    backgroundColor: const Color.fromRGBO(234, 221, 255, 1),
-                    child: member.avatar.isEmpty
-                      ? Text(
-                          member.firstName[0],
-                          style: AppTextThemes.bodyMedium().copyWith(
-                            color: Colors.orange,
-                            fontSize: 24.sp,
-                          ),
-                        )
-                      : null,
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.to(()=>
+                      IndividualUserPage(name: member.firstName, trips: member.points, followers: member.points, distance: member.kmTraveled.toString(), avatharurl: member.avatar, uid: member.uid, points: member.points));
+                    },
+                    child: CircleAvatar(
+                      radius: 50.r,
+                      backgroundImage: member.avatar.isNotEmpty 
+                        ? NetworkImage(member.avatar)
+                        : null,
+                      backgroundColor: const Color.fromRGBO(234, 221, 255, 1),
+                      child: member.avatar.isEmpty
+                        ? Text(
+                            member.firstName[0],
+                            style: AppTextThemes.bodyMedium().copyWith(
+                              color: Colors.orange,
+                              fontSize: 24.sp,
+                            ),
+                          )
+                        : null,
+                    ),
                   ),
                 ),
                 
@@ -368,7 +376,6 @@ class MembersStatisticsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total group statistics
     double totalDistance = 0;
     int totalMembers = groupMembers.members.length;
     double averageDistance = 0;
