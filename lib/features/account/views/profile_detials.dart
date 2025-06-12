@@ -74,7 +74,8 @@ class Profiledetails extends StatelessWidget {
             bool shouldLogout = await _showLogoutConfirmationDialog(context);
             if (shouldLogout) {
               authController.logout();
-                   !Get.currentRoute.contains('/login');
+              // Navigate to login page and clear all previous routes
+              Get.offAllNamed('/login');
             }
           },
           child: Text(
@@ -89,7 +90,6 @@ class Profiledetails extends StatelessWidget {
     );
   }
 }
-
 class _UI extends StatelessWidget {
   const _UI();
 

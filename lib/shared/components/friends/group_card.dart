@@ -284,11 +284,13 @@ class CustomDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 10.w),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
-          const SizedBox(width: 8),
-          Text('Filter', style: AppTextThemes.bodySmall()),
+           SizedBox(width: 25.w),
+          Text('Filter', style: AppTextThemes.bodyLarge()),
+                    const SizedBox(width: 10),
+      
           const Spacer(),
           Container(
             height: 30.w,

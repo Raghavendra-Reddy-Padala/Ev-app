@@ -71,11 +71,9 @@ class _GroupDetailUI extends StatelessWidget {
   Widget build(BuildContext context) {
     final GroupController groupController = Get.find();
 
-    // Fetch member details when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       groupController.fetchGroupMembersDetails(groupId);
       if (groupData != null) {
-        // Also fetch group details for GroupData
         groupController.fetchGroupDetails(groupId);
       }
     });
@@ -146,128 +144,7 @@ Widget _buildActivityGraph() {
   });
 }
 
-class _GroupHeaderSection extends StatelessWidget {
-  final AllGroup? allGroup;
-  final GroupData? groupData;
 
-  const _GroupHeaderSection({
-    this.allGroup,
-    this.groupData,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 140.h,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.r),
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withOpacity(0.8),
-            AppColors.primary.withOpacity(0.6),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 30.r,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                backgroundImage:  NetworkImage ( allGroup?.avatharurl ?? groupData!.avatarUrl 
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      allGroup?.name ?? groupData!.name,
-                      style: AppTextThemes.bodyLarge().copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 18.sp,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      allGroup?.description ?? groupData!.description,
-                      style: AppTextThemes.bodyMedium().copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14.sp,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          if (allGroup != null)
-            Row(
-              children: [
-                _StatChip(
-                  label: 'Members',
-                  value: allGroup!.memberCount.toString(),
-                ),
-                SizedBox(width: 12.w),
-                _StatChip(
-                  label: 'Total Distance',
-                  value: '${allGroup!.totalDistance.toStringAsFixed(1)} km',
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatChip({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Text(
-        '${label}: ${value}',
-        style: AppTextThemes.bodySmall().copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-          fontSize: 12.sp,
-        ),
-      ),
-    );
-  }
-}
 
 class _GroupActivityRow extends StatelessWidget {
   final String groupId;
@@ -657,6 +534,336 @@ class _GroupMembersRow extends StatelessWidget {
             'No data available',
             style: AppTextThemes.bodySmall().copyWith(
               color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _GroupHeaderSection extends StatefulWidget {
+  final AllGroup? allGroup;
+  final GroupData? groupData;
+
+  const _GroupHeaderSection({
+    this.allGroup,
+    this.groupData,
+  });
+
+  @override
+  _GroupHeaderSectionState createState() => _GroupHeaderSectionState();
+}
+
+class _GroupHeaderSectionState extends State<_GroupHeaderSection>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _showProfileDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.9),
+      builder: (BuildContext context) {
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: Center(
+              child: Hero(
+                tag: 'profile_image',
+                child: widget.allGroup?.avatharurl != null || 
+                       widget.groupData?.avatarUrl != null
+                    ? Image.network(
+                        widget.allGroup?.avatharurl ?? 
+                        widget.groupData!.avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.primary.withOpacity(0.7),
+                            child: Icon(
+                              Icons.group,
+                              color: Colors.white,
+                              size: 100.sp,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: AppColors.primary.withOpacity(0.7),
+                        child: Icon(
+                          Icons.group,
+                          color: Colors.white,
+                          size: 100.sp,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 160.h,
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.r),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.9),
+            AppColors.primary.withOpacity(0.7),
+            AppColors.primary.withOpacity(0.5),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background pattern
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.r),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.1),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+          
+          // Main content
+          Padding(
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    // Animated profile picture
+                    Hero(
+                      tag: 'profile_image',
+                      child: GestureDetector(
+                        onTap: _showProfileDialog,
+                        onTapDown: (_) => _animationController.forward(),
+                        onTapUp: (_) => _animationController.reverse(),
+                        onTapCancel: () => _animationController.reverse(),
+                        child: AnimatedBuilder(
+                          animation: _animationController,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: _scaleAnimation.value,
+                              child: Container(
+                                width: 70.w,
+                                height: 70.w,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: widget.allGroup?.avatharurl != null || 
+                                         widget.groupData?.avatarUrl != null
+                                      ? Image.network(
+                                          widget.allGroup?.avatharurl ?? 
+                                          widget.groupData!.avatarUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              color: AppColors.primary.withOpacity(0.7),
+                                              child: Icon(
+                                                Icons.group,
+                                                color: Colors.white,
+                                                size: 30.sp,
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : Container(
+                                          color: AppColors.primary.withOpacity(0.7),
+                                          child: Icon(
+                                            Icons.group,
+                                            color: Colors.white,
+                                            size: 30.sp,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(width: 20.w),
+                    
+                    // Group info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.allGroup?.name ?? widget.groupData!.name,
+                            style: AppTextThemes.bodyLarge().copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 20.sp,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: const Offset(0, 1),
+                                  blurRadius: 3,
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
+                          Text(
+                            widget.allGroup?.description ?? widget.groupData!.description,
+                            style: AppTextThemes.bodyMedium().copyWith(
+                              color: Colors.white.withOpacity(0.95),
+                              fontSize: 14.sp,
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: 16.h),
+                
+                // Stats row
+                if (widget.allGroup != null)
+                  Row(
+                    children: [
+                      _EnhancedStatChip(
+                        icon: Icons.people,
+                        label: 'Members',
+                        value: widget.allGroup!.memberCount.toString(),
+                      ),
+                      SizedBox(width: 12.w),
+                      _EnhancedStatChip(
+                        icon: Icons.route,
+                        label: 'Distance',
+                        value: '${widget.allGroup!.totalDistance.toStringAsFixed(1)} km',
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EnhancedStatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _EnhancedStatChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(25.r),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 14.sp,
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            '$label: $value',
+            style: AppTextThemes.bodySmall().copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 12.sp,
             ),
           ),
         ],

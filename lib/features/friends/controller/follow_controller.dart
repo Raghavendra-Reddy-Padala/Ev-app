@@ -26,7 +26,6 @@ class FollowController extends GetxController {
 
       print('Response: $response');
 
-      // Since your API service returns the response body directly as a Map
       Map<String, dynamic> responseData;
       if (response is Map) {
         responseData = Map<String, dynamic>.from(response);
@@ -45,20 +44,20 @@ class FollowController extends GetxController {
       } else {
         // Handle API error
         Get.snackbar(
-          'Error',
-          responseData['message'] ?? 'Failed to follow user',
-          backgroundColor: Colors.red,
+          'Your are Already following this user',
+          responseData['message'] ?? 'Already following this user',
+          backgroundColor: Colors.green,
           colorText: Colors.white,
         );
       }
     } catch (e) {
       print('Error following user: $e');
-      Get.snackbar(
-        'Error',
-        'Something went wrong. Please try again.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+     Get.snackbar(
+          'Your are Already following this user',
+          "Thank You",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
     } finally {
       loadingUsers[userId] = false; // Stop loading for specific user
     }
