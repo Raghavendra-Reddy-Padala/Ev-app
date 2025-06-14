@@ -7,8 +7,6 @@ import 'package:mjollnir/features/menubar/memberdetailpage.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
 import 'package:mjollnir/shared/components/groups/groupmemberpage.dart';
 import 'package:mjollnir/shared/components/profile/user_progress_card.dart';
-
-import '../../shared/components/header/header.dart';
 import '../../shared/constants/colors.dart';
 import '../../shared/models/group/group_models.dart';
 import '../friends/controller/groups_controller.dart';
@@ -155,12 +153,12 @@ class _GroupDetailUI extends StatelessWidget {
                 topRight: Radius.circular(16.r),
               ),
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.shade300,
-                  Colors.green.shade500,
-                ]),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.green.shade300,
+                    Colors.green.shade500,
+                  ]),
               image: DecorationImage(
                 image: NetworkImage(
                   'https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png',
@@ -199,17 +197,19 @@ class _GroupDetailUI extends StatelessWidget {
           ),
           child: CircleAvatar(
             radius: 48.w,
-            backgroundImage: (allGroup?.avatharurl != null || groupData?.avatarUrl != null)
-                ? NetworkImage(allGroup?.avatharurl ?? groupData!.avatarUrl)
-                : null,
+            backgroundImage:
+                (allGroup?.avatharurl != null || groupData?.avatarUrl != null)
+                    ? NetworkImage(allGroup?.avatharurl ?? groupData!.avatarUrl)
+                    : null,
             backgroundColor: Colors.grey[300],
-            child: (allGroup?.avatharurl == null && groupData?.avatarUrl == null)
-                ? Icon(
-                    Icons.group,
-                    size: 40.w,
-                    color: Colors.grey[600],
-                  )
-                : null,
+            child:
+                (allGroup?.avatharurl == null && groupData?.avatarUrl == null)
+                    ? Icon(
+                        Icons.group,
+                        size: 40.w,
+                        color: Colors.grey[600],
+                      )
+                    : null,
           ),
         ),
       ),
@@ -241,7 +241,8 @@ class _GroupDetailUI extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15.r),
-                  child: (allGroup?.avatharurl != null || groupData?.avatarUrl != null)
+                  child: (allGroup?.avatharurl != null ||
+                          groupData?.avatarUrl != null)
                       ? Image.network(
                           allGroup?.avatharurl ?? groupData!.avatarUrl,
                           fit: BoxFit.contain,
@@ -377,7 +378,7 @@ class _GroupDetailUI extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if ((allGroup?.description?.isNotEmpty ?? false) || 
+                  if ((allGroup?.description?.isNotEmpty ?? false) ||
                       (groupData?.description?.isNotEmpty ?? false))
                     Padding(
                       padding: EdgeInsets.only(left: 24.w, top: 4.h),
@@ -417,7 +418,8 @@ class _GroupDetailUI extends StatelessWidget {
                 _buildVerticalDivider(),
                 _buildMinimalStat(
                   icon: Icons.travel_explore_rounded,
-                  value: allGroup?.totalTrips.toStringAsFixed(1)??"0", // You might want to  activities count to your group model
+                  value: allGroup?.totalTrips.toStringAsFixed(1) ??
+                      "0", // You might want to  activities count to your group model
                   label: 'Trips',
                   color: Colors.orange[600]!,
                 ),
@@ -474,36 +476,33 @@ class _GroupDetailUI extends StatelessWidget {
     );
   }
 
+  Widget _buildUserProgressCard() {
+    return Obx(() {
+      final user = ProfileController().userData.value?.data;
+      if (user == null) return const SizedBox();
 
-Widget _buildUserProgressCard() {
-  return Obx(() {
-    final user = ProfileController().userData.value?.data;
-    if (user == null) return const SizedBox();
+      final currentLevel = (user.points / 100).floor() + 1;
+      final nextLevelPoints = currentLevel * 100;
 
-    final currentLevel = (user.points / 100).floor() + 1;
-    final nextLevelPoints = currentLevel * 100;
+      return UserProgressCard(
+        currentPoints: user.points,
+        nextLevelPoints: nextLevelPoints,
+        level: currentLevel,
+      );
+    });
+  }
 
-    return UserProgressCard(
-      currentPoints: user.points,
-      nextLevelPoints: nextLevelPoints,
-      level: currentLevel,
-    );
-  });
+  Widget _buildActivityGraph() {
+    return Obx(() {
+      final summary = ProfileController().tripSummary.value;
+
+      return ActivityGraphWidget(
+        tripSummary: summary,
+        onDateRangeChanged: (dateRange) {},
+      );
+    });
+  }
 }
-
-Widget _buildActivityGraph() {
-  return Obx(() {
-    final summary = ProfileController().tripSummary.value;
-
-    return ActivityGraphWidget(
-      tripSummary: summary,
-      onDateRangeChanged: (dateRange) {},
-    );
-  });
-}
-}
-
-
 
 class _GroupActivityRow extends StatelessWidget {
   final String groupId;
@@ -573,9 +572,9 @@ class _GroupActivityRow extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     Get.to(() => MemberDetailPage(
-                      groupMembers: memberDetails,
-                      name: groupName,
-                    ));
+                          groupMembers: memberDetails,
+                          name: groupName,
+                        ));
                   },
                   child: Icon(
                     Icons.arrow_forward_ios,
@@ -735,8 +734,6 @@ class _GroupMembersRow extends StatelessWidget {
               children: [
                 Row(
                   children: displayedMembers.map((member) {
-             
-
                     return Padding(
                       padding: EdgeInsets.only(right: 4.w),
                       child: CircleAvatar(
@@ -901,7 +898,6 @@ class _GroupMembersRow extends StatelessWidget {
   }
 }
 
-
 class _GroupHeaderSection extends StatefulWidget {
   final AllGroup? allGroup;
   final GroupData? groupData;
@@ -956,11 +952,11 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
             child: Center(
               child: Hero(
                 tag: 'profile_image',
-                child: widget.allGroup?.avatharurl != null || 
-                       widget.groupData?.avatarUrl != null
+                child: widget.allGroup?.avatharurl != null ||
+                        widget.groupData?.avatarUrl != null
                     ? Image.network(
-                        widget.allGroup?.avatharurl ?? 
-                        widget.groupData!.avatarUrl,
+                        widget.allGroup?.avatharurl ??
+                            widget.groupData!.avatarUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -1037,7 +1033,7 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
               ),
             ),
           ),
-          
+
           // Main content
           Padding(
             padding: EdgeInsets.all(24.w),
@@ -1078,15 +1074,17 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                                   ],
                                 ),
                                 child: ClipOval(
-                                  child: widget.allGroup?.avatharurl != null || 
-                                         widget.groupData?.avatarUrl != null
+                                  child: widget.allGroup?.avatharurl != null ||
+                                          widget.groupData?.avatarUrl != null
                                       ? Image.network(
-                                          widget.allGroup?.avatharurl ?? 
-                                          widget.groupData!.avatarUrl,
+                                          widget.allGroup?.avatharurl ??
+                                              widget.groupData!.avatarUrl,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
                                             return Container(
-                                              color: AppColors.primary.withOpacity(0.7),
+                                              color: AppColors.primary
+                                                  .withOpacity(0.7),
                                               child: Icon(
                                                 Icons.group,
                                                 color: Colors.white,
@@ -1096,7 +1094,8 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                                           },
                                         )
                                       : Container(
-                                          color: AppColors.primary.withOpacity(0.7),
+                                          color: AppColors.primary
+                                              .withOpacity(0.7),
                                           child: Icon(
                                             Icons.group,
                                             color: Colors.white,
@@ -1110,9 +1109,9 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                         ),
                       ),
                     ),
-                    
+
                     SizedBox(width: 20.w),
-                    
+
                     // Group info
                     Expanded(
                       child: Column(
@@ -1135,7 +1134,8 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                           ),
                           SizedBox(height: 6.h),
                           Text(
-                            widget.allGroup?.description ?? widget.groupData!.description,
+                            widget.allGroup?.description ??
+                                widget.groupData!.description,
                             style: AppTextThemes.bodyMedium().copyWith(
                               color: Colors.white.withOpacity(0.95),
                               fontSize: 14.sp,
@@ -1149,9 +1149,9 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                     ),
                   ],
                 ),
-                
+
                 SizedBox(height: 16.h),
-                
+
                 // Stats row
                 if (widget.allGroup != null)
                   Row(
@@ -1165,7 +1165,8 @@ class _GroupHeaderSectionState extends State<_GroupHeaderSection>
                       _EnhancedStatChip(
                         icon: Icons.route,
                         label: 'Distance',
-                        value: '${widget.allGroup!.totalDistance.toStringAsFixed(1)} km',
+                        value:
+                            '${widget.allGroup!.totalDistance.toStringAsFixed(1)} km',
                       ),
                     ],
                   ),

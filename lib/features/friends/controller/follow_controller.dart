@@ -11,18 +11,18 @@ import '../../../core/storage/local_storage.dart';
 class FollowController extends GetxController {
   RxBool isLoading = false.obs;
   final RxMap<String, bool> followedUsers = <String, bool>{}.obs;
-  final RxMap<String, bool> loadingUsers = <String, bool>{}.obs; // Track loading per user
+  final RxMap<String, bool> loadingUsers =
+      <String, bool>{}.obs; // Track loading per user
   final LocalStorage localStorage = Get.find<LocalStorage>();
 
   Future<void> followUser(String userId) async {
     try {
       loadingUsers[userId] = true; // Set loading for specific user
-      final response = await apiService.post(
-          endpoint: 'user/follow/$userId',
-          headers: {
-            'Authorization': 'Bearer ${localStorage.getToken()}',
-            'X-Karma-App': 'dafjcnalnsjn'
-          });
+      final response =
+          await apiService.post(endpoint: 'user/follow/$userId', headers: {
+        'Authorization': 'Bearer ${localStorage.getToken()}',
+        'X-Karma-App': 'dafjcnalnsjn'
+      });
 
       print('Response: $response');
 
@@ -37,29 +37,19 @@ class FollowController extends GetxController {
 
       print('Parsed response: $responseData');
 
-      // Check if the API call was successful
       if (responseData['success'] == true) {
         followedUsers[userId] = true;
         showSuccessDialog();
       } else {
-        // Handle API error
-        Get.snackbar(
-          'Your are Already following this user',
-          responseData['message'] ?? 'Already following this user',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        Toast.show(
+            message: responseData['message'] ?? 'Already following this user',
+            type: ToastType.info);
       }
     } catch (e) {
       print('Error following user: $e');
-     Get.snackbar(
-          'Your are Already following this user',
-          "Thank You",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+      Toast.show(message: e.toString(), type: ToastType.error);
     } finally {
-      loadingUsers[userId] = false; // Stop loading for specific user
+      loadingUsers[userId] = false;
     }
   }
 

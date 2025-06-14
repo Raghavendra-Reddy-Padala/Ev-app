@@ -36,11 +36,8 @@ class ProfileController extends BaseController {
     'trips'
   ];
 
-  // Activity & stats
   final Rxn<TripSummaryModel> tripSummary = Rxn<TripSummaryModel>();
   final RxList<Trip> userTrips = <Trip>[].obs;
-
-  // Invite system
   final RxString referralCode = ''.obs;
   final Rxn<ReferralBenefitsData> referralBenefits =
       Rxn<ReferralBenefitsData>();

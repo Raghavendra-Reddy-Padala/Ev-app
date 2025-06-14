@@ -187,8 +187,9 @@ class GroupController extends BaseController {
             throw Exception('Authentication token not found');
           }
 
+          // First, fetch all groups
           final response = await apiService.get(
-            endpoint: ApiConstants.userGroups,
+            endpoint: ApiConstants.groupsGetAll,
             headers: {
               'Authorization': 'Bearer $authToken',
               'X-Karma-App': 'dafjcnalnsjn'
@@ -196,13 +197,25 @@ class GroupController extends BaseController {
           );
 
           if (response != null) {
+            final List<AllGroup> allGroups;
             if (response is List) {
-              final groups = response.map((e) => AllGroup.fromJson(e)).toList();
-              joinedGroups.assignAll(groups);
-            } else if (response.data != null) {
+              allGroups = response.map((e) => AllGroup.fromJson(e)).toList();
+            } else {
               final groupsResponse = GetAllGroupsResponse.fromJson(response);
-              joinedGroups.assignAll(groupsResponse.groups);
+              allGroups = groupsResponse.groups;
             }
+
+            // Filter groups where user is member but not creator
+            final joinedGroupsList = allGroups
+                .where((group) => group.isMember && !group.isCreator)
+                .toList();
+
+            // For each joined group, fetch its details
+            for (var group in joinedGroupsList) {
+              await fetchGroupDetails(group.id);
+            }
+
+            joinedGroups.assignAll(joinedGroupsList);
             return true;
           }
           return false;
@@ -210,8 +223,10 @@ class GroupController extends BaseController {
         dummyData: () {
           final dummyData = DummyDataService.getGroupsResponse();
           final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
-          joinedGroups
-              .assignAll(groupsResponse.groups.where((g) => g.isMember));
+          final joinedGroupsList = groupsResponse.groups
+              .where((g) => g.isMember && !g.isCreator)
+              .toList();
+          joinedGroups.assignAll(joinedGroupsList);
           return true;
         },
       );
@@ -222,138 +237,142 @@ class GroupController extends BaseController {
     }
   }
 
- // Updated createGroup method for GroupController
-Future<bool> createGroup(String name, String description, [String? groupImage]) async {
-  try {
-    isLoading.value = true;
-    errorMessage.value = '';
+  // Updated createGroup method for GroupController
+  Future<bool> createGroup(String name, String description,
+      [String? groupImage]) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-    final result = await useApiOrDummy(
-      apiCall: () async {
-        final String? authToken = await getToken();
-        if (authToken == null) {
-          throw Exception('Authentication token not found');
-        }
+      final result = await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = await getToken();
+          if (authToken == null) {
+            throw Exception('Authentication token not found');
+          }
 
-        // Prepare the request body
-        Map<String, dynamic> requestBody = {
-          "name": name,
-          "description": description,
-        };
+          // Prepare the request body
+          Map<String, dynamic> requestBody = {
+            "name": name,
+            "description": description,
+          };
 
-        // Add group_image only if it's provided
-        if (groupImage != null && groupImage.isNotEmpty) {
-          requestBody["group_image"] = groupImage;
-        }
+          // Add group_image only if it's provided
+          if (groupImage != null && groupImage.isNotEmpty) {
+            requestBody["group_image"] = groupImage;
+          }
 
-        final response = await apiService.post(
-          endpoint: ApiConstants.groupsCreate,
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'X-Karma-App': 'dafjcnalnsjn'
-          },
-          body: requestBody,
-        );
+          final response = await apiService.post(
+            endpoint: ApiConstants.groupsCreate,
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
+            },
+            body: requestBody,
+          );
 
-        if (response != null && response['success']) {
-          await fetchUserGroups();
+          if (response != null && response['success']) {
+            await fetchUserGroups();
+            return true;
+          }
+          return false;
+        },
+        dummyData: () {
+          final dummyResponse =
+              DummyDataService.createGroupResponse(name, description);
+
+          userGroups.add(
+            GroupData(
+              id: dummyResponse['group_id'],
+              name: name,
+              description: description,
+              createdAt: DateTime.now().toString(),
+              createdBy: 'dummy-user-id',
+              avatarUrl: groupImage ??
+                  'https://dummyimage.com/600x400/000/fff&text=Group+Image',
+            ),
+          );
           return true;
-        }
-        return false;
-      },
-      dummyData: () {
-        final dummyResponse = DummyDataService.createGroupResponse(name, description);
+        },
+      );
 
-        userGroups.add(
-          GroupData(
-            id: dummyResponse['group_id'],
-            name: name,
-            description: description,
-            createdAt: DateTime.now().toString(),
-            createdBy: 'dummy-user-id',
-            avatarUrl: groupImage ?? 'https://dummyimage.com/600x400/000/fff&text=Group+Image',
-           
-          ),
-        );
-        return true;
-      },
-    );
-
-    return result;
-  } catch (e) {
-    handleError(e);
-    return false;
-  } finally {
-    isLoading.value = false;
+      return result;
+    } catch (e) {
+      handleError(e);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
-}Future<bool> joinGroup(String groupId) async {
-  try {
-    isLoading.value = true;
-    errorMessage.value = '';
 
-    final result = await useApiOrDummy(
-      apiCall: () async {
-        final String? authToken = await getToken();
-        if (authToken == null) {
-          throw Exception('Authentication token not found');
-        }
+  Future<bool> joinGroup(String groupId) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-        final response = await apiService.get(
-          endpoint: 'groups/$groupId/join',
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'X-Karma-App': 'dafjcnalnsjn'
-          },
-        );
+      final result = await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = await getToken();
+          if (authToken == null) {
+            throw Exception('Authentication token not found');
+          }
 
-        if (response != null && response['success']) {
-          // Update the allGroups list immediately
+          final response = await apiService.get(
+            endpoint: 'groups/$groupId/join',
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn'
+            },
+          );
+
+          if (response != null && response['success']) {
+            // Update the allGroups list immediately
+            final currentGroups = List<AllGroup>.from(allGroups.value);
+            final groupIndex = currentGroups.indexWhere((g) => g.id == groupId);
+
+            if (groupIndex >= 0) {
+              final updatedGroup = currentGroups[groupIndex];
+              updatedGroup.isMember = true;
+              updatedGroup.memberCount = (updatedGroup.memberCount) + 1;
+              currentGroups[groupIndex] = updatedGroup;
+              allGroups.value = currentGroups; // Trigger reactive update
+            }
+
+            // Also refresh the joined groups list in background
+            getAlreadyJoinedGroups();
+            return true;
+          }
+          return false;
+        },
+        dummyData: () {
+          final dummyResponse = DummyDataService.joinGroupResponse();
+
           final currentGroups = List<AllGroup>.from(allGroups.value);
           final groupIndex = currentGroups.indexWhere((g) => g.id == groupId);
-          
+
           if (groupIndex >= 0) {
-            final updatedGroup = currentGroups[groupIndex];
-            updatedGroup.isMember = true;
-            updatedGroup.memberCount = (updatedGroup.memberCount) + 1;
-            currentGroups[groupIndex] = updatedGroup;
+            final group = currentGroups[groupIndex];
+            group.isMember = true;
+            currentGroups[groupIndex] = group;
             allGroups.value = currentGroups; // Trigger reactive update
+
+            if (!joinedGroups.any((g) => g.id == groupId)) {
+              joinedGroups.add(group);
+            }
           }
-          
-          // Also refresh the joined groups list in background
-          getAlreadyJoinedGroups();
-          return true;
-        }
-        return false;
-      },
-      dummyData: () {
-        final dummyResponse = DummyDataService.joinGroupResponse();
 
-        final currentGroups = List<AllGroup>.from(allGroups.value);
-        final groupIndex = currentGroups.indexWhere((g) => g.id == groupId);
-        
-        if (groupIndex >= 0) {
-          final group = currentGroups[groupIndex];
-          group.isMember = true;
-          currentGroups[groupIndex] = group;
-          allGroups.value = currentGroups; // Trigger reactive update
+          return dummyResponse['success'];
+        },
+      );
 
-          if (!joinedGroups.any((g) => g.id == groupId)) {
-            joinedGroups.add(group);
-          }
-        }
-
-        return dummyResponse['success'];
-      },
-    );
-
-    return result;
-  } catch (e) {
-    handleError(e);
-    return false;
-  } finally {
-    isLoading.value = false;
+      return result;
+    } catch (e) {
+      handleError(e);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
-}
 
   Future<void> fetchGroupMembersDetails(String groupId) async {
     try {
@@ -437,20 +456,20 @@ Future<bool> createGroup(String name, String description, [String? groupImage]) 
     }
   }
 
-Future<void> getAlreadyJoinedGroups() async {
-  String? authtoken = Get.find<LocalStorage>().getToken();
+  Future<void> getAlreadyJoinedGroups() async {
+    String? authtoken = Get.find<LocalStorage>().getToken();
 
-  final response = await apiService.get(
-      endpoint: '${ApiConstants.groupsGetAll}/?limit=10',
-      headers: {
-        'Authorization': 'Bearer $authtoken',
-        'X-Karma-App': 'dafjcnalnsjn'
-      });
+    final response = await apiService.get(
+        endpoint: '${ApiConstants.groupsGetAll}/?limit=10',
+        headers: {
+          'Authorization': 'Bearer $authtoken',
+          'X-Karma-App': 'dafjcnalnsjn'
+        });
 
-  if (response != null && response is List) {
-    joined_groups.value = response.map((e) => GroupData.fromJson(e)).toList();
-    joined_groups.refresh(); // Ensure UI updates
+    if (response != null && response is List) {
+      joined_groups.value = response.map((e) => GroupData.fromJson(e)).toList();
+      joined_groups.refresh(); // Ensure UI updates
+    }
+    print("Joined groups: $joined_groups");
   }
-  print("Joined groups: $joined_groups");
-}
 }

@@ -6,8 +6,6 @@ import 'package:mjollnir/features/friends/views/friends_page.dart';
 import 'package:mjollnir/features/home/views/home_main_view.dart';
 import 'package:mjollnir/features/wallet/views/walletpage.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
-
-import '../core/storage/local_storage.dart';
 import '../shared/components/navigation/app_bottom_navbar.dart';
 import 'bikes/views/bike_details_view.dart';
 import 'main_page_controller.dart';
