@@ -22,7 +22,6 @@ import '../../menubar/trips_main_view.dart';
 class HomeMainView extends StatefulWidget {
   const HomeMainView({super.key});
 
-
   @override
   State<HomeMainView> createState() => _HomeMainViewState();
 }
@@ -32,14 +31,14 @@ class _HomeMainViewState extends State<HomeMainView> {
   final ProfileController controller = Get.put(ProfileController());
   late final LocationController locationController;
   late final StationController stationController;
-  late final GroupController groupController; 
+  late final GroupController groupController;
 
   @override
   void initState() {
     super.initState();
     locationController = Get.put(LocationController());
     stationController = Get.put(StationController());
-    groupController = Get.put(GroupController()); 
+    groupController = Get.put(GroupController());
     _initializeLocation();
   }
 
@@ -56,43 +55,59 @@ class _HomeMainViewState extends State<HomeMainView> {
     }
   }
 
- // Updated _handleCreateGroup method in HomeMainView
-void _handleCreateGroup() {
-  showDialog(
-    context: context,
-    builder: (context) => CreateGroupDialog(
-      onSubmit: (name, description, groupImage) async {
-        Get.dialog(
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
-          barrierDismissible: false,
-        );
+  // Updated _handleCreateGroup method in HomeMainView
+  void _handleCreateGroup() {
+    showDialog(
+      context: context,
+      builder: (context) => CreateGroupDialog(
+        onSubmit: (name, description, groupImage) async {
+          Get.dialog(
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+            barrierDismissible: false,
+          );
 
-        try {
-          final success = await groupController.createGroup(name, description, groupImage);
-          
-          Get.back(); // Close loading dialog
+          try {
+            final success = await groupController.createGroup(
+                name, description, groupImage);
 
-          if (success) {
-            Navigator.of(context).pop(); // Close create group dialog
+            Get.back(); // Close loading dialog
 
-            Get.snackbar(
-              'Success',
-              'Group "$name" created successfully!',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-              duration: const Duration(seconds: 3),
-              icon: const Icon(Icons.check_circle, color: Colors.white),
-            );
-            groupController.fetchGroups();
-          } else {
+            if (success) {
+              Navigator.of(context).pop(); // Close create group dialog
+
+              Get.snackbar(
+                'Success',
+                'Group "$name" created successfully!',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+                icon: const Icon(Icons.check_circle, color: Colors.white),
+              );
+              groupController.fetchGroups();
+            } else {
+              Get.snackbar(
+                'Error',
+                groupController.errorMessage.value.isNotEmpty
+                    ? groupController.errorMessage.value
+                    : 'Failed to create group. Please try again.',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+                icon: const Icon(Icons.error, color: Colors.white),
+              );
+            }
+          } catch (e) {
+            if (Get.isDialogOpen == true) {
+              Get.back();
+            }
+
             Get.snackbar(
               'Error',
-              groupController.errorMessage.value.isNotEmpty 
-                  ? groupController.errorMessage.value 
-                  : 'Failed to create group. Please try again.',
+              'An unexpected error occurred: ${e.toString()}',
               snackPosition: SnackPosition.BOTTOM,
               backgroundColor: Colors.red,
               colorText: Colors.white,
@@ -100,25 +115,12 @@ void _handleCreateGroup() {
               icon: const Icon(Icons.error, color: Colors.white),
             );
           }
-        } catch (e) {
-          if (Get.isDialogOpen == true) {
-            Get.back(); 
-          }
-          
-          Get.snackbar(
-            'Error',
-            'An unexpected error occurred: ${e.toString()}',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 3),
-            icon: const Icon(Icons.error, color: Colors.white),
-          );
-        }
-      },
-    ),
-  );
-}  List<DrawerOption> _getDrawerOptions() {
+        },
+      ),
+    );
+  }
+
+  List<DrawerOption> _getDrawerOptions() {
     return [
       DrawerOption(
         title: 'Subscriptions',
@@ -214,7 +216,7 @@ void _handleCreateGroup() {
               bottom: 20,
               child: FloatingActionButton(
                 backgroundColor: Colors.white,
-                onPressed: locationController.goToUserLocation,
+                onPressed: locationController.goToUserLocationAnimated,
                 child: const Icon(
                   Icons.my_location,
                   color: Colors.black,
