@@ -41,8 +41,7 @@ class ClubComponent extends StatelessWidget {
         Get.to(() => GroupDetailPage(
               allGroup: allGroup,
               groupData: groupData,
-            )
-            );
+            ));
       },
       child: Container(
         width: double.infinity,
@@ -71,13 +70,10 @@ class ClubComponent extends StatelessWidget {
                 flex: 3,
                 child: ClubHeader(data: _data),
               ),
-
               Expanded(
                 flex: 3,
                 child: StatsRow(data: _data),
               ),
-
-              // Button Section
               Expanded(
                 flex: 2,
                 child: Align(

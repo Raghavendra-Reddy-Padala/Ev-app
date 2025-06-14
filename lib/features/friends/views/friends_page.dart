@@ -89,13 +89,15 @@ class FriendsPage extends StatelessWidget {
                 child: Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   child: Obx(() {
-                    final availableItems = tabControllerX.selectedIndex.value == 0
-                        ? const ['Pts', 'followers', 'Trips']
-                        : const ['Pts', 'Km', 'Carbon'];
+                    final availableItems =
+                        tabControllerX.selectedIndex.value == 0
+                            ? const ['Pts', 'followers', 'Trips']
+                            : const ['Pts', 'Km', 'Carbon'];
 
                     final filterController = Get.find<FilterController>();
 
-                    if (!availableItems.contains(filterController.selectedValue.value)) {
+                    if (!availableItems
+                        .contains(filterController.selectedValue.value)) {
                       filterController.selectedValue.value = availableItems[0];
                     }
 
@@ -142,16 +144,16 @@ class FriendsPage extends StatelessWidget {
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabControllerX tabControllerX;
   _StickyTabBarDelegate({required this.tabControllerX});
-  
+
   @override
-  double get minExtent => 60.h; // Reduced height since filter is moved out
+  double get minExtent => 60.h;
   @override
   double get maxExtent => 65.h;
-  
+
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
-      
+
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
