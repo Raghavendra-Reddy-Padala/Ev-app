@@ -197,6 +197,7 @@ class MapView extends StatelessWidget {
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: controller.currentLocation.value,
+              tilt: 60,
               zoom: 15,
             ),
             myLocationEnabled: controller.showMyLocation.value,
