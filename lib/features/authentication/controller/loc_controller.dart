@@ -6,13 +6,11 @@ import 'package:location/location.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:ui' as ui;
 import 'dart:typed_data';
-import 'dart:math' as math;
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/home/controller/station_controller.dart';
-import 'package:mjollnir/shared/constants/strings.dart';
 import 'package:mjollnir/shared/models/stations/station.dart';
 import 'dart:async';
 
@@ -32,14 +30,17 @@ class RouteInfo {
   });
 }
 
-class LocationController extends GetxController
+class LocationController extends GetxController 
     with GetTickerProviderStateMixin {
   Rx<LatLng> initialLocation = const LatLng(17.4065, 78.4772).obs;
   Rx<GoogleMapController?> mapController = Rx<GoogleMapController?>(null);
-  RxBool isLocationReady = false.obs;
+    Rx<MapType> currentMapType = MapType.terrain.obs;
+  RxBool isHybridMode = true.obs;   RxBool isLocationReady = false.obs;
   RxBool isMarkersLoading = false.obs;
   RxBool showPaths = false.obs;
   RxBool isLoadingRoutes = false.obs;
+
+  
 
   static const String _googleMapsApiKey = String.fromEnvironment(
       'GOOGLE_MAPS_API_KEY',
@@ -48,7 +49,6 @@ class LocationController extends GetxController
   late AnimationController _markerAnimationController;
   late AnimationController _cameraAnimationController;
   late AnimationController _pathAnimationController;
-
   RxDouble animationProgress = 0.0.obs;
   RxDouble tiltAnimation = 0.0.obs;
   RxDouble zoomAnimation = 7.0.obs;
@@ -90,6 +90,292 @@ class LocationController extends GetxController
       }
     });
   }
+ void toggleMapType() {
+    switch (currentMapType.value) {
+      case MapType.satellite:
+        currentMapType.value = MapType.hybrid;
+        isHybridMode.value = true;
+        break;
+      case MapType.hybrid:
+        currentMapType.value = MapType.terrain;
+        isHybridMode.value = false;
+        break;
+      case MapType.terrain:
+        currentMapType.value = MapType.normal;
+        isHybridMode.value = false;
+        break;
+      case MapType.normal:
+        currentMapType.value = MapType.satellite;
+        isHybridMode.value = false;
+        break;
+      case MapType.none:
+        throw UnimplementedError();
+    }
+  }
+  IconData getCurrentMapTypeIcon() {
+    switch (currentMapType.value) {
+      case MapType.satellite:
+        return Icons.satellite_alt;
+      case MapType.hybrid:
+        return Icons.layers;
+      case MapType.terrain:
+        return Icons.terrain;
+      case MapType.normal:
+        return Icons.map;
+      case MapType.none:
+        throw UnimplementedError();
+    }
+  }
+   String getCurrentMapTypeLabel() {
+    switch (currentMapType.value) {
+      case MapType.satellite:
+        return 'Satellite';
+      case MapType.hybrid:
+        return 'Hybrid';
+      case MapType.terrain:
+        return 'Terrain';
+      case MapType.normal:
+        return 'Default';
+      case MapType.none:
+        throw UnimplementedError();
+    }
+  }
+  String getSatelliteStyleMapStyle() {
+    return '''[
+      {
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "saturation": 15
+          },
+          {
+            "lightness": -10
+          }
+        ]
+      },
+      {
+        "elementType": "labels.icon",
+        "stylers": [
+          {
+            "visibility": "on"
+          }
+        ]
+      },
+      {
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#ffffff"
+          },
+          {
+            "weight": "0.5"
+          }
+        ]
+      },
+      {
+        "elementType": "labels.text.stroke",
+        "stylers": [
+          {
+            "color": "#000000"
+          },
+          {
+            "weight": "2"
+          }
+        ]
+      },
+      {
+        "featureType": "administrative",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {
+            "color": "#c9b2a6"
+          }
+        ]
+      },
+      {
+        "featureType": "administrative.land_parcel",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {
+            "color": "#dcd2be"
+          }
+        ]
+      },
+      {
+        "featureType": "administrative.land_parcel",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#ae9e90"
+          }
+        ]
+      },
+      {
+        "featureType": "landscape.natural",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#dfd2ae"
+          }
+        ]
+      },
+      {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#dfd2ae"
+          }
+        ]
+      },
+      {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#93817c"
+          }
+        ]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "geometry.fill",
+        "stylers": [
+          {
+            "color": "#a5b076"
+          }
+        ]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#447530"
+          }
+        ]
+      },
+      {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#f5f1e6"
+          }
+        ]
+      },
+      {
+        "featureType": "road.arterial",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#fdfcf8"
+          }
+        ]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#f8c967"
+          }
+        ]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {
+            "color": "#e9bc62"
+          }
+        ]
+      },
+      {
+        "featureType": "road.highway.controlled_access",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#e98d58"
+          }
+        ]
+      },
+      {
+        "featureType": "road.highway.controlled_access",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {
+            "color": "#db8555"
+          }
+        ]
+      },
+      {
+        "featureType": "road.local",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#806b63"
+          }
+        ]
+      },
+      {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#dfd2ae"
+          }
+        ]
+      },
+      {
+        "featureType": "transit.line",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#8f7d77"
+          }
+        ]
+      },
+      {
+        "featureType": "transit.line",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+          {
+            "color": "#ebe3cd"
+          }
+        ]
+      },
+      {
+        "featureType": "transit.station",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#dfd2ae"
+          }
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "geometry.fill",
+        "stylers": [
+          {
+            "color": "#b9d3c2"
+          }
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#92998d"
+          }
+        ]
+      }
+    ]''';
+  }
+
+
 
   void _updateUserLocationMarker(LocationData locationData) async {
     if (locationData.latitude == null || locationData.longitude == null) return;
@@ -120,7 +406,7 @@ class LocationController extends GetxController
   Future<BitmapDescriptor> _getDirectionPointerIcon(double heading) async {
     try {
       final ByteData arrowData =
-          await rootBundle.load('assets/images/direction_pointer.png');
+          await rootBundle.load('assets/images/iconn.png');
       final Uint8List arrowBytes = arrowData.buffer.asUint8List();
 
       final ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -518,22 +804,7 @@ class LocationController extends GetxController
     return Colors.red.shade600;
   }
 
-  double _calculateDistance(LatLng start, LatLng end) {
-    const double earthRadius = 6371000;
-    double lat1Rad = start.latitude * math.pi / 180;
-    double lat2Rad = end.latitude * math.pi / 180;
-    double deltaLatRad = (end.latitude - start.latitude) * math.pi / 180;
-    double deltaLngRad = (end.longitude - start.longitude) * math.pi / 180;
-
-    double a = math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
-        math.cos(lat1Rad) *
-            math.cos(lat2Rad) *
-            math.sin(deltaLngRad / 2) *
-            math.sin(deltaLngRad / 2);
-    double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-
-    return earthRadius * c;
-  }
+ 
 
   void _animatePathDrawing(List<LatLng> fullPath, int stationIndex) async {
     _pathAnimationController.reset();
@@ -764,12 +1035,11 @@ class LocationController extends GetxController
   Future<BitmapDescriptor> _getCustomMarkerWithFallback() async {
     try {
       final ByteData data =
-          await rootBundle.load('assets/images/tmp/pointer.png');
+          await rootBundle.load('assets/company/mj.png');
       final Uint8List bytes = data.buffer.asUint8List();
       final ui.Codec codec = await ui.instantiateImageCodec(
         bytes,
         targetWidth: 60,
-        targetHeight: 60,
       );
       final ui.FrameInfo frame = await codec.getNextFrame();
       final ByteData? resizedData = await frame.image.toByteData(
@@ -898,7 +1168,6 @@ class LocationController extends GetxController
     super.onClose();
   }
 }
-
 class MapsView extends StatefulWidget {
   const MapsView({super.key});
 
@@ -913,6 +1182,8 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
 
   late AnimationController _fabAnimationController;
   late Animation<double> _fabAnimation;
+  bool _isToggling = false; 
+
 
   @override
   void initState() {
@@ -975,8 +1246,7 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
             icon: customIcon,
             infoWindow: InfoWindow(
               title: station.name,
-              snippet:
-                  'Capacity: ${station.currentCapacity}/${station.capacity}',
+              snippet: 'Capacity: ${station.currentCapacity}/${station.capacity}',
             ),
             onTap: () => _onStationMarkerTapped(station),
           ));
@@ -991,8 +1261,7 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
       double.parse(station.locationLongitude),
     );
 
-    locationController._createAnimatedPathToStation(
-        position, int.parse(station.id));
+    locationController._createAnimatedPathToStation(position, int.parse(station.id));
     locationController._animateCameraToStation(position);
     _showStationDetails(station);
   }
@@ -1055,12 +1324,6 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
     );
   }
 
-  String _getMapStyle(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? MapStyles.customDark
-        : MapStyles.customLight;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -1094,21 +1357,31 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: locationController.initialLocation.value,
-              zoom: 7,
-              tilt: 60,
-              bearing: 45,
+              zoom: 15,
+              tilt: 45,
+              bearing: 0,
             ),
+            mapType: locationController.currentMapType.value,
             myLocationEnabled: false,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
             compassEnabled: true,
             mapToolbarEnabled: false,
+            buildingsEnabled: true,
+            trafficEnabled: false,
+            indoorViewEnabled: true,
             markers: {...locationController.markers, ..._markers},
             polylines: locationController.polylines,
             onMapCreated: (GoogleMapController controller) async {
               locationController.mapController.value = controller;
-              await controller.setMapStyle(_getMapStyle(context));
-
+              
+              // Apply custom satellite style only if using normal map type
+              if (locationController.currentMapType.value == MapType.normal) {
+                await controller.setMapStyle(locationController.getSatelliteStyleMapStyle());
+              }
+              
+              await Future.delayed(const Duration(milliseconds: 500));
+              
               await _nearbyStationsController.fetchAllStations();
               final stationLocations = _nearbyStationsController.stations
                   .map((station) => LatLng(
@@ -1121,6 +1394,8 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
             },
             onCameraMove: (CameraPosition position) {},
           ),
+
+          // Loading overlays
           if (locationController.isLoadingRoutes.value)
             Container(
               color: Colors.black26,
@@ -1140,6 +1415,7 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
                 ),
               ),
             ),
+
           if (locationController.isMarkersLoading.value)
             Container(
               color: Colors.black26,
@@ -1159,9 +1435,137 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
                 ),
               ),
             ),
+
           Positioned(
-            bottom: 160,
-            right: 20,
+  top: 80,
+  right: 10,
+  child: ScaleTransition(
+    scale: _fabAnimation,
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          splashColor: Theme.of(context).primaryColor.withOpacity(0.1),
+          highlightColor: Theme.of(context).primaryColor.withOpacity(0.05),
+          onTap: () async {
+            // Add haptic feedback
+            HapticFeedback.lightImpact();
+            
+            // Add loading state animation
+            setState(() {
+              _isToggling = true;
+            });
+            
+            locationController.toggleMapType();
+            
+            // Apply/remove custom styling based on map type
+            if (locationController.mapController.value != null) {
+              try {
+                if (locationController.currentMapType.value == MapType.normal) {
+                  await locationController.mapController.value!
+                      .setMapStyle(locationController.getSatelliteStyleMapStyle());
+                } else {
+                  await locationController.mapController.value!
+                      .setMapStyle(null);
+                }
+              } catch (e) {
+                print('Error setting map style: $e');
+              }
+            }
+            
+            await Future.delayed(const Duration(milliseconds: 300));
+            setState(() {
+              _isToggling = false;
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon with rotation animation and loading state
+                AnimatedRotation(
+                  turns: _isToggling ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) {
+                      return ScaleTransition(
+                        scale: animation,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _isToggling
+                        ? SizedBox(
+                            key: const ValueKey('loading'),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            key: ValueKey(locationController.currentMapType.value),
+                            locationController.getCurrentMapTypeIcon(),
+                            color: Theme.of(context).primaryColor,
+                            size: 22,
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Text with fade transition
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    key: ValueKey(locationController.getCurrentMapTypeLabel()),
+                    locationController.getCurrentMapTypeLabel(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+),
+
+          // Routes toggle button
+          Positioned(
+            bottom: 220,
+            right: 10,
             child: ScaleTransition(
               scale: _fabAnimation,
               child: FloatingActionButton(
@@ -1180,21 +1584,11 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+          // Reset button
           Positioned(
-            bottom: 20,
-            right: 20,
-            child: ScaleTransition(
-              scale: _fabAnimation,
-              child: FloatingActionButton(
-                heroTag: "locationFab",
-                onPressed: locationController.goToUserLocationAnimated,
-                child: const Icon(Icons.my_location),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 90,
-            right: 20,
+            bottom: 160,
+            left: 10,
             child: ScaleTransition(
               scale: _fabAnimation,
               child: FloatingActionButton(
@@ -1202,6 +1596,20 @@ class _MapsViewState extends State<MapsView> with TickerProviderStateMixin {
                 mini: true,
                 onPressed: locationController.resetMapView,
                 child: const Icon(Icons.refresh),
+              ),
+            ),
+          ),
+
+          // Location button
+          Positioned(
+            bottom: 160,
+            right: 10,
+            child: ScaleTransition(
+              scale: _fabAnimation,
+              child: FloatingActionButton(
+                heroTag: "locationFab",
+                onPressed: locationController.goToUserLocationAnimated,
+                child: const Icon(Icons.my_location),
               ),
             ),
           ),

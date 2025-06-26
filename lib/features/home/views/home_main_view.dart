@@ -190,18 +190,16 @@ class _HomeMainViewState extends State<HomeMainView> {
           children: [
             const MapsView(),
             Positioned(
-              top: 16.0,
-              left: 35.0,
-              right: 16.0,
+              top: 12.0,
+              left: 5.0,
+              right: 5.0,
               child: CustomSearchBar(
-                controller: TextEditingController(),
-                hintText: 'Search for stations',
-                onChanged: (value) {},
+               
               ),
             ),
             Positioned(
-              top: 20.0,
-              left: 5.0,
+              top: 17.0,
+              left: 10.0,
               child: IconButton(
                 icon: Icon(Icons.menu, size: 30.w),
                 onPressed: () {
@@ -211,18 +209,7 @@ class _HomeMainViewState extends State<HomeMainView> {
               ),
             ),
             const StationsList(),
-            Positioned(
-              right: 5,
-              bottom: 20,
-              child: FloatingActionButton(
-                backgroundColor: Colors.white,
-                onPressed: locationController.goToUserLocationAnimated,
-                child: const Icon(
-                  Icons.my_location,
-                  color: Colors.black,
-                ),
-              ),
-            ),
+           
           ],
         ),
       ),

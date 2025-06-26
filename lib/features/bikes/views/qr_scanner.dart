@@ -1,15 +1,12 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:bolt_ui_kit/bolt_kit.dart' show AppTextThemes;
 import 'package:bolt_ui_kit/components/toast/toast.dart' show Toast, ToastType;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mjollnir/core/storage/local_storage.dart';
-import 'package:mjollnir/features/account/controllers/trips_controller.dart';
 import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
 import 'package:mjollnir/shared/models/trips/trips_model.dart';
 import '../../../../shared/components/buttons/app_button.dart';
-import '../../../../shared/constants/colors.dart';
 import '../../main_page_controller.dart';
 import '../controller/qr_controller.dart';
 import '../controller/trips_control_service.dart';
@@ -148,19 +145,12 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
     setState(() => _isLoading = true);
 
     try {
-      print("🚴 Starting personal bike trip...");
 
-      final tripsController = Get.find<TripsController>();
       final bikeController = Get.find<BikeMetricsController>();
       final tripControlService = Get.find<TripControlService>();
       final storage = Get.find<LocalStorage>();
 
-      // Clear any existing trip data first (optional - remove if you want to preserve data)
       await _clearExistingTripData(storage, bikeController);
-
-      print("🆕 Starting personal trip...");
-
-      // Start a trip
       final startTripData = StartTrip(
         bikeId: "_3a0ienbqx",
         stationId: "6xugln92qx",
@@ -173,10 +163,7 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
       );
 
       if (success) {
-        // Update main page
         Get.find<MainPageController>().isBikeSubscribed.value = true;
-
-        // Show success notification
         AwesomeNotifications().createNotification(
           content: NotificationContent(
             id: 1,
@@ -185,7 +172,6 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
             body: "Your ride metrics are being tracked",
           ),
         );
-
         print("🎉 Personal bike setup completed successfully");
         Get.back();
       } else {
@@ -197,7 +183,6 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
         );
       }
     } catch (e) {
-      print('❌ Error in _handleOwnBikeTap: $e');
       Toast.show(
         message: "Failed to start bike tracking: $e",
         type: ToastType.error,
@@ -211,11 +196,6 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
 
   Future<void> _clearExistingTripData(
       LocalStorage storage, BikeMetricsController bikeController) async {
-    print("🧹 Clearing existing trip data...");
-
-    // Only clear if you want to start completely fresh
-    // Comment out this section if you want to preserve existing trip state
-
     await storage.remove('tripId');
     await storage.setBikeSubscribed(false);
     await storage.setBikeCode('');

@@ -413,9 +413,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       children: [
         // Banner Section
         _buildBannerSection(),
-        // Profile Photo Section - Positioned to overlap banner
         Positioned(
-          bottom: -60.h, // Half the profile photo height
+          bottom: -60.h, 
           left: 0,
           right: 0,
           child: _buildProfilePhotoSection(),
@@ -525,75 +524,75 @@ class _EditProfileViewState extends State<EditProfileView> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Profile Photo
-                Container(
-                  width: 120.w,
-                  height: 120.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: _isAvatarLoading
-                      ? CircleAvatar(
-                          radius: 60.r,
-                          backgroundColor: AppColors.offwhite,
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
-                        )
-                      : CircleAvatar(
-                          radius: 60.r,
-                          backgroundColor: AppColors.offwhite,
-                          backgroundImage: _formData['avatar'] != null &&
-                                  _formData['avatar'].toString().isNotEmpty
-                              ? NetworkImage(_formData['avatar'].toString())
-                              : const AssetImage('assets/images/user_img.png')
-                                  as ImageProvider,
+                GestureDetector(
+                  onTap: _pickAndUploadAvatar,
+                  child: Container(
+                    width: 120.w,
+                    height: 120.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
                         ),
-                ),
-                // Camera Icon - Positioned with proper touch handling
-                Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isAvatarLoading ? null : _pickAndUploadAvatar,
-                      borderRadius: BorderRadius.circular(20.r),
-                      child: Container(
-                        width: 40.w,
-                        height: 40.w,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              spreadRadius: 1,
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20.sp,
-                        ),
-                      ),
+                      ],
                     ),
+                    child: _isAvatarLoading
+                        ? CircleAvatar(
+                            radius: 60.r,
+                            backgroundColor: AppColors.offwhite,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary),
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 60.r,
+                            backgroundColor: AppColors.offwhite,
+                            backgroundImage: _formData['avatar'] != null &&
+                                    _formData['avatar'].toString().isNotEmpty
+                                ? NetworkImage(_formData['avatar'].toString())
+                                : const AssetImage('assets/images/user_img.png')
+                                    as ImageProvider,
+                          ),
                   ),
                 ),
+                Positioned(
+  bottom: 8,
+  right: 8,
+  child: GestureDetector(
+    onTap: _pickAndUploadAvatar, 
+    child: Container(
+      width: 40.w,
+      height: 40.w,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: _pickAndUploadAvatar,
+        child: Icon(
+          Icons.camera_alt,
+          color: Colors.white,
+          size: 20.sp,
+        ),
+      ),
+    ),
+  ),
+),
               ],
             ),
           ),

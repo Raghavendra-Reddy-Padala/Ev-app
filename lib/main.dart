@@ -23,8 +23,6 @@ void main() async {
     navigatorKey: navigatorKey,
   );
   await setupDependencies();
-  final LocalStorage localStorage = Get.find();
-  localStorage.setBool('useDummyToken', false);
   runApp(const MyApp());
 }
 
