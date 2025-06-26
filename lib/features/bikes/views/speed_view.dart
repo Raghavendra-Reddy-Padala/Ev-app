@@ -227,7 +227,7 @@ class _CurrentSpeedDisplay extends StatelessWidget {
   }
 
   Color _getSpeedColor(double speed) {
-    if (speed < 5) return Colors.grey[400]!;
+    if (speed < 5) return Colors.green[400]!;
     if (speed < 15) return const Color(0xFF3B82F6);
     if (speed < 25) return const Color(0xFFF59E0B);
     return const Color(0xFFEF4444);
@@ -420,9 +420,7 @@ class _SpeedChart extends StatelessWidget {
           SizedBox(height: 16.h),
           Expanded(
             child: Obx(() {
-              print(
-                  "🔄 Speed chart rebuilding with data: ${controller.speedHistoryData}");
-
+             
               if (controller.speedHistoryData.isEmpty) {
                 return _buildEmptyState("No data available");
               }

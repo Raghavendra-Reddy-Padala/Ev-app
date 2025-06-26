@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
@@ -7,6 +8,8 @@ import '../../../shared/models/stations/station.dart';
 import '../../../shared/services/dummy_data_service.dart';
 
 class StationController extends BaseController {
+    final TextEditingController searchController = TextEditingController();
+
   final RxList<Station> stations = <Station>[].obs;
   final RxList<Station> filteredStations = <Station>[].obs;
   final RxSet<Marker> markers = <Marker>{}.obs;

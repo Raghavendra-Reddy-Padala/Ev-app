@@ -145,7 +145,7 @@ class _UI extends StatelessWidget {
                         (bike) => BikeCard(
                           bike: bike,
                           onSelectPlan: () {
-                   Get.to(() => PlanType(bike: bike));
+                           Get.to(() => PlanType(bike: bike));
                           },
                         ),
                       ),
