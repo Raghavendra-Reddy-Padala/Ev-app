@@ -277,7 +277,7 @@ class UserProfileBottomSheet extends StatelessWidget {
                       Colors.green,
                     ),
                     _buildStatColumn(
-                      '${member.points ?? 18}', // Fallback if trips not available
+                      '${member.points ?? 18}', 
                       'Points',
                       '',
                       Colors.green,

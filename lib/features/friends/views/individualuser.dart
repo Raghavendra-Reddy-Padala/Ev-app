@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
+import 'package:mjollnir/features/friends/controller/follow_controller.dart';
+import 'package:mjollnir/features/friends/views/individualuserfollowerscontrolller.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
 import 'package:mjollnir/shared/components/activity/activity_widget.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
@@ -34,6 +36,11 @@ class IndividualUserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
+    // Initialize controllers
+    Get.put(FollowController());
+    Get.put(IndividualUserFollowersController()); // Initialize the new controller
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -46,7 +53,7 @@ class IndividualUserPage extends StatelessWidget {
                 followers: followers,
                 avatharurl: avatharurl,
                 name: name,
-                distance: distance,
+                distance: "$distance km" ,
                 points: points,
               ),
             ],
@@ -303,7 +310,7 @@ class _UI extends StatelessWidget {
             radius: 48.w,
             backgroundImage: avatharurl.isNotEmpty
                 ? NetworkImage(avatharurl)
-                : null,
+                : NetworkImage("https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg"),
             backgroundColor: Colors.grey[300],
             child: avatharurl.isEmpty
                 ? Icon(
@@ -430,94 +437,169 @@ class _UI extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoContainer() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.accent1,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16.r),
-          bottomRight: Radius.circular(16.r),
+Widget _buildInfoContainer() {
+  final followController = Get.find<FollowController>();
+  final followersController = Get.find<IndividualUserFollowersController>(); // Get the new controller
+  
+  return Container(
+    decoration: BoxDecoration(
+      color: AppColors.accent1,
+      borderRadius: BorderRadius.only(
+        bottomLeft: Radius.circular(16.r),
+        bottomRight: Radius.circular(16.r),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          SizedBox(height: 55.h),
-          
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 200, 0),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
+      ],
+    ),
+    child: Column(
+      children: [
+        SizedBox(height: 55.h),
+        
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Name section
+              Expanded(
+                child: Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                ],
+                ),
               ),
-            ),
+              
+              // Spacer between name and button
+              SizedBox(width: 16.w),
+              
+              // Follow button - custom container button
+              Obx(() {
+                final isFollowed = followController.followedUsers[uid] ?? false;
+                final isLoading = followController.isUserLoading(uid);
+                
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  child: GestureDetector(
+                    onTap: isLoading ? null : () async {
+                      if (!isFollowed) {
+                        await followController.followUser(uid);
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isFollowed ? AppColors.accent1 : AppColors.primary,
+                        border: isFollowed ? Border.all(color: AppColors.primary, width: 1.5) : null,
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: isFollowed ? null : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: isLoading
+                          ? SizedBox(
+                              width: 16.w,
+                              height: 16.h,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isFollowed ? AppColors.primary : Colors.white,
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isFollowed ? Icons.check : Icons.person,
+                                  size: 14.w,
+                                  color: isFollowed ? AppColors.primary : Colors.white,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  isFollowed ? 'Following' : 'Follow',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: isFollowed ? AppColors.primary : Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
-          
-          Container(
-            height: 1.h,
-            margin: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-            ),
+        ),
+        
+        SizedBox(height: 16.h),
+        
+        Container(
+          height: 1.h,
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
           ),
-          
-          Container(
-            padding: EdgeInsets.all(16.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMinimalStat(
-                  icon: Icons.route_outlined,
-                  value: distance.toString(),
-                  label: 'Distance',
-                  color: Colors.blue[600]!,
-                ),
-                _buildVerticalDivider(),
-                _buildMinimalStat(
-                  icon: Icons.map_outlined,
-                  value: trips.toString(),
-                  label: 'Trips',
-                  color: Colors.green[600]!,
-                ),
-                _buildVerticalDivider(),
-                _buildMinimalStat(
-                  icon: Icons.people_outline,
-                  value: followers.toString(),
-                  label: 'Followers',
-                  color: Colors.orange[600]!,
-                ),
-              ],
-            ),
+        ),
+        
+        Container(
+          padding: EdgeInsets.all(16.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildMinimalStat(
+                icon: Icons.route_outlined,
+                value: distance.toString(),
+                label: 'Distance',
+                color: Colors.blue[600]!,
+              ),
+              _buildVerticalDivider(),
+              _buildMinimalStat(
+                icon: Icons.map_outlined,
+                value: trips.toString(),
+                label: 'Trips',
+                color: Colors.green[600]!,
+              ),
+              _buildVerticalDivider(),
+              _buildMinimalStat(
+                icon: Icons.people_outline,
+                value: followers.toString(),
+                label: 'Followers',
+                color: Colors.orange[600]!,
+                onTap: () {         followersController.showUserFollowersList(uid: uid, userName:name);
+},
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
+        ),
+      ],
+    ),
+  );
+}
   Widget _buildMinimalStat({
     required IconData icon,
     required String value,
     required String label,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Column(
+    final statWidget = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
@@ -544,7 +626,24 @@ class _UI extends StatelessWidget {
         ),
       ],
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.r),
+            color: Colors.transparent,
+          ),
+          child: statWidget,
+        ),
+      );
+    }
+    
+    return statWidget;
   }
+  
 
   Widget _buildVerticalDivider() {
     return Container(

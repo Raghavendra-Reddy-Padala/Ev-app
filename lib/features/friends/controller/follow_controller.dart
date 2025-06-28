@@ -12,12 +12,12 @@ class FollowController extends GetxController {
   RxBool isLoading = false.obs;
   final RxMap<String, bool> followedUsers = <String, bool>{}.obs;
   final RxMap<String, bool> loadingUsers =
-      <String, bool>{}.obs; // Track loading per user
+      <String, bool>{}.obs; 
   final LocalStorage localStorage = Get.find<LocalStorage>();
 
   Future<void> followUser(String userId) async {
     try {
-      loadingUsers[userId] = true; // Set loading for specific user
+      loadingUsers[userId] = true; 
       final response =
           await apiService.post(endpoint: 'user/follow/$userId', headers: {
         'Authorization': 'Bearer ${localStorage.getToken()}',
