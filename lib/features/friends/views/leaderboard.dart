@@ -181,7 +181,7 @@ class LeaderBoardList extends StatelessWidget {
                   followers: item.followers,
                   avatharurl: item.avatar,
                   name: item.firstName,
-                  distance: item.distance.toString(),
+                  distance: item.distance.toInt().toString(),
                   points:item.points
 
                 ),

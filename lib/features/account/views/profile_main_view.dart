@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_null_comparison
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -10,6 +9,7 @@ import 'package:mjollnir/shared/components/states/empty_state.dart';
 import 'package:mjollnir/shared/constants/colors.dart' show AppColors;
 import '../../../shared/components/activity/activity_graph.dart';
 import '../controllers/profile_controller.dart';
+import '../controllers/user_controller.dart'; // Add this import
 
 class ProfileMainView extends StatelessWidget {
   const ProfileMainView({super.key});
@@ -47,8 +47,12 @@ class ProfileMainView extends StatelessWidget {
 
 class _ProfileContent extends StatelessWidget {
   final ProfileController controller;
+  late final UserController userController; // Add UserController
 
-  const _ProfileContent({required this.controller});
+  _ProfileContent({required this.controller}) {
+    // Initialize UserController
+    userController = Get.put(UserController());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -413,9 +417,10 @@ class _ProfileContent extends StatelessWidget {
               children: [
                 _buildMinimalStat(
                   icon: Icons.route_outlined,
-                  value: user.distance.toString(),
+                  value: user.distance.toInt().toString(),
                   label: 'Distance',
                   color: Colors.blue[600]!,
+                  onTap: null, 
                 ),
                 _buildVerticalDivider(),
                 _buildMinimalStat(
@@ -423,6 +428,7 @@ class _ProfileContent extends StatelessWidget {
                   value: user.trips.toString(),
                   label: 'Trips',
                   color: Colors.green[600]!,
+                  onTap: null, 
                 ),
                 _buildVerticalDivider(),
                 _buildMinimalStat(
@@ -430,6 +436,9 @@ class _ProfileContent extends StatelessWidget {
                   value: user.followers.toString(),
                   label: 'Followers',
                   color: Colors.orange[600]!,
+                  onTap: () {
+                    userController.showFollowersList();
+                  },
                 ),
               ],
             ),
@@ -444,8 +453,9 @@ class _ProfileContent extends StatelessWidget {
     required String value,
     required String label,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Column(
+    Widget statWidget = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
@@ -472,6 +482,22 @@ class _ProfileContent extends StatelessWidget {
         ),
       ],
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.r),
+            color: Colors.transparent,
+          ),
+          child: statWidget,
+        ),
+      );
+    }
+
+    return statWidget;
   }
 
   Widget _buildVerticalDivider() {
