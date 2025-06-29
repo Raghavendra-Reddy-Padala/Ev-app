@@ -19,6 +19,7 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+ProfileController pf = Get.put(ProfileController());
     return Drawer(
       child: SafeArea(
         child: Container(
@@ -50,9 +51,12 @@ class CustomDrawer extends StatelessWidget {
                       SizedBox(height: 20.h),
                       _buildInviteFriendsCard(),
                       SizedBox(height: 20.h),
+                    LogoutButton(onLogout:(){pf.logout();} ,)
                     ],
+                    
                   ),
                 ),
+                
               ),
             ],
           ),
@@ -349,9 +353,9 @@ class CreateGroupDialog extends StatefulWidget {
   final Function(String name, String description, String? groupImage) onSubmit; // Changed signature
 
   const CreateGroupDialog({
-    Key? key,
+    super.key,
     required this.onSubmit,
-  }) : super(key: key);
+  });
 
   @override
   State<CreateGroupDialog> createState() => _CreateGroupDialogState();
@@ -371,12 +375,11 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     super.dispose();
   }
 
-  // Added this method
   void _handleImageSelected(dynamic imageSource) {
     if (imageSource is String) {
       selectedGroupImage.value = imageSource;
     }
-    // Handle ImageSource (camera/gallery) if needed in the future
+
   }
 
   @override
@@ -407,7 +410,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                   padding: EdgeInsets.all(24.w),
                   child: Column(
                     children: [
-                      // Use ProfileImagePicker instead of ImagePickerWidget
                       ProfileImagePicker(
                         imageUrl: selectedGroupImage,
                         onImageSelected: _handleImageSelected,
@@ -567,8 +569,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           onPressed: _isSubmitting ? null : _handleSubmit,
           type: ButtonType.primary,
           fullWidth: true,
-          // If your AppButton supports loading state, add it here
-          // isLoading: _isSubmitting,
+        
         ),
         SizedBox(height: 12.h),
         AppButton(
@@ -592,14 +593,158 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
 
     final groupName = nameController.text.trim();
     final groupDescription = descriptionController.text.trim();
-    final groupImage = selectedGroupImage.value; // Changed from imageFile
+    final groupImage = selectedGroupImage.value; 
 
-    await widget.onSubmit(groupName, groupDescription, groupImage); // Updated call
+    await widget.onSubmit(groupName, groupDescription, groupImage);
 
     if (mounted) {
       setState(() {
         _isSubmitting = false;
       });
     }
+  }
+}
+
+
+
+class LogoutButton extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const LogoutButton({
+    super.key,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.red.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40.w,
+          height: 40.w,
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Icon(
+            Icons.logout,
+            color: Colors.red,
+            size: 18.w,
+          ),
+        ),
+        title: Text(
+          'Logout',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w800,
+            color: Colors.red[700],
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16.w,
+          color: Colors.red[300],
+        ),
+        onTap: () => _showLogoutDialog(context),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.logout,
+                color: Colors.red,
+                size: 24.w,
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      'No',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close dialog first
+                    onLogout(); // Then call logout function
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      'Yes, Logout',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mjollnir/core/services/image_service.dart';
 import '../../constants/colors.dart';
+// Import your ImageService here
+// import 'path_to_your_image_service.dart';
 
 /// A reusable widget for picking and displaying profile images
-class ProfileImagePicker extends StatelessWidget {
+class ProfileImagePicker extends StatefulWidget {
   final Rx<String?> imageUrl;
   final Function onImageSelected;
   final double size;
   final bool showLabel;
   final String label;
+  final ImageType imageType; // Add this parameter
 
   const ProfileImagePicker({
     Key? key,
@@ -19,34 +23,42 @@ class ProfileImagePicker extends StatelessWidget {
     this.size = 120,
     this.showLabel = true,
     this.label = 'Upload Profile Picture',
+    this.imageType = ImageType.avatar, // Default to avatar
   }) : super(key: key);
+
+  @override
+  State<ProfileImagePicker> createState() => _ProfileImagePickerState();
+}
+
+class _ProfileImagePickerState extends State<ProfileImagePicker> {
+  bool _isUploading = false;
 
   // Predefined avatar images - Cloudinary hosted URLs
   static const Map<String, String> predefinedAvatars = {
-        'Avengers':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474061/475409-3840x2160-desktop-4k-mjolnir-thor-background_sy9bik.jpg',
+    'Avengers': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474061/475409-3840x2160-desktop-4k-mjolnir-thor-background_sy9bik.jpg',
     'Black Widow': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473989/476112-3840x2160-desktop-4k-valkyrie-thor-wallpaper_wzetqs.jpg',
     'Spider-Man New': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg',
     'Spider-Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474048/51983-1920x1080-desktop-full-hd-loki-background_izkwel.jpg',
     'Iron Man': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474046/79564-3840x2160-desktop-4k-hulk-background-photo_nifdrh.jpg',
     'Thanos': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474043/453718-1080x1920-iphone-1080p-nanaue-king-shark-wallpaper_aln7m0.jpg',
     'Groot': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474040/325932-3840x2160-desktop-4k-wonder-woman-movie-background_kidhec.jpg',
-    'storm-marvel':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474028/486909-3840x2160-desktop-4k-tony-stark-iron-man-background-image_bdt1xu.jpg',
-    'DeadPool':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg',
-    'Magneto':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474000/475892-1125x2436-samsung-hd-heimdall-thor-background_wxvp9u.jpg',
-    'Batman':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473994/475857-1125x2436-iphone-hd-hela-thor-wallpaper-photo_ycjt4k.jpg',
-    'Joker':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473991/475721-1920x1080-desktop-1080p-hela-thor-wallpaper-photo_ioxzil.jpg',
-    'a':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473984/Untitled_design-15_ezndnm.png',
-    'b':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473981/Untitled_design-16_ptodd9.png',
-    'c':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473978/Untitled_design_pptozx.png',
-    'd'  : 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473977/Untitled_design-18_rvjidz.png',
-    'e':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473974/Untitled_design-14_jgsuia.png',
-    'f':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473971/Untitled_design-10_scipkm.png',
-    'g':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473963/Untitled_design-5_cpp6sc.png',
-    'h':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473957/Untitled_design-8_qcxsen.png',
-    'i':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473960/Untitled_design-9_nddt2w.png',
-    'j':'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473953/Untitled_design-4_rbjo2r.png',
-    "k":"https://res.cloudinary.com/djyny0qqn/image/upload/v1749473950/Untitled_design-3_evvd0h.png",
-    "l":"https://res.cloudinary.com/djyny0qqn/image/upload/v1749473947/Untitled_design-2_ams8zg.png"
+    'storm-marvel': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474028/486909-3840x2160-desktop-4k-tony-stark-iron-man-background-image_bdt1xu.jpg',
+    'DeadPool': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg',
+    'Magneto': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749474000/475892-1125x2436-samsung-hd-heimdall-thor-background_wxvp9u.jpg',
+    'Batman': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473994/475857-1125x2436-iphone-hd-hela-thor-wallpaper-photo_ycjt4k.jpg',
+    'Joker': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473991/475721-1920x1080-desktop-1080p-hela-thor-wallpaper-photo_ioxzil.jpg',
+    'a': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473984/Untitled_design-15_ezndnm.png',
+    'b': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473981/Untitled_design-16_ptodd9.png',
+    'c': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473978/Untitled_design_pptozx.png',
+    'd': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473977/Untitled_design-18_rvjidz.png',
+    'e': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473974/Untitled_design-14_jgsuia.png',
+    'f': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473971/Untitled_design-10_scipkm.png',
+    'g': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473963/Untitled_design-5_cpp6sc.png',
+    'h': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473957/Untitled_design-8_qcxsen.png',
+    'i': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473960/Untitled_design-9_nddt2w.png',
+    'j': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473953/Untitled_design-4_rbjo2r.png',
+    'k': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473950/Untitled_design-3_evvd0h.png',
+    'l': 'https://res.cloudinary.com/djyny0qqn/image/upload/v1749473947/Untitled_design-2_ams8zg.png'
   };
 
   @override
@@ -56,12 +68,12 @@ class ProfileImagePicker extends StatelessWidget {
     return Column(
       children: [
         Obx(() => GestureDetector(
-              onTap: _showImageSourceOptions,
+              onTap: _isUploading ? null : _showImageSourceOptions,
               child: Stack(
                 children: [
                   Container(
-                    width: size.w,
-                    height: size.w,
+                    width: widget.size.w,
+                    height: widget.size.w,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.grey[200],
@@ -71,36 +83,46 @@ class ProfileImagePicker extends StatelessWidget {
                       ),
                     ),
                     child: ClipOval(
-                      child: _buildProfileImage(),
+                      child: _isUploading
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary,
+                                ),
+                              ),
+                            )
+                          : _buildProfileImage(),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                  if (!_isUploading)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
                           color: Colors.white,
-                          width: 2,
+                          size: 20.w,
                         ),
                       ),
-                      child: Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 20.w,
-                      ),
                     ),
-                  ),
                 ],
               ),
             )),
-        if (showLabel) ...[
+        if (widget.showLabel) ...[
           SizedBox(height: 8.h),
           Text(
-            label,
+            _isUploading ? 'Uploading...' : widget.label,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.grey[600],
             ),
@@ -112,16 +134,16 @@ class ProfileImagePicker extends StatelessWidget {
 
   /// Builds the profile image widget based on the current imageUrl
   Widget _buildProfileImage() {
-    if (imageUrl.value != null && imageUrl.value!.isNotEmpty) {
+    if (widget.imageUrl.value != null && widget.imageUrl.value!.isNotEmpty) {
       // Check if it's a predefined avatar (asset image)
-      if (imageUrl.value!.startsWith('assets/')) {
+      if (widget.imageUrl.value!.startsWith('assets/')) {
         return Image.asset(
-          imageUrl.value!,
+          widget.imageUrl.value!,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Icon(
               Icons.person,
-              size: (size * 0.5).w,
+              size: (widget.size * 0.5).w,
               color: Colors.grey[400],
             );
           },
@@ -129,7 +151,7 @@ class ProfileImagePicker extends StatelessWidget {
       } else {
         // Network image
         return Image.network(
-          imageUrl.value!,
+          widget.imageUrl.value!,
           fit: BoxFit.cover,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
@@ -145,7 +167,7 @@ class ProfileImagePicker extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) {
             return Icon(
               Icons.person,
-              size: (size * 0.5).w,
+              size: (widget.size * 0.5).w,
               color: Colors.grey[400],
             );
           },
@@ -154,7 +176,7 @@ class ProfileImagePicker extends StatelessWidget {
     } else {
       return Icon(
         Icons.person,
-        size: (size * 0.5).w,
+        size: (widget.size * 0.5).w,
         color: Colors.grey[400],
       );
     }
@@ -182,19 +204,18 @@ class ProfileImagePicker extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             
-            // Camera and Gallery options
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildSourceOption(
                   icon: Icons.camera_alt,
                   label: 'Camera',
-                  onTap: () => _pickImage(ImageSource.camera),
+                  onTap: () => _pickAndUploadImage(ImageSource.camera),
                 ),
                 _buildSourceOption(
                   icon: Icons.image,
                   label: 'Gallery',
-                  onTap: () => _pickImage(ImageSource.gallery),
+                  onTap: () => _pickAndUploadImage(ImageSource.gallery),
                 ),
               ],
             ),
@@ -256,10 +277,10 @@ class ProfileImagePicker extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: imageUrl.value == avatarUrl 
+            color: widget.imageUrl.value == avatarUrl 
                 ? AppColors.primary 
                 : Colors.grey[300]!,
-            width: imageUrl.value == avatarUrl ? 3 : 1,
+            width: widget.imageUrl.value == avatarUrl ? 3 : 1,
           ),
         ),
         child: ClipOval(
@@ -327,22 +348,69 @@ class ProfileImagePicker extends StatelessWidget {
   /// Handles selecting a predefined avatar
   void _selectPredefinedAvatar(String avatarUrl) {
     Get.back(); // Close the bottom sheet
-    imageUrl.value = avatarUrl;
-    onImageSelected(avatarUrl); // Pass the URL directly
+    widget.imageUrl.value = avatarUrl;
+    widget.onImageSelected(avatarUrl); // Pass the URL directly
   }
 
-  /// Handles picking an image from the specified source
-  void _pickImage(ImageSource source) async {
-    Get.back(); // Close the bottom sheet
-    await onImageSelected(source);
+  /// NEW: This method uses ImageService to pick and upload images
+  void _pickAndUploadImage(ImageSource source) async {
+    try {
+      Get.back(); // Close the bottom sheet first
+      
+      setState(() {
+        _isUploading = true;
+      });
+
+      // Use your ImageService to pick and upload image
+      String? uploadedImageUrl = await ImageService.pickAndUploadImage(
+        type: widget.imageType,
+        source: source,
+      );
+
+      if (uploadedImageUrl != null) {
+        // Update the imageUrl with the uploaded URL
+        widget.imageUrl.value = uploadedImageUrl;
+        // Call the callback with the uploaded URL
+        widget.onImageSelected(uploadedImageUrl);
+        
+        Get.snackbar(
+          'Success',
+          'Image uploaded successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 2),
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to upload image. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: Duration(seconds: 3),
+      );
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
 
-  /// Static method to check if a URL is a predefined avatar
   static bool isPredefinedAvatar(String? url) {
     return url != null && predefinedAvatars.containsValue(url);
   }
 
-  /// Static method to get all predefined avatar URLs
   static List<String> getAllPredefinedAvatars() {
     return predefinedAvatars.values.toList();
   }

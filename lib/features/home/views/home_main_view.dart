@@ -55,7 +55,6 @@ class _HomeMainViewState extends State<HomeMainView> {
     }
   }
 
-  // Updated _handleCreateGroup method in HomeMainView
   void _handleCreateGroup() {
     showDialog(
       context: context,
@@ -72,7 +71,7 @@ class _HomeMainViewState extends State<HomeMainView> {
             final success = await groupController.createGroup(
                 name, description, groupImage);
 
-            Get.back(); // Close loading dialog
+            Get.back(); 
 
             if (success) {
               Navigator.of(context).pop(); // Close create group dialog

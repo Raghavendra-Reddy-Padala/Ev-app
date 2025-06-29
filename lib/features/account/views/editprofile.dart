@@ -9,6 +9,7 @@ import 'package:mjollnir/core/utils/logger.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/main.dart';
 import 'package:mjollnir/shared/components/header/header.dart';
+import 'package:mjollnir/shared/components/profile_picker/profile_image_picker.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -24,12 +25,14 @@ class _EditProfileViewState extends State<EditProfileView> {
   final Map<String, dynamic> _formData = {};
   final ProfileController userController = Get.find<ProfileController>();
   bool _isLoading = false;
-  bool _isAvatarLoading = false;
   bool _isBannerLoading = false;
+    late Rx<String?> _avatarUrl;
+
 
   @override
   void initState() {
     super.initState();
+
     if (userController.userData.value != null) {
       _formData['first_name'] = userController.userData.value!.data.firstName;
       _formData['last_name'] = userController.userData.value!.data.lastName;
@@ -68,6 +71,15 @@ class _EditProfileViewState extends State<EditProfileView> {
       _formData['gender'] = userController.userData.value!.data.gender ?? '';
       _formData['invite_code'] =
           userController.userData.value!.data.inviteCode ?? '';
+
+    String? avatarValue = _formData['avatar'];
+    if (avatarValue != null && avatarValue.isNotEmpty) {
+      _avatarUrl = Rx<String?>(avatarValue);
+    } else {
+      _avatarUrl = Rx<String?>(null);
+    
+  }
+          
     }
   }
 
@@ -163,27 +175,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  Future<void> _pickAndUploadAvatar() async {
-    setState(() {
-      _isAvatarLoading = true;
-    });
-
-    try {
-      final url = await ImageService.pickAndUploadImage(type: ImageType.avatar);
-      if (url != null) {
-        setState(() {
-          _formData['avatar'] = url;
-        });
-        _showSnackBar('Profile picture updated', AppColors.primary);
-      }
-    } catch (e) {
-      _showSnackBar('Failed to upload avatar: ${e.toString()}', Colors.red);
-    } finally {
-      setState(() {
-        _isAvatarLoading = false;
-      });
-    }
-  }
+  
 
   Future<void> _pickAndUploadBanner() async {
     setState(() {
@@ -513,102 +505,28 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  Widget _buildProfilePhotoSection() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 136.w,
-            height: 136.w,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                GestureDetector(
-                  onTap: _pickAndUploadAvatar,
-                  child: Container(
-                    width: 120.w,
-                    height: 120.w,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: _isAvatarLoading
-                        ? CircleAvatar(
-                            radius: 60.r,
-                            backgroundColor: AppColors.offwhite,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primary),
-                            ),
-                          )
-                        : CircleAvatar(
-                            radius: 60.r,
-                            backgroundColor: AppColors.offwhite,
-                            backgroundImage: _formData['avatar'] != null &&
-                                    _formData['avatar'].toString().isNotEmpty
-                                ? NetworkImage(_formData['avatar'].toString())
-                                : const AssetImage('assets/images/user_img.png')
-                                    as ImageProvider,
-                          ),
-                  ),
-                ),
-                Positioned(
-  bottom: 8,
-  right: 8,
-  child: GestureDetector(
-    onTap: _pickAndUploadAvatar, 
-    child: Container(
-      width: 40.w,
-      height: 40.w,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: _pickAndUploadAvatar,
-        child: Icon(
-          Icons.camera_alt,
-          color: Colors.white,
-          size: 20.sp,
+ Widget _buildProfilePhotoSection() {
+  return Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ProfileImagePicker(
+          imageUrl: _avatarUrl,
+          onImageSelected: (String imageUrl) {
+            setState(() {
+              _formData['avatar'] = imageUrl;
+            });
+            _showSnackBar('Profile picture updated', AppColors.primary);
+          },
+          size: 120,
+          showLabel: true,
+          label: 'Profile Photo',
+          imageType: ImageType.avatar,
         ),
-      ),
+      ],
     ),
-  ),
-),
-              ],
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Profile Photo',
-            style: AppTextThemes.bodyMedium().copyWith(
-              color: Colors.black54,
-              fontSize: 14.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  );
+}
   Widget _buildPersonalInfoSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

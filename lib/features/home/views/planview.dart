@@ -79,7 +79,7 @@ class PlanType extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FetchPlans controller = Get.put(FetchPlans());
-    controller.fetchPlan(bike.id);
+    controller.fetchPlan(bike.stationId);
 
     return Scaffold(
       body: SafeArea(
