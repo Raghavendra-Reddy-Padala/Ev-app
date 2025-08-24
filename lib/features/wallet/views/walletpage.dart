@@ -86,6 +86,7 @@ class _UIState extends State<_UI> {
         children: [
           Text(
             "₹${(controller.walletData.value?.balance ?? 0.0).toInt()}",
+            
             style: TextStyle(
               fontSize: 48.sp,
               fontWeight: FontWeight.w800,

@@ -437,7 +437,6 @@ class _SpeedChart extends StatelessWidget {
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
-                      tooltipRoundedRadius: 6.r,
                       tooltipPadding:
                           EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {

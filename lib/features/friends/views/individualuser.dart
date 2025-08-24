@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mjollnir/features/account/controllers/profile_controller.dart';
 import 'package:mjollnir/features/friends/controller/follow_controller.dart';
+import 'package:mjollnir/features/friends/controller/individualusertripscontroller.dart';
 import 'package:mjollnir/features/friends/views/individualuserfollowerscontrolller.dart';
 import 'package:mjollnir/shared/components/activity/activity_graph.dart';
 import 'package:mjollnir/shared/components/activity/activity_widget.dart';
@@ -36,10 +36,9 @@ class IndividualUserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-    // Initialize controllers
     Get.put(FollowController());
-    Get.put(IndividualUserFollowersController()); // Initialize the new controller
+    Get.put(IndividualUserFollowersController()); 
+    Get.put(IndividualUserTripsController());
     
     return Scaffold(
       body: SafeArea(
@@ -53,7 +52,7 @@ class IndividualUserPage extends StatelessWidget {
                 followers: followers,
                 avatharurl: avatharurl,
                 name: name,
-                distance: "$distance km" ,
+                distance: "$distance km",
                 points: points,
               ),
             ],
@@ -64,7 +63,7 @@ class IndividualUserPage extends StatelessWidget {
   }
 }
 
-class _UI extends StatelessWidget {
+class _UI extends StatefulWidget {
   final String distance;
   final String name;
   final int points;
@@ -83,83 +82,26 @@ class _UI extends StatelessWidget {
     required this.uid,
   });
 
-  // Generate static trips data with Hyderabad locations
-  List<Trip> _generateStaticTrips() {
-    return [
-      Trip(
-        id: '1',
-        userId: uid,
-        bikeId: 'bike123',
-        stationId: 'station1',
-        startTimestamp: DateTime.now().subtract(const Duration(days: 2)),
-        endTimestamp: DateTime.now().subtract(const Duration(days: 2, hours: 1)),
-        distance: 8.5,
-        duration: 45.2,
-        averageSpeed: 11.3,
-        maxElevation: 520,
-        kcal: 320,
-        path: _generateHyderabadPathPoints(17.3850, 78.4867, 0.02), // Starting near Charminar
-      ),
-      Trip(
-        id: '2',
-        userId: uid,
-        bikeId: 'bike456',
-        stationId: 'station2',
-        startTimestamp: DateTime.now().subtract(const Duration(days: 5)),
-        endTimestamp: DateTime.now().subtract(const Duration(days: 5, hours: 2)),
-        distance: 15.2,
-        duration: 90.5,
-        averageSpeed: 10.1,
-        maxElevation: 540,
-        kcal: 580,
-        path: _generateHyderabadPathPoints(17.4065, 78.4772, 0.03), // Starting near Gachibowli
-      ),
-      Trip(
-        id: '3',
-        userId: uid,
-        bikeId: 'bike789',
-        stationId: 'station3',
-        startTimestamp: DateTime.now().subtract(const Duration(days: 7)),
-        endTimestamp: DateTime.now().subtract(const Duration(days: 7, hours: 1, minutes: 30)),
-        distance: 12.7,
-        duration: 75.8,
-        averageSpeed: 10.8,
-        maxElevation: 510,
-        kcal: 450,
-        path: _generateHyderabadPathPoints(17.4239, 78.4738, 0.025), // Starting near HITEC City
-      ),
-    ];
-  }
+  @override
+  State<_UI> createState() => _UIState();
+}
 
-  // Generate random path points around a central Hyderabad location
-  List<PathPoint> _generateHyderabadPathPoints(double startLat, double startLng, double range) {
-    final random = Random();
-    final points = <PathPoint>[];
-    
-    // Generate 10-20 random points around the starting location
-    final pointCount = 3 + random.nextInt(1);
-    
-    for (int i = 0; i < pointCount; i++) {
-      // Add small random variations to the coordinates
-      final lat = startLat + (random.nextDouble() * range * 2 - range);
-      final lng = startLng + (random.nextDouble() * range * 2 - range);
-      
-      points.add(PathPoint(
-        lat: lat,
-        long: lng,
-        timestamp: DateTime.now().subtract(Duration(minutes: i * 5)),
-        elevation: 500 + random.nextDouble(), // Hyderabad elevation ~500m
-      ));
-    }
-    
-    return points;
+class _UIState extends State<_UI> {
+  late IndividualUserTripsController tripsController;
+
+  @override
+  void initState() {
+    super.initState();
+    tripsController = Get.find<IndividualUserTripsController>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      tripsController.fetchUserTrips(widget.uid);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentLevel = (points / 100).floor() + 1;
+    final currentLevel = (widget.points / 100).floor() + 1;
     final nextLevelPoints = currentLevel * 100;
-    final staticTrips = _generateStaticTrips();
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -171,7 +113,7 @@ class _UI extends StatelessWidget {
           UserProgressCard(
             nextLevelPoints: nextLevelPoints,
             currentPoints: currentLevel,
-            level: points,
+            level: widget.points,
           ),
           SizedBox(height: 16.h),
           Center(
@@ -186,9 +128,19 @@ class _UI extends StatelessWidget {
           SizedBox(height: 32.h),
           
           // Recent Trips Section
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
+          _buildTripsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripsSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
               'Recent Trips',
               style: TextStyle(
                 fontSize: 18.sp,
@@ -196,30 +148,207 @@ class _UI extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
+            Obx(() {
+              if (tripsController.isLoading.value) {
+                return SizedBox(
+                  width: 20.w,
+                  height: 20.h,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                );
+              }
+              return GestureDetector(
+                onTap: () => tripsController.refreshTrips(widget.uid),
+                child: Icon(
+                  Icons.refresh,
+                  size: 20.w,
+                  color: AppColors.primary,
+                ),
+              );
+            }),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        
+        // Trips Content
+        Obx(() => _buildTripsContent()),
+      ],
+    );
+  }
+
+  Widget _buildTripsContent() {
+    if (tripsController.isLoading.value) {
+      return _buildLoadingState();
+    }
+    
+    if (tripsController.hasError) {
+      return _buildErrorState();
+    }
+    
+    if (!tripsController.hasTrips) {
+      return _buildEmptyState();
+    }
+    
+    return _buildTripsList();
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      height: 200.h,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Loading trips...',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.red[200]!),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.w,
+            color: Colors.red[400],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            'Oops! Something went wrong',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.red[700],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            tripsController.errorMessage.value,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.red[600],
+            ),
+            textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),
-          
-          // List of recent trips
-          Column(
-            children: [
-              for (final trip in staticTrips)
-                Column(
-                  children: [
-                    ActivityWidget(
-                          pathPoints: _convertToLatLng(trip.path),
-                      trip: trip,
-                    ),
-                    SizedBox(height: 16.h),
-                  ],
-                ),
-            ],
+          ElevatedButton(
+            onPressed: () => tripsController.refreshTrips(widget.uid),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[600],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            child: Text('Try Again'),
           ),
         ],
       ),
     );
   }
 
-   List<LatLng> _convertToLatLng(List<PathPoint> pathPoints) {
+  Widget _buildEmptyState() {
+    return Container(
+      padding: EdgeInsets.all(32.w),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80.w,
+            height: 80.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.route_outlined,
+              size: 40.w,
+              color: Colors.grey[400],
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'No trips yet',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '${widget.name} hasn\'t taken any trips yet.\nCheck back later!',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 20.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Text(
+              'Start your cycling journey today! 🚴‍♀️',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripsList() {
+    return Column(
+      children: [
+        for (final trip in tripsController.userTrips)
+          Column(
+            children: [
+              ActivityWidget(
+                pathPoints: _convertToLatLng(trip.path),
+                trip: trip,
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+      ],
+    );
+  }
+
+  List<LatLng> _convertToLatLng(List<PathPoint> pathPoints) {
     return pathPoints.map((point) => LatLng(point.lat, point.long)).toList();
   }
 
@@ -308,11 +437,11 @@ class _UI extends StatelessWidget {
           ),
           child: CircleAvatar(
             radius: 48.w,
-            backgroundImage: avatharurl.isNotEmpty
-                ? NetworkImage(avatharurl)
+            backgroundImage: widget.avatharurl.isNotEmpty
+                ? NetworkImage(widget.avatharurl)
                 : NetworkImage("https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg"),
             backgroundColor: Colors.grey[300],
-            child: avatharurl.isEmpty
+            child: widget.avatharurl.isEmpty
                 ? Icon(
                     Icons.person_outline,
                     size: 40.w,
@@ -350,9 +479,9 @@ class _UI extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15.r),
-                  child: avatharurl.isNotEmpty
+                  child: widget.avatharurl.isNotEmpty
                       ? Image.network(
-                          avatharurl,
+                          widget.avatharurl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) => Container(
                             width: 300.w,
@@ -420,7 +549,7 @@ class _UI extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
-                  name,
+                  widget.name,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18.sp,
@@ -439,7 +568,7 @@ class _UI extends StatelessWidget {
 
 Widget _buildInfoContainer() {
   final followController = Get.find<FollowController>();
-  final followersController = Get.find<IndividualUserFollowersController>(); // Get the new controller
+  final followersController = Get.find<IndividualUserFollowersController>();
   
   return Container(
     decoration: BoxDecoration(
@@ -468,7 +597,7 @@ Widget _buildInfoContainer() {
               // Name section
               Expanded(
                 child: Text(
-                  name,
+                  widget.name,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
@@ -482,15 +611,15 @@ Widget _buildInfoContainer() {
               
               // Follow button - custom container button
               Obx(() {
-                final isFollowed = followController.followedUsers[uid] ?? false;
-                final isLoading = followController.isUserLoading(uid);
+                final isFollowed = followController.followedUsers[widget.uid] ?? false;
+                final isLoading = followController.isUserLoading(widget.uid);
                 
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   child: GestureDetector(
                     onTap: isLoading ? null : () async {
                       if (!isFollowed) {
-                        await followController.followUser(uid);
+                        await followController.followUser(widget.uid);
                       }
                     },
                     child: Container(
@@ -565,25 +694,26 @@ Widget _buildInfoContainer() {
             children: [
               _buildMinimalStat(
                 icon: Icons.route_outlined,
-                value: distance.toString(),
+                value: widget.distance.toString(),
                 label: 'Distance',
                 color: Colors.blue[600]!,
               ),
               _buildVerticalDivider(),
               _buildMinimalStat(
                 icon: Icons.map_outlined,
-                value: trips.toString(),
+                value: widget.trips.toString(),
                 label: 'Trips',
                 color: Colors.green[600]!,
               ),
               _buildVerticalDivider(),
               _buildMinimalStat(
                 icon: Icons.people_outline,
-                value: followers.toString(),
+                value: widget.followers.toString(),
                 label: 'Followers',
                 color: Colors.orange[600]!,
-                onTap: () {         followersController.showUserFollowersList(uid: uid, userName:name);
-},
+                onTap: () {
+                  followersController.showUserFollowersList(uid: widget.uid, userName: widget.name);
+                },
               ),
             ],
           ),
@@ -592,6 +722,7 @@ Widget _buildInfoContainer() {
     ),
   );
 }
+
   Widget _buildMinimalStat({
     required IconData icon,
     required String value,

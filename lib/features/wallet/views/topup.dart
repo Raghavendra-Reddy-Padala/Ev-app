@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mjollnir/features/wallet/controller/wallet_controller.dart';
 import 'package:mjollnir/shared/components/logger/logger.dart';
-import 'package:mjollnir/shared/components/payment/payment_web.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 String formatBalance(double balance) {
@@ -79,6 +78,16 @@ class _WalletTopupState extends State<WalletTopup> {
       return;
     }
 
+    if (amount < 1) {
+      Get.snackbar("Error", "Minimum amount is ₹1");
+      return;
+    }
+
+    if (amount > 100000) {
+      Get.snackbar("Error", "Maximum amount is ₹1,00,000");
+      return;
+    }
+
     _focusNode.unfocus();
     showDialog(
       context: context,
@@ -106,38 +115,28 @@ class _WalletTopupState extends State<WalletTopup> {
       },
     );
   }
-Future<void> _processTopUp() async {
-  setState(() {
-    _isLoading = true;
-  });
 
-  try {
-    final String? response = await controller.topUpWallet(_amountController.text);
-    
-    print("Response from controller: $response"); // Debug print
-    
-    if (response != null && response.isNotEmpty) {
-      Logger.e(response);
-      String url = "https://payments.avidia.in/payments/$response";
-      print("Payment URL: $url");
-      
-      Get.to(() => paymentWeb(url: url));
-    } else {
-      print("Response is null or empty: $response"); // Debug print
-      Get.snackbar("Error", "Failed to initiate payment");
-    }
-  } catch (e) {
-    print("Top-up error: $e");
-    Get.snackbar("Error", "Failed to process top-up: $e");
-  } finally {
+  Future<void> _processTopUp() async {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
+
+    try {
+      await controller.topUpWallet(_amountController.text);
+      
+      
+    } catch (e) {
+      print("Top-up error: $e");
+      Get.snackbar("Error", "Failed to process top-up: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
 
   Widget _buildQuickAmountButtons() {
-    final amounts = ['50', '100', '200', '300'];
+    final amounts = ['50', '100', '200', '500'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +258,7 @@ Future<void> _processTopUp() async {
               ),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.currency_rupee),
-                hintText: 'Enter amount',
+                hintText: 'Enter amount (Min: ₹1, Max: ₹1,00,000)',
                 hintStyle: AppTextThemes.bodySmall().copyWith(
                   color: const Color.fromRGBO(130, 130, 130, 1),
                   fontWeight: FontWeight.w600,
@@ -295,7 +294,7 @@ Future<void> _processTopUp() async {
                       ),
                     )
                   : Text(
-                      "Proceed",
+                      "Proceed with Razorpay",
                       style: AppTextThemes.bodyMedium().copyWith(
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

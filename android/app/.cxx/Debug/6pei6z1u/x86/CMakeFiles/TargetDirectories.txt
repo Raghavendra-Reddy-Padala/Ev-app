@@ -1,0 +1,2 @@
+C:/coffeecodes/evnew/ev.new/android/app/.cxx/Debug/6pei6z1u/x86/CMakeFiles/edit_cache.dir
+C:/coffeecodes/evnew/ev.new/android/app/.cxx/Debug/6pei6z1u/x86/CMakeFiles/rebuild_cache.dir

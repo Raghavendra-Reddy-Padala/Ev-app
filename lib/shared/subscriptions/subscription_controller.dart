@@ -15,7 +15,6 @@ class SubscriptionController extends GetxController {
       Rxn<List<UserSubscriptionData>>();
   final RxString errorMessage = ''.obs;
 
-  /// Get authentication token
   Future<String?> getToken() async {
     try {
       return localStorage.getToken();
@@ -51,7 +50,7 @@ class SubscriptionController extends GetxController {
         },
         headers: {
           'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWdlIjoiIiwiZW1haWwiOiIiLCJlbXBsb3llZV9pZCI6IiIsImV4cCI6MTc1MDc4MTg4MywiZ2VuZGVyIjoiIiwibmFtZSI6IiIsInBob25lIjoiKzkxOTAzMjMyMzA5NSIsInVpZCI6ImdfOXhrdDRlZDEifQ.f2EWnxtudDgLiyvkRU01MA6jPf5r5n_T4zDZ7CYTz78',
+              'Bearer $authToken',
           'Content-Type': 'application/json',
         },
       );

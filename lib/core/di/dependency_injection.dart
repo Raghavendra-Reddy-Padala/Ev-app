@@ -41,6 +41,7 @@ Future<void> setupDependencies() async {
   Get.put(FaqController());
   Get.put(IssueController());
   Get.put(IndividualUserFollowersController());
+  Get.put(IndividualUserFollowersController());
   final tripControlService = Get.find<TripControlService>();
   tripControlService.initializeFromStorage();
 

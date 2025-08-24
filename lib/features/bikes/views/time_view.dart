@@ -448,8 +448,6 @@ class _CaloriesChart extends StatelessWidget {
                       barTouchData: BarTouchData(
                         enabled: true,
                         touchTooltipData: BarTouchTooltipData(
-                          //tooltipBgColor: const Color(0xFF1E293B),
-                          tooltipRoundedRadius: 6.r,
                           tooltipPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             if (groupIndex >= controller.calorieHistoryData.length) {

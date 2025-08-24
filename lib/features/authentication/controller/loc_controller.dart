@@ -35,6 +35,7 @@ class LocationController extends GetxController
   Rx<LatLng> initialLocation = const LatLng(17.4065, 78.4772).obs;
   Rx<GoogleMapController?> mapController = Rx<GoogleMapController?>(null);
     Rx<MapType> currentMapType = MapType.terrain.obs;
+    StationController stationController = Get.put(StationController());
   RxBool isHybridMode = true.obs;   RxBool isLocationReady = false.obs;
   RxBool isMarkersLoading = false.obs;
   RxBool showPaths = false.obs;
@@ -560,14 +561,14 @@ class LocationController extends GetxController
     Set<Marker> newMarkers = locations.asMap().entries.map((entry) {
       int index = entry.key;
       LatLng latLng = entry.value;
+      String stationName = stationController.stations[index].name;
 
       return Marker(
         markerId: MarkerId('${latLng.toString()}_$index'),
         position: latLng,
         icon: customIcon,
         infoWindow: InfoWindow(
-          title: 'Station ${index + 1}',
-          snippet: 'Tap for details',
+          title: stationName,
         ),
         onTap: () => _onMarkerTapped(latLng, index),
       );

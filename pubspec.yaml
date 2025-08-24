@@ -2,7 +2,7 @@ name: mjollnir
 description: "A new Flutter project."
 
 publish_to: "none"
-version: 1.0.0+20
+version: 1.0.0+1
 
 environment:
   sdk: ^3.6.2
@@ -11,14 +11,14 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  bolt_ui_kit: ^1.2.0
+  bolt_ui_kit: ^1.2.2
   intl: ^0.20.2
   google_maps_flutter: ^2.12.1
   share_plus: ^10.1.4
   get: ^4.7.2
   screenshot: ^3.0.0
   flutter_screenutil: ^5.9.3
-  fl_chart: ^0.70.2
+  fl_chart: ^1.0.0
   cached_network_image: ^3.4.1
   carousel_slider: ^5.0.0
   image_picker: ^1.1.2
@@ -28,7 +28,7 @@ dependencies:
   path_provider: ^2.1.4
   geolocator: ^10.0.0
   location: ^7.0.0
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   percent_indicator: ^4.2.5
   awesome_notifications: ^0.10.1
   http: ^1.1.0
@@ -37,6 +37,7 @@ dependencies:
   dio: ^5.8.0+1
   flutter_launcher_icons: ^0.14.3
   collection:
+  razorpay_flutter: ^1.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
