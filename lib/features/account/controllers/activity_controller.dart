@@ -80,15 +80,15 @@ class ActivityController extends BaseController {
             return false;
           }
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getTripSummaryResponse();
-          if (dummyData != null && dummyData['data'] != null) {
-            tripSummary.value = TripSummaryModel.fromJson(dummyData['data']);
-            generateGraphData();
-            saveCachedData();
-          }
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getTripSummaryResponse();
+        //   if (dummyData != null && dummyData['data'] != null) {
+        //     tripSummary.value = TripSummaryModel.fromJson(dummyData['data']);
+        //     generateGraphData();
+        //     saveCachedData();
+        //   }
+        //   return true;
+        // },
       );
     } catch (e) {
       print("Error in fetchTripSummary: $e");

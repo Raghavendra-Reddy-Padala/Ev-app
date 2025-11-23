@@ -132,13 +132,13 @@ class BikeController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getBikesResponse('123');
-          final bikeResponse = BikeResponseModel.fromMap(dummyData);
-          bikes.assignAll(bikeResponse.data);
-          saveToLocalStorage(bikeResponse.data);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getBikesResponse('123');
+        //   final bikeResponse = BikeResponseModel.fromMap(dummyData);
+        //   bikes.assignAll(bikeResponse.data);
+        //   saveToLocalStorage(bikeResponse.data);
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error fetching bikes: $e');
@@ -169,13 +169,13 @@ class BikeController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getBikeData(id);
-          final bike = Bike.fromJson(dummyData['data']);
-          bikeData.value = bike;
-          saveToLocalStorage(bike);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getBikeData(id);
+        //   final bike = Bike.fromJson(dummyData['data']);
+        //   bikeData.value = bike;
+        //   saveToLocalStorage(bike);
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error fetching bike data: $e');

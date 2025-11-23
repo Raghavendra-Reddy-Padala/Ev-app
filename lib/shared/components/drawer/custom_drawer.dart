@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -19,7 +18,7 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-ProfileController pf = Get.put(ProfileController());
+    ProfileController pf = Get.put(ProfileController());
     return Drawer(
       child: SafeArea(
         child: Container(
@@ -51,18 +50,45 @@ ProfileController pf = Get.put(ProfileController());
                       SizedBox(height: 20.h),
                       _buildInviteFriendsCard(),
                       SizedBox(height: 20.h),
-                    LogoutButton(onLogout:(){pf.logout();} ,)
+                      LogoutButton(
+                        onLogout: () {
+                          pf.logout();
+                        },
+                      ),
+                      SizedBox(height: 20.h),
+                      DeleteButton(
+                        onLogout: () {
+                          showDeleteAccountSnackbar(context);
+                          pf.logout();
+                        },
+                      )
                     ],
-                    
                   ),
                 ),
-                
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void showDeleteAccountSnackbar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Text(
+        'We have received your request for delete account. Our team will reach out to you for next steps.',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: Colors.green, // you can change the color
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.all(16),
+      duration: Duration(seconds: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Widget _buildDrawerHeader() {
@@ -350,7 +376,8 @@ class DrawerOption {
 
 // Enhanced Create Group Dialog with ProfileImagePicker
 class CreateGroupDialog extends StatefulWidget {
-  final Function(String name, String description, String? groupImage) onSubmit; // Changed signature
+  final Function(String name, String description, String? groupImage)
+      onSubmit; // Changed signature
 
   const CreateGroupDialog({
     super.key,
@@ -379,7 +406,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     if (imageSource is String) {
       selectedGroupImage.value = imageSource;
     }
-
   }
 
   @override
@@ -464,7 +490,8 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
             onPressed: _isSubmitting ? null : () => Navigator.pop(context),
             icon: Icon(
               Icons.close,
-              color: _isSubmitting ? Colors.white.withOpacity(0.5) : Colors.white,
+              color:
+                  _isSubmitting ? Colors.white.withOpacity(0.5) : Colors.white,
               size: 24.w,
             ),
           ),
@@ -569,7 +596,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           onPressed: _isSubmitting ? null : _handleSubmit,
           type: ButtonType.primary,
           fullWidth: true,
-        
         ),
         SizedBox(height: 12.h),
         AppButton(
@@ -593,7 +619,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
 
     final groupName = nameController.text.trim();
     final groupDescription = descriptionController.text.trim();
-    final groupImage = selectedGroupImage.value; 
+    final groupImage = selectedGroupImage.value;
 
     await widget.onSubmit(groupName, groupDescription, groupImage);
 
@@ -604,8 +630,6 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     }
   }
 }
-
-
 
 class LogoutButton extends StatelessWidget {
   final VoidCallback onLogout;
@@ -703,7 +727,8 @@ class LogoutButton extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8.r),
@@ -725,13 +750,158 @@ class LogoutButton extends StatelessWidget {
                     onLogout(); // Then call logout function
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
                       'Yes, Logout',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class DeleteButton extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const DeleteButton({
+    super.key,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.red.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40.w,
+          height: 40.w,
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Icon(
+            Icons.delete,
+            color: Colors.red,
+            size: 18.w,
+          ),
+        ),
+        title: Text(
+          'Delete Account',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w800,
+            color: Colors.red[700],
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16.w,
+          color: Colors.red[300],
+        ),
+        onTap: () => _showLogoutDialog(context),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.delete,
+                color: Colors.red,
+                size: 24.w,
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'Delete Account',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete?',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      'No',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close dialog first
+                    onLogout(); // Then call logout function
+                  },
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      'Yes, Delete',
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,

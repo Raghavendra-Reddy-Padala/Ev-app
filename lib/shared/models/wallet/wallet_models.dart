@@ -38,7 +38,8 @@ class WalletData {
   factory WalletData.fromJson(Map<String, dynamic> json) {
     return WalletData(
       userId: json['user_id'],
-      balance: json['balance'].toDouble(),
+      // Convert from paisa to rupees (divide by 100)
+      balance: (json['balance'] ?? 0).toDouble(),
     );
   }
 

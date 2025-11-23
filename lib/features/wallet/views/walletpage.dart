@@ -29,11 +29,20 @@ class _UI extends StatefulWidget {
 }
 
 class _UIState extends State<_UI> {
+   WalletController controller = Get.find<WalletController>();
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<WalletController>();
+    // Refresh data when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.refreshWalletData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final WalletController controller = Get.find<WalletController>();
-    controller.fetchWalletBalance();
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -47,27 +56,37 @@ class _UIState extends State<_UI> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          // Add refresh button for debugging
+          IconButton(
+            onPressed: () => controller.refreshWalletData(),
+            icon: Icon(Icons.refresh),
+          ),
+        ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            children: [
-              // Balance Card
-              Obx(() => _buildBalanceCard(controller)),
+      body: RefreshIndicator(
+        onRefresh: controller.onRefresh,
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              children: [
+                // Balance Card with better error handling
+                Obx(() => _buildBalanceCard(controller)),
 
-              SizedBox(height: 30.h),
+                SizedBox(height: 30.h),
 
-              // Action Buttons
-              _buildActionButtons(controller),
+                // Action Buttons
+                _buildActionButtons(controller),
 
-              SizedBox(height: 30.h),
+                SizedBox(height: 30.h),
 
-              // Transactions Section
-              _buildTransactionsSection(),
+                // Transactions Section
+                _buildTransactionsSection(),
 
-              Spacer(),
-            ],
+                Spacer(),
+              ],
+            ),
           ),
         ),
       ),
@@ -79,34 +98,38 @@ class _UIState extends State<_UI> {
       width: double.infinity,
       padding: EdgeInsets.all(30.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F9F1), // Light mint green
+        color: const Color(0xFFE8F9F1),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
         children: [
-          Text(
-            "₹${(controller.walletData.value?.balance ?? 0.0).toInt()}",
-            
-            style: TextStyle(
-              fontSize: 48.sp,
-              fontWeight: FontWeight.w800,
-              color: Colors.black,
+          if (controller.isLoading.value)
+            CircularProgressIndicator()
+          else
+            Text(
+              "₹${(controller.walletData.value?.balance ?? 0.0)}",
+              style: TextStyle(
+                fontSize: 48.sp,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
             ),
-          ),
           SizedBox(height: 8.h),
           Text(
-            'Your Balance',
+            controller.isLoading.value ? 'Loading...' : 'Your Balance',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w500,
               color: Colors.black54,
             ),
           ),
+        
         ],
       ),
     );
   }
 
+  // Rest of your methods remain the same...
   Widget _buildActionButtons(WalletController controller) {
     return Row(
       children: [
@@ -125,37 +148,6 @@ class _UIState extends State<_UI> {
               child: Center(
                 child: Text(
                   'TOP-UP',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(width: 15.w),
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              // Fixed - should probably navigate to withdraw page
-              // Get.to(() => WithdrawView());
-             BoltKit.Toast.show(
-               message:  "Wallet is Empty. please Top-up your wallet",
-               type:BoltKit.ToastType.error,
-                duration: Duration(seconds: 2),
-              );
-            },
-            child: Container(
-              height: 50.h,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(25.r),
-              ),
-              child: Center(
-                child: Text(
-                  'Withdraw',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,

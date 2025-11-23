@@ -45,14 +45,10 @@ abstract class BaseController extends GetxController {
 
   Future<T> useApiOrDummy<T>({
     required Future<T> Function() apiCall,
-    required T Function() dummyData,
   }) async {
-    if (useDummyData.value) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return dummyData();
-    } else {
+    
       return await apiCall();
-    }
+    
   }
 
   Future<String?> getToken() async {

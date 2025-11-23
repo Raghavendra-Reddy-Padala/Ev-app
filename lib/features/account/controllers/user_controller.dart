@@ -53,11 +53,11 @@ class UserController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getUserData();
-          userData.value = UserDetailsResponse.fromJson(dummyData);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getUserData();
+        //   userData.value = UserDetailsResponse.fromJson(dummyData);
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error fetching user details: $e');
@@ -100,18 +100,18 @@ class UserController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getAllUsersResponse();
-          final usersResponse = GetAllUsersResponse.fromJson(dummyData);
-          users.assignAll(usersResponse.data);
-          getAllUsers.value = usersResponse;
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getAllUsersResponse();
+        //   final usersResponse = GetAllUsersResponse.fromJson(dummyData);
+        //   users.assignAll(usersResponse.data);
+        //   getAllUsers.value = usersResponse;
 
-          final followController = Get.find<FollowController>();
-          for (var user in getAllUsers.value!.data) {
-            followController.followedUsers[user.uid] = user.following;
-          }
-          return true;
-        },
+        //   final followController = Get.find<FollowController>();
+        //   for (var user in getAllUsers.value!.data) {
+        //     followController.followedUsers[user.uid] = user.following;
+        //   }
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e); 
@@ -148,40 +148,40 @@ class UserController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          // Create dummy followers data
-          final dummyFollowersData = {
-            "success": true,
-            "data": {
-              "followers": [
-                {
-                  "uid": "vi0jpqkdco",
-                  "first_name": "chintu",
-                  "last_name": "reddy",
-                  "email": "fux@gmajl.xom",
-                  "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg",
-                  "points": 0,
-                  "following": false
-                }
-              ],
-              "user": {
-                "uid": "0d5u-yu4dn",
-                "first_name": "anil",
-                "last_name": "kumar",
-                "email": "anilkumar2000jnv@gmail.com",
-                "avatar": "https://cdn.public.prod.coffeecodes.in/ImageType.avatar_1750929856364.jpg",
-                "points": 0,
-                "following": false
-              }
-            },
-            "message": "User followers retrieved successfully",
-            "error": null
-          };
+        // dummyData: () {
+        //   // Create dummy followers data
+        //   final dummyFollowersData = {
+        //     "success": true,
+        //     "data": {
+        //       "followers": [
+        //         {
+        //           "uid": "vi0jpqkdco",
+        //           "first_name": "chintu",
+        //           "last_name": "reddy",
+        //           "email": "fux@gmajl.xom",
+        //           "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg",
+        //           "points": 0,
+        //           "following": false
+        //         }
+        //       ],
+        //       "user": {
+        //         "uid": "0d5u-yu4dn",
+        //         "first_name": "anil",
+        //         "last_name": "kumar",
+        //         "email": "anilkumar2000jnv@gmail.com",
+        //         "avatar": "https://cdn.public.prod.coffeecodes.in/ImageType.avatar_1750929856364.jpg",
+        //         "points": 0,
+        //         "following": false
+        //       }
+        //     },
+        //     "message": "User followers retrieved successfully",
+        //     "error": null
+        //   };
           
-          followersData.value = FollowersResponse.fromJson(dummyFollowersData);
-          followers.assignAll(followersData.value!.data.followers);
-          return true;
-        },
+        //   followersData.value = FollowersResponse.fromJson(dummyFollowersData);
+        //   followers.assignAll(followersData.value!.data.followers);
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error fetching followers: $e');

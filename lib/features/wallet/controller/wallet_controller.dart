@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
 import 'package:mjollnir/core/api/api_constants.dart';
+import 'package:mjollnir/core/utils/logger.dart';
 import '../../../core/api/base/base_controller.dart';
 import '../../../main.dart';
 import '../../../shared/models/transaction/transaction.dart';
 import '../../../shared/models/wallet/wallet_models.dart';
-import '../../../shared/services/dummy_data_service.dart';
 
 class WalletController extends BaseController {
   final Rxn<WalletData> walletData = Rxn<WalletData>();
@@ -13,8 +13,15 @@ class WalletController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    fetchWalletBalance();
-    fetchTransactions();
+    refreshWalletData();
+  }
+
+  // Combined method to refresh all wallet data
+  Future<void> refreshWalletData() async {
+    await Future.wait([
+      fetchWalletBalance(),
+      fetchTransactions(),
+    ]);
   }
 
   Future<void> fetchWalletBalance() async {
@@ -33,27 +40,27 @@ class WalletController extends BaseController {
             endpoint: ApiConstants.walletGet,
             headers: {
               'Authorization': 'Bearer $authToken',
-          'X-Karma-App': 'dafjcnalnsjn',
-
+              'X-Karma-App': 'dafjcnalnsjn',
             },
           );
 
           if (response != null) {
-            final balanceResponse =
-                WalletBalanceResponse.fromJson(response.data);
+            // response is already the parsed JSON Map, not a response object with .data
+            final balanceResponse = WalletBalanceResponse.fromJson(response);
             walletData.value = balanceResponse.data;
+            
+            // Force UI update
+            walletData.refresh();
+            
+            AppLogger.i('Wallet balance fetched: ${walletData.value?.balance}');
+            AppLogger.i('Raw API balance: ${response['data']['balance']}');
             return true;
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getWalletBalanceResponse();
-          final balanceResponse = WalletBalanceResponse.fromJson(dummyData);
-          walletData.value = balanceResponse.data;
-          return true;
-        },
       );
     } catch (e) {
+      AppLogger.e('Error fetching wallet balance: $e');
       handleError(e);
     } finally {
       isLoading.value = false;
@@ -81,84 +88,71 @@ class WalletController extends BaseController {
           );
 
           if (response != null) {
-            final transactionsResponse =
-                TransactionResponse.fromJson(response.data);
+            // response is already the parsed JSON Map, not a response object with .data
+            final transactionsResponse = TransactionResponse.fromJson(response);
             transactions.assignAll(transactionsResponse.transactions);
+            AppLogger.i('Transactions fetched: ${transactions.length}');
             return true;
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getTransactionsResponse();
-          final transactionsResponse = TransactionResponse.fromJson(dummyData);
-          transactions.assignAll(transactionsResponse.transactions);
-          return true;
-        },
       );
     } catch (e) {
+      AppLogger.e('Error fetching transactions: $e');
       handleError(e);
     } finally {
       isLoading.value = false;
     }
   }
-Future<String?> topUpWallet(String amount) async {
-  try {
-    isLoading.value = true;
-    errorMessage.value = '';
 
-    final result = await useApiOrDummy(
-      apiCall: () async {
-        final String? authToken = await getToken();
-        if (authToken == null) {
-          throw Exception('Authentication token not found');
-        }
+  Future<String?> topUpWallet(String amount) async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-        final response = await apiService.post(
-          endpoint: 'wallet/topup', 
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'X-Karma-App': 'dafjcnalnsjn',
-          }, 
-          body: {
-            "balance": amount
+      final result = await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = await getToken();
+          if (authToken == null) {
+            throw Exception('Authentication token not found');
           }
-        );
 
-        print("Full API Response: $response"); // Debug print
-        print("Response type: ${response.runtimeType}"); // Debug print
-
-        if (response != null) {
-          // The response is already the parsed JSON Map, not a response object with .data
-          if (response['success'] == true && response['data'] != null) {
-            await fetchWalletBalance();
-            return response['data'].toString(); // Access directly from the Map
-          } else {
-            throw Exception(response['message'] ?? 'Payment initiation failed');
-          }
-        }
-        throw Exception('No response from server');
-      },
-      dummyData: () {
-        final dummyData = DummyDataService.getWalletTopupResponse();
-
-        if (walletData.value != null) {
-          walletData.value = WalletData(
-            userId: walletData.value!.userId,
-            balance: walletData.value!.balance + double.parse(amount)
+          final response = await apiService.post(
+            endpoint: 'wallet/topup',
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn',
+            },
+            body: {
+              "balance": amount
+            }
           );
-        }
-        return dummyData['data']?.toString();
-      },
-    );
 
-    return result;
-  } catch (e) {
-    print("Error in topUpWallet: $e"); // Debug print
-    handleError(e);
-    return null;
-  } finally {
-    isLoading.value = false;
+          if (response != null) {
+            if (response['success'] == true && response['data'] != null) {
+              // Refresh wallet balance after successful top-up
+              await fetchWalletBalance();
+              return response['data'].toString();
+            } else {
+              throw Exception(response['message'] ?? 'Payment initiation failed');
+            }
+          }
+          throw Exception('No response from server');
+        },
+      );
+
+      return result;
+    } catch (e) {
+      AppLogger.e('Error in topUpWallet: $e');
+      handleError(e);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
   }
-}
 
+  // Method to manually refresh balance (useful for pull-to-refresh)
+  Future<void> onRefresh() async {
+    await refreshWalletData();
+  }
 }

@@ -69,22 +69,10 @@ class ProfileController extends BaseController {
         return;
       }
       final response = await useApiOrDummy(
-        apiCall: () async {
-          final formattedStartDate =
-              dateRange.start.toIso8601String().split('T')[0];
-          final formattedEndDate =
-              dateRange.end.toIso8601String().split('T')[0];
+               // dummyData: () => _getDummyActivityGraphData(dateRange, metric),
+        apiCall: () async => _getDummyActivityGraphData(dateRange, metric),
 
-          return await apiService.get(
-            endpoint:
-                '${ApiConstants.activityGraph}?start_date=$formattedStartDate&end_date=$formattedEndDate&metric=$metric',
-            headers: {
-              'Authorization': 'Bearer $token',
-              'X-Karma-App': 'dafjcnalnsjn',
-            },
-          );
-        },
-        dummyData: () => _getDummyActivityGraphData(dateRange, metric),
+        // dummyData: () => _getDummyActivityGraphData(dateRange, metric),
       );
 
       if (response != null) {
@@ -138,7 +126,7 @@ class ProfileController extends BaseController {
             'X-Karma-App': 'dafjcnalnsjn'
           },
         ),
-        dummyData: () => _getDummyUserData(),
+        // dummyData: () => _getDummyUserData(),
       );
 
       if (response != null) {
@@ -168,7 +156,7 @@ class ProfileController extends BaseController {
           },
           body: profileData,
         ),
-        dummyData: () => {'success': true, 'message': 'Profile updated'},
+        // dummyData: () => {'success': true, 'message': 'Profile updated'},
       );
 
       if (response != null && response['success'] == true) {
@@ -217,7 +205,7 @@ class ProfileController extends BaseController {
             'X-Karma-App': 'dafjcnalnsjn'
           },
         ),
-        dummyData: () => _getDummyTripSummary(),
+        // dummyData: () => _getDummyTripSummary(),
       );
 
       if (response != null) {
@@ -241,7 +229,7 @@ class ProfileController extends BaseController {
             'X-Karma-App': 'dafjcnalnsjn'
           },
         ),
-        dummyData: () => _getDummyTrips(),
+        // dummyData: () => _getDummyTrips(),
       );
 
       if (response != null && response['data'] != null) {
@@ -268,7 +256,7 @@ class ProfileController extends BaseController {
             'X-Karma-App': 'dafjcnalnsjn'
           },
         ),
-        dummyData: () => _getDummySubscriptions(),
+        // dummyData: () => _getDummySubscriptions(),
       );
 
       if (response != null && response['data'] != null) {
@@ -295,10 +283,10 @@ class ProfileController extends BaseController {
             'X-Karma-App': 'dafjcnalnsjn'
           },
         ),
-        dummyData: () => {
-          'success': true,
-          'data': {'referral_code': 'DEMO123'}
-        },
+        // dummyData: () => {
+        //   'success': true,
+        //   'data': {'referral_code': 'DEMO123'}
+        // },
       );
 
       if (response != null && response['success'] == true) {

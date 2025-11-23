@@ -52,58 +52,58 @@ class IndividualUserFollowersController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          // Create dummy followers data for the specific user
-          final dummyFollowersData = {
-            "success": true,
-            "data": {
-              "followers": [
-                {
-                  "uid": "vi0jpqkdco",
-                  "first_name": "chintu",
-                  "last_name": "reddy", 
-                  "email": "fux@gmajl.xom",
-                  "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg",
-                  "points": 150,
-                  "following": false
-                },
-                {
-                  "uid": "abc123def",
-                  "first_name": "priya",
-                  "last_name": "sharma",
-                  "email": "priya.sharma@example.com", 
-                  "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg",
-                  "points": 280,
-                  "following": true
-                },
-                {
-                  "uid": "xyz789ghi",
-                  "first_name": "rahul",
-                  "last_name": "verma",
-                  "email": "rahul.v@example.com",
-                  "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png",
-                  "points": 95,
-                  "following": false
-                }
-              ],
-              "user": {
-                "uid": uid,
-                "first_name": "target",
-                "last_name": "user",
-                "email": "target@example.com",
-                "avatar": "https://cdn.public.prod.coffeecodes.in/ImageType.avatar_1750929856364.jpg",
-                "points": 0,
-                "following": false
-              }
-            },
-            "message": "User followers retrieved successfully",
-            "error": null
-          };
+        // dummyData: () {
+        //   // Create dummy followers data for the specific user
+        //   final dummyFollowersData = {
+        //     "success": true,
+        //     "data": {
+        //       "followers": [
+        //         {
+        //           "uid": "vi0jpqkdco",
+        //           "first_name": "chintu",
+        //           "last_name": "reddy", 
+        //           "email": "fux@gmajl.xom",
+        //           "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474051/37391-3840x2160-desktop-4k-venom-background-image_tvehbk.jpg",
+        //           "points": 150,
+        //           "following": false
+        //         },
+        //         {
+        //           "uid": "abc123def",
+        //           "first_name": "priya",
+        //           "last_name": "sharma",
+        //           "email": "priya.sharma@example.com", 
+        //           "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749474006/475525-3840x2160-desktop-4k-mjolnir-thor-wallpaper_bl9rvh.jpg",
+        //           "points": 280,
+        //           "following": true
+        //         },
+        //         {
+        //           "uid": "xyz789ghi",
+        //           "first_name": "rahul",
+        //           "last_name": "verma",
+        //           "email": "rahul.v@example.com",
+        //           "avatar": "https://res.cloudinary.com/djyny0qqn/image/upload/v1749388344/ChatGPT_Image_Jun_8_2025_05_27_53_PM_nu0zjs.png",
+        //           "points": 95,
+        //           "following": false
+        //         }
+        //       ],
+        //       "user": {
+        //         "uid": uid,
+        //         "first_name": "target",
+        //         "last_name": "user",
+        //         "email": "target@example.com",
+        //         "avatar": "https://cdn.public.prod.coffeecodes.in/ImageType.avatar_1750929856364.jpg",
+        //         "points": 0,
+        //         "following": false
+        //       }
+        //     },
+        //     "message": "User followers retrieved successfully",
+        //     "error": null
+        //   };
           
-          userFollowersData.value = FollowersResponse.fromJson(dummyFollowersData);
-          userFollowers.assignAll(userFollowersData.value!.data.followers);
-          return true;
-        },
+        //   userFollowersData.value = FollowersResponse.fromJson(dummyFollowersData);
+        //   userFollowers.assignAll(userFollowersData.value!.data.followers);
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error fetching user followers: $e');

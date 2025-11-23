@@ -8,18 +8,9 @@ class LocalStorage {
 
   Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
-    await getDummyToken();
   }
 
-  Future<void> getDummyToken() async {
-    final response = await apiService.post(
-        endpoint: ApiConstants.dummyToken,
-        headers: {'X-Karma-App': 'dafjcnalnsjn'});
-    if (response != null) {
-      await _preferences?.setString("dummyToken", response['data']);
-      print(response['data']);
-    }
-  }
+ 
 
   Future<void> setString(String key, String value) async {
     await _preferences?.setString(key, value);
@@ -154,7 +145,7 @@ class LocalStorage {
   }
 
   String? getToken() {
-    return (_preferences?.getBool('useDummyToken') == true)
+    return (_preferences?.getBool('useDummyToken') == false)
         ? _preferences?.getString('dummyToken')
         : _preferences?.getString('token');
   }

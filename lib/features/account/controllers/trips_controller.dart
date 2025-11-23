@@ -230,22 +230,22 @@ class TripsController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getEndTripResponse("");
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getEndTripResponse("");
 
-          if (dummyData['success']) {
-            endTripDetails.value = EndTripModel.fromJson(dummyData);
+        //   if (dummyData['success']) {
+        //     endTripDetails.value = EndTripModel.fromJson(dummyData);
 
-            Toast.show(
-              message: "Trip Ended!",
-              type: ToastType.success,
-            );
-            saveTripsDataToLocalStorage();
+        //     Toast.show(
+        //       message: "Trip Ended!",
+        //       type: ToastType.success,
+        //     );
+        //     saveTripsDataToLocalStorage();
 
-            return true;
-          }
-          return false;
-        },
+        //     return true;
+        //   }
+        //   return false;
+        // },
       );
 
       return result;
@@ -285,14 +285,14 @@ class TripsController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getTripsResponse();
-          final tripsResponse = TripsResponse.fromJson(dummyData);
-          trips.assignAll(tripsResponse.data);
-          saveTripsDataToLocalStorage();
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getTripsResponse();
+        //   final tripsResponse = TripsResponse.fromJson(dummyData);
+        //   trips.assignAll(tripsResponse.data);
+        //   saveTripsDataToLocalStorage();
 
-          return true;
-        },
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -332,14 +332,14 @@ class TripsController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getTripLocationsResponse();
-          final locationsResponse = TripLocationsResponse.fromJson(dummyData);
-          tripLocations.assignAll(locationsResponse.data);
-          //saveTripLocationsToLocalStorage(tripId);
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getTripLocationsResponse();
+        //   final locationsResponse = TripLocationsResponse.fromJson(dummyData);
+        //   tripLocations.assignAll(locationsResponse.data);
+        //   //saveTripLocationsToLocalStorage(tripId);
 
-          return true;
-        },
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -394,19 +394,19 @@ class TripsController extends BaseController {
             return false;
           }
         },
-        dummyData: () {
-          final dummyData = DummyDataService.putTripLocationResponse();
-          if (dummyData['success']) {
-            final data = dummyData['data'];
-            _updateTripMetrics(data);
-            isLocationUpdated.value = true;
-            tripLocations.add(TripLocation(latitude: lat, longitude: long));
-            saveTripMetricsToLocalStorage();
-            print('✅ Location updated successfully (dummy data)');
-            return true;
-          }
-          return false;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.putTripLocationResponse();
+        //   if (dummyData['success']) {
+        //     final data = dummyData['data'];
+        //     _updateTripMetrics(data);
+        //     isLocationUpdated.value = true;
+        //     tripLocations.add(TripLocation(latitude: lat, longitude: long));
+        //     saveTripMetricsToLocalStorage();
+        //     print('✅ Location updated successfully (dummy data)');
+        //     return true;
+        //   }
+        //   return false;
+        // },
       );
 
       return result;

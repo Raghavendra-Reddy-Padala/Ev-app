@@ -63,12 +63,12 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getGroupsResponse();
-          final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
-          allGroups.assignAll(groupsResponse.groups);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getGroupsResponse();
+        //   final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
+        //   allGroups.assignAll(groupsResponse.groups);
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -105,13 +105,13 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          // final dummyData = DummyDataService.getGroupsResponse();
-          // final groupsResponse = GroupsResponse.fromJson(dummyData);
+        // dummyData: () {
+        //   // final dummyData = DummyDataService.getGroupsResponse();
+        //   // final groupsResponse = GroupsResponse.fromJson(dummyData);
 
-          //userGroups.assignAll(groupsResponse.data.where((g) => g.isCreator));
-          return true;
-        },
+        //   //userGroups.assignAll(groupsResponse.data.where((g) => g.isCreator));
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -220,15 +220,15 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getGroupsResponse();
-          final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
-          final joinedGroupsList = groupsResponse.groups
-              .where((g) => g.isMember && !g.isCreator)
-              .toList();
-          joinedGroups.assignAll(joinedGroupsList);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getGroupsResponse();
+        //   final groupsResponse = GetAllGroupsResponse.fromJson(dummyData);
+        //   final joinedGroupsList = groupsResponse.groups
+        //       .where((g) => g.isMember && !g.isCreator)
+        //       .toList();
+        //   joinedGroups.assignAll(joinedGroupsList);
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -277,23 +277,23 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyResponse =
-              DummyDataService.createGroupResponse(name, description);
+        // dummyData: () {
+        //   final dummyResponse =
+        //       DummyDataService.createGroupResponse(name, description);
 
-          userGroups.add(
-            GroupData(
-              id: dummyResponse['group_id'],
-              name: name,
-              description: description,
-              createdAt: DateTime.now().toString(),
-              createdBy: 'dummy-user-id',
-              avatarUrl: groupImage ??
-                  'https://dummyimage.com/600x400/000/fff&text=Group+Image',
-            ),
-          );
-          return true;
-        },
+        //   userGroups.add(
+        //     GroupData(
+        //       id: dummyResponse['group_id'],
+        //       name: name,
+        //       description: description,
+        //       createdAt: DateTime.now().toString(),
+        //       createdBy: 'dummy-user-id',
+        //       avatarUrl: groupImage ??
+        //           'https://dummyimage.com/600x400/000/fff&text=Group+Image',
+        //     ),
+        //   );
+        //   return true;
+        // },
       );
 
       return result;
@@ -344,25 +344,25 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyResponse = DummyDataService.joinGroupResponse();
+        // dummyData: () {
+        //   final dummyResponse = DummyDataService.joinGroupResponse();
 
-          final currentGroups = List<AllGroup>.from(allGroups.value);
-          final groupIndex = currentGroups.indexWhere((g) => g.id == groupId);
+        //   final currentGroups = List<AllGroup>.from(allGroups.value);
+        //   final groupIndex = currentGroups.indexWhere((g) => g.id == groupId);
 
-          if (groupIndex >= 0) {
-            final group = currentGroups[groupIndex];
-            group.isMember = true;
-            currentGroups[groupIndex] = group;
-            allGroups.value = currentGroups; // Trigger reactive update
+        //   if (groupIndex >= 0) {
+        //     final group = currentGroups[groupIndex];
+        //     group.isMember = true;
+        //     currentGroups[groupIndex] = group;
+        //     allGroups.value = currentGroups; // Trigger reactive update
 
-            if (!joinedGroups.any((g) => g.id == groupId)) {
-              joinedGroups.add(group);
-            }
-          }
+        //     if (!joinedGroups.any((g) => g.id == groupId)) {
+        //       joinedGroups.add(group);
+        //     }
+        //   }
 
-          return dummyResponse['success'];
-        },
+        //   return dummyResponse['success'];
+        // },
       );
 
       return result;
@@ -401,12 +401,12 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getGroupMembersResponse(groupId);
-          groupMembersDetails.value =
-              GroupMembersDetailsModel.fromJson(dummyData);
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getGroupMembersResponse(groupId);
+        //   groupMembersDetails.value =
+        //       GroupMembersDetailsModel.fromJson(dummyData);
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);
@@ -442,12 +442,12 @@ class GroupController extends BaseController {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getGroupAggregateResponse(groupId);
-          final aggregateModel = GroupAggregateModel.fromJson(dummyData);
-          groupAggregateData.value = aggregateModel.aggregateData;
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getGroupAggregateResponse(groupId);
+        //   final aggregateModel = GroupAggregateModel.fromJson(dummyData);
+        //   groupAggregateData.value = aggregateModel.aggregateData;
+        //   return true;
+        // },
       );
     } catch (e) {
       handleError(e);

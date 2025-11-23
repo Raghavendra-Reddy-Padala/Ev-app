@@ -8,7 +8,7 @@ import '../../../shared/models/stations/station.dart';
 import '../../../shared/services/dummy_data_service.dart';
 
 class StationController extends BaseController {
-    final TextEditingController searchController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   final RxList<Station> stations = <Station>[].obs;
   final RxList<Station> filteredStations = <Station>[].obs;
@@ -58,84 +58,90 @@ class StationController extends BaseController {
       handleError(e);
     }
   }
-Future<void> fetchAllStations() async {
-  try {
-    isLoading.value = true;
-    errorMessage.value = '';
 
-    await useApiOrDummy(
-      apiCall: () async {
-        final String? authToken = localStorage.getToken();
-        if (authToken == null) {
-          throw Exception('Authentication token not found');
-        }
-        
-        final response = await apiService.get(
-          endpoint: 'stations/',
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-            'X-Karma-App': 'dafjcnalnsjn',
-          },
-        );
+  Future<void> fetchAllStations() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
 
-        if (response != null) {
-          print('Raw Response data: ${response}');
-          
-          // Debug: Check the structure of response
-          print('Response type: ${response.runtimeType}');
-          print('Response keys: ${response.keys}');
-          
-          try {
-            final stationResponse = GetMultipleStationsResponse.fromJson(response);
-            print('Parsed stations count: ${stationResponse.stations.length}');
-            
-            if (stationResponse.success) {
-              stations.clear();
-              stations.addAll(stationResponse.stations);
-              filteredStations.assignAll(stations);
-              nearbyStations.assignAll(stations);
-              
-              print('Stations added to controller: ${stations.length}');
-              print('First station: ${stations.isNotEmpty ? stations.first.name : 'No stations'}');
-              
-              _updateMarkers();
-              return true;
-            } else {
-              errorMessage.value = stationResponse.message;
-              print('API returned success: false, message: ${stationResponse.message}');
-              return false;
-            }
-          } catch (parseError) {
-            print('Error parsing response: $parseError');
-            print('Response structure: $response');
-            throw parseError;
+      await useApiOrDummy(
+        apiCall: () async {
+          final String? authToken = localStorage.getToken();
+          if (authToken == null) {
+            throw Exception('Authentication token not found');
           }
-        }
-        print('Response is null');
-        return false;
-      },
-      dummyData: () {
-        print('Using dummy data');
-        final dummyData = DummyDataService.getStationsResponse();
-        print('Dummy data: $dummyData');
-        
-        final stationResponse = GetMultipleStationsResponse.fromJson(dummyData);
-        stations.assignAll(stationResponse.stations);
-        filteredStations.assignAll(stationResponse.stations);
-        nearbyStations.assignAll(stationResponse.stations);
-        _updateMarkers();
-        return true;
-      },
-    );
-  } catch (e) {
-    print('Error in fetchAllStations: $e');
-    print('Stack trace: ${StackTrace.current}');
-    handleError(e);
-  } finally {
-    isLoading.value = false;
+
+          final response = await apiService.get(
+            endpoint: 'stations/',
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'Content-Type': 'application/json',
+              'X-Karma-App': 'dafjcnalnsjn',
+            },
+          );
+
+          if (response != null) {
+            print('Raw Response data: ${response}');
+
+            // Debug: Check the structure of response
+            print('Response type: ${response.runtimeType}');
+            print('Response keys: ${response.keys}');
+
+            try {
+              final stationResponse =
+                  GetMultipleStationsResponse.fromJson(response);
+              print(
+                  'Parsed stations count: ${stationResponse.stations.length}');
+
+              if (stationResponse.success) {
+                stations.clear();
+                stations.addAll(stationResponse.stations);
+                filteredStations.assignAll(stations);
+                nearbyStations.assignAll(stations);
+
+                print('Stations added to controller: ${stations.length}');
+                print(
+                    'First station: ${stations.isNotEmpty ? stations.first.name : 'No stations'}');
+
+                _updateMarkers();
+                return true;
+              } else {
+                errorMessage.value = stationResponse.message;
+                print(
+                    'API returned success: false, message: ${stationResponse.message}');
+                return false;
+              }
+            } catch (parseError) {
+              print('Error parsing response: $parseError');
+              print('Response structure: $response');
+              throw parseError;
+            }
+          }
+          print('Response is null');
+          return false;
+        },
+        // dummyData: () {
+        //   print('Using dummy data');
+        //   final dummyData = DummyDataService.getStationsResponse();
+        //   print('Dummy data: $dummyData');
+
+        //   final stationResponse = GetMultipleStationsResponse.fromJson(dummyData);
+        //   stations.assignAll(stationResponse.stations);
+        //   filteredStations.assignAll(stationResponse.stations);
+        //   nearbyStations.assignAll(stationResponse.stations);
+        //   _updateMarkers();
+        //   return true;
+        // },
+      );
+    } catch (e) {
+      print('Error in fetchAllStations: $e');
+      print('Stack trace: ${StackTrace.current}');
+      handleError(e);
+    } finally {
+      isLoading.value = false;
+    }
   }
-}
+
   Future<void> fetchNearbyStations(double lat, double lon) async {
     try {
       isLoading.value = true;
@@ -185,16 +191,16 @@ Future<void> fetchAllStations() async {
           }
           return false;
         },
-        dummyData: () {
-          final dummyData = DummyDataService.getStationsResponse();
-          final stationResponse =
-              GetMultipleStationsResponse.fromJson(dummyData);
-          stations.assignAll(stationResponse.stations);
-          nearbyStations.assignAll(stationResponse.stations);
-          filteredStations.assignAll(stationResponse.stations);
-          _updateMarkers();
-          return true;
-        },
+        // dummyData: () {
+        //   final dummyData = DummyDataService.getStationsResponse();
+        //   final stationResponse =
+        //       GetMultipleStationsResponse.fromJson(dummyData);
+        //   stations.assignAll(stationResponse.stations);
+        //   nearbyStations.assignAll(stationResponse.stations);
+        //   filteredStations.assignAll(stationResponse.stations);
+        //   _updateMarkers();
+        //   return true;
+        // },
       );
     } catch (e) {
       print('Error in fetchNearbyStations: $e');
