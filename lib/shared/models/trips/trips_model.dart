@@ -5,7 +5,7 @@ class TripSummaryModel {
   final double carbonFootprintKg;
   final double highestSpeed;
   final LongestRide longestRide;
-  final double maxElevationM; // Changed from int to double
+  final double maxElevationM;
   final int totalCalories;
   final double totalTimeHours;
   final int totalTrips;
@@ -27,8 +27,7 @@ class TripSummaryModel {
       carbonFootprintKg: json['carbon_footprint_kg']?.toDouble() ?? 0.0,
       highestSpeed: json['highest_speed']?.toDouble() ?? 0.0,
       longestRide: LongestRide.fromJson(json['longest_ride']),
-      maxElevationM:
-          json['max_elevation_m']?.toDouble() ?? 0.0, // Changed to toDouble()
+      maxElevationM: json['max_elevation_m']?.toDouble() ?? 0.0,
       totalCalories: json['total_calories'] ?? 0,
       totalTimeHours: json['total_time_hours']?.toDouble() ?? 0.0,
       totalTrips: json['total_trips'] ?? 0,
@@ -107,6 +106,7 @@ class Averages {
       speedKmh: json['speed_kmh']?.toDouble() ?? 0.0,
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       'calories_trip': caloriesTrip,
@@ -131,6 +131,7 @@ class LongestRide {
       durationHours: json['duration_hours']?.toDouble() ?? 0.0,
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       'distance_km': distanceKm,
@@ -149,6 +150,7 @@ class EndTrip {
   final double duration;
   final double averageSpeed;
   final List<List<double>> path;
+  final double? fare;
 
   EndTrip({
     required this.id,
@@ -160,6 +162,7 @@ class EndTrip {
     required this.duration,
     required this.averageSpeed,
     required this.path,
+    this.fare,
   });
 
   Map<String, dynamic> toJson() {
@@ -173,6 +176,7 @@ class EndTrip {
       'duration': duration,
       'average_speed': averageSpeed,
       'path': path,
+      if (fare != null) 'fare': fare,
     };
   }
 
@@ -187,6 +191,7 @@ class EndTrip {
       duration: json['duration'].toDouble(),
       averageSpeed: json['average_speed'].toDouble(),
       path: json['path'],
+      fare: json['fare']?.toDouble(),
     );
   }
 
@@ -205,13 +210,11 @@ class StartTrip {
   final String bikeId;
   final String stationId;
   final bool personal;
-  //final DateTime startTimestamp;
 
   StartTrip({
     required this.bikeId,
     required this.stationId,
     required this.personal,
-    //required this.startTimestamp,
   });
 
   Map<String, dynamic> toJson() {
@@ -227,19 +230,14 @@ class StartTrip {
       bikeId: json['bike_id'],
       stationId: json['station_id'],
       personal: json['personal'] ?? false,
-      // startTimestamp: DateTime.parse(json['start_timestamp']),
     );
   }
-
-  // String getFormattedStartTimestamp() {
-  //   final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
-  //   return formatter.format(startTimestamp);
-  // }
 }
 
+// ✅ FIXED: EndTripModel now uses EndTripResponseData
 class EndTripModel {
   final bool success;
-  final EndTripData? data;
+  final EndTripResponseData? data;  // Changed from EndTripData to EndTripResponseData
   final String message;
 
   EndTripModel({
@@ -251,8 +249,127 @@ class EndTripModel {
   factory EndTripModel.fromJson(Map<String, dynamic> json) {
     return EndTripModel(
       success: json['success'] ?? false,
-      data: json['data'] != null ? EndTripData.fromJson(json['data']) : null,
+      data: json['data'] != null ? EndTripResponseData.fromJson(json['data']) : null,
       message: json['message'] ?? '',
+    );
+  }
+}
+
+// ✅ This wraps both rideSummary and trip
+class EndTripResponseData {
+  final RideSummaryData? rideSummary;
+  final EndTripData? trip;
+
+  EndTripResponseData({
+    this.rideSummary,
+    this.trip,
+  });
+
+  factory EndTripResponseData.fromJson(Map<String, dynamic> json) {
+    return EndTripResponseData(
+      rideSummary: json['ride_summary'] != null 
+          ? RideSummaryData.fromJson(json['ride_summary']) 
+          : null,
+      trip: json['trip'] != null 
+          ? EndTripData.fromJson(json['trip']) 
+          : null,
+    );
+  }
+}
+
+// ✅ Contains fare and all ride summary details
+class RideSummaryData {
+  final String tripId;
+  final double duration;
+  final double distance;
+  final double averageSpeed;
+  final double caloriesBurned;
+  final double maxElevation;
+  final String startTime;
+  final String endTime;
+  final double carbonOffset;
+  final LocationData? startLocation;
+  final LocationData? endLocation;
+  final BikeDetails? bikeDetails;
+  final double fare;
+
+  RideSummaryData({
+    required this.tripId,
+    required this.duration,
+    required this.distance,
+    required this.averageSpeed,
+    required this.caloriesBurned,
+    required this.maxElevation,
+    required this.startTime,
+    required this.endTime,
+    required this.carbonOffset,
+    this.startLocation,
+    this.endLocation,
+    this.bikeDetails,
+    required this.fare,
+  });
+
+  factory RideSummaryData.fromJson(Map<String, dynamic> json) {
+    return RideSummaryData(
+      tripId: json['trip_id'] ?? '',
+      duration: (json['duration'] ?? 0).toDouble(),
+      distance: (json['distance'] ?? 0).toDouble(),
+      averageSpeed: (json['average_speed'] ?? 0).toDouble(),
+      caloriesBurned: (json['calories_burned'] ?? 0).toDouble(),
+      maxElevation: (json['max_elevation'] ?? 0).toDouble(),
+      startTime: json['start_time'] ?? '',
+      endTime: json['end_time'] ?? '',
+      carbonOffset: (json['carbon_offset'] ?? 0).toDouble(),
+      startLocation: json['start_location'] != null 
+          ? LocationData.fromJson(json['start_location']) 
+          : null,
+      endLocation: json['end_location'] != null 
+          ? LocationData.fromJson(json['end_location']) 
+          : null,
+      bikeDetails: json['bike_details'] != null 
+          ? BikeDetails.fromJson(json['bike_details']) 
+          : null,
+      fare: (json['fare'] ?? 0).toDouble(),
+    );
+  }
+}
+
+class LocationData {
+  final String stationName;
+  final String latitude;
+  final String longitude;
+
+  LocationData({
+    required this.stationName,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  factory LocationData.fromJson(Map<String, dynamic> json) {
+    return LocationData(
+      stationName: json['station_name'] ?? '',
+      latitude: json['latitude'] ?? '',
+      longitude: json['longitude'] ?? '',
+    );
+  }
+}
+
+class BikeDetails {
+  final String bikeId;
+  final String bikeName;
+  final String frameNumber;
+
+  BikeDetails({
+    required this.bikeId,
+    required this.bikeName,
+    required this.frameNumber,
+  });
+
+  factory BikeDetails.fromJson(Map<String, dynamic> json) {
+    return BikeDetails(
+      bikeId: json['bike_id'] ?? '',
+      bikeName: json['bike_name'] ?? '',
+      frameNumber: json['frame_number'] ?? '',
     );
   }
 }

@@ -91,11 +91,11 @@ class QrScannerController extends BaseController {
     try {
       isLoading.value = true;
 
-      const demoDeviceId = "775tg4cmmp";
+      const demoDeviceId = "jbpf-o74p-";
 
       final startTripData = StartTrip(
         bikeId: demoDeviceId,
-        stationId: "6xugln92qx",
+        stationId: "jfxu2lumqq",
         personal: true,
       );
 

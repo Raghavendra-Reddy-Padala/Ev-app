@@ -63,7 +63,6 @@ class TripControlService extends BaseController {
         currentTripId.value = tripsController.tripId.value;
         print("✅ Trip started successfully. Trip ID: ${currentTripId.value}");
 
-        // Set bike subscription status
         bikeMetricsController.bikeSubscribed.value = true;
         bikeMetricsController.bikeID.value = startTripData.bikeId;
 
@@ -418,6 +417,7 @@ class TripControlService extends BaseController {
     final startTimestamp =
         endTimestamp.subtract(Duration(seconds: totalDuration.toInt()));
 
+    final fare = tripsController.endTripDetails.value?.data?.rideSummary?.fare;
     return EndTrip(
       path: pathPoints,
       stationId: '',
@@ -428,6 +428,8 @@ class TripControlService extends BaseController {
       distance: totalDistance,
       duration: totalDuration,
       averageSpeed: bikeMetricsController.avgSpeed.value,
+          fare: fare, // Add fare to EndTrip
+
     );
   }
 
@@ -436,7 +438,10 @@ class TripControlService extends BaseController {
       print('🎯 Showing trip summary...');
       await Future.delayed(Duration(milliseconds: 500));
       await Get.to(
-        () => RideSummary(tripData: endTripData),
+        () => RideSummary(tripData: endTripData,
+                fareAmount: endTripData.fare ?? 0, // Pass fare explicitly
+
+        ),
         transition: Transition.rightToLeft,
         duration: Duration(milliseconds: 300),
       );

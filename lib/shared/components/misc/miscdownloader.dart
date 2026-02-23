@@ -223,11 +223,10 @@ class Miscellaneous extends StatelessWidget {
   }
 
   String _generateSummaryUrl(String rideId) {
-    return 'https://ev.coffeecodes.in/v1/trips/summary/$rideId';
+    return 'https://ev-api.aks2.mellob.in/v1/trips/summary/$rideId';
   }
 
   String _generateShareText(String summaryUrl) {
-    // Add ride stats if available
     if (tripDetails != null) {
       final double? distance = tripDetails?.distance;
       final String? duration = tripDetails?.duration as String?;

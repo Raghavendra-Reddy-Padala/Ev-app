@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://ev.coffeecodes.in/v1';
+  static const String baseUrl = 'https://ev-api.aks2.mellob.in/v1';
 
   static const String login = 'auth/login';
   static const String signup = 'auth/register';

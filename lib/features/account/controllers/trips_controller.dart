@@ -116,6 +116,7 @@ class TripsController extends BaseController {
       }
     } catch (e) {
       print("❌ Exception in startTrip: $e");
+      
       if (e is DioException) {
         if (e.response?.statusCode == 400) {
           final responseData = e.response?.data as Map<String, dynamic>?;
@@ -369,7 +370,7 @@ class TripsController extends BaseController {
           }
 
           final response = await apiService.put(
-            endpoint: 'trips/location/$tripId',
+            endpoint: 'trips/$tripId/location',
             headers: {
               'Authorization': 'Bearer $authToken',
               'Content-Type': 'application/json',

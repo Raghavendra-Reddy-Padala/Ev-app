@@ -88,7 +88,6 @@ class WalletController extends BaseController {
           );
 
           if (response != null) {
-            // response is already the parsed JSON Map, not a response object with .data
             final transactionsResponse = TransactionResponse.fromJson(response);
             transactions.assignAll(transactionsResponse.transactions);
             AppLogger.i('Transactions fetched: ${transactions.length}');
@@ -105,6 +104,34 @@ class WalletController extends BaseController {
     }
   }
 
+ Future<String> topUp(String value) async {
+    try {
+          final String? authToken = await getToken();
+          if (authToken == null) {
+      return '';
+    }
+      
+          final response = await apiService.post(
+            endpoint: 'wallet/topup',
+            headers: {
+              'Authorization': 'Bearer $authToken',
+              'X-Karma-App': 'dafjcnalnsjn',
+            },
+            body: {
+              "balance": value
+            }
+          );
+          print('Top-up response: $response');
+      if (response.statusCode == 200) {
+        return response.data['data'];
+      } else {
+        return '';
+      }
+    } catch (e) {
+
+      return '';
+    }
+  }
   Future<String?> topUpWallet(String amount) async {
     try {
       isLoading.value = true;

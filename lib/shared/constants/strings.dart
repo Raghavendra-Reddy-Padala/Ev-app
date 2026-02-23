@@ -1,5 +1,5 @@
 class TextStrings {
-  static const baseUrl = 'https://ev.coffeecodes.in/';
+  static const baseUrl = 'https://ev-api.aks2.mellob.in/';
   static const login = 'Login';
   static const tc =
       'By clicking continue, you agree to our Terms of Service and Privacy Policy.';

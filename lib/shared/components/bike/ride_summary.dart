@@ -5,23 +5,28 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:mjollnir/core/storage/local_storage.dart';
+import 'package:mjollnir/features/account/controllers/trips_controller.dart';
+import 'package:mjollnir/features/bikes/controller/bike_controller.dart';
+import 'package:mjollnir/features/bikes/controller/bike_metrics_controller.dart';
+import 'package:mjollnir/features/main_page_controller.dart';
+import 'package:mjollnir/shared/components/bike/summary_card.dart';
+import 'package:mjollnir/shared/components/map/path_view.dart';
+import 'package:mjollnir/shared/constants/colors.dart';
+import 'package:mjollnir/shared/models/trips/trips_model.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../core/storage/local_storage.dart';
-import '../../../features/account/controllers/trips_controller.dart';
-import '../../../features/bikes/controller/bike_controller.dart';
-import '../../../features/bikes/controller/bike_metrics_controller.dart';
-import '../../../features/main_page_controller.dart';
-import '../../constants/colors.dart';
-import '../../models/trips/trips_model.dart';
-import '../map/path_view.dart';
-import 'summary_card.dart';
 
 class RideSummary extends StatefulWidget {
   final EndTrip? tripData;
+  final double fareAmount; // Add fare parameter
 
-  RideSummary({super.key, this.tripData});
+  RideSummary({
+    super.key, 
+    this.tripData,
+    this.fareAmount = 0, // Default to 0 if not provided
+  });
 
   @override
   State<RideSummary> createState() => _RideSummaryState();
@@ -39,6 +44,7 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     _markSummaryAsShown();
 
     print('🎯 RideSummary: Initialized with trip data');
+    print('💰 Fare Amount: ${widget.fareAmount}');
   }
 
   @override
@@ -60,11 +66,17 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final BikeMetricsController bikeController =
-        Get.find<BikeMetricsController>();
+    final BikeMetricsController bikeController = Get.find<BikeMetricsController>();
     final LocalStorage localStorage = Get.find<LocalStorage>();
     final TripsController tripsController = Get.find<TripsController>();
     final BikeController bikeDataController = Get.find<BikeController>();
+
+    // Get fare from multiple sources (priority order)
+    final displayFare = widget.fareAmount > 0 
+        ? widget.fareAmount 
+        : (widget.tripData?.fare ?? 
+           tripsController.endTripDetails.value?.data?.rideSummary?.fare ?? 
+           0);
 
     return WillPopScope(
       onWillPop: () async {
@@ -73,12 +85,10 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        // Remove AppBar completely
         body: _isClosing
             ? _buildClosingIndicator()
             : Column(
                 children: [
-                  // Add custom header with back button
                   _buildCustomHeader(),
                   Expanded(
                     child: SingleChildScrollView(
@@ -87,7 +97,6 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
                         child: Screenshot(
                           controller: screenshotController,
                           child: Container(
-                            // Add white background for screenshot
                             color: Colors.white,
                             child: Column(
                               children: [
@@ -104,6 +113,9 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
                                       ),
                                       SizedBox(height: 20.h),
                                       _buildMapSection(bikeController),
+                                      SizedBox(height: 20.h),
+                                      // Add Fare Display Section
+                                      _buildFareSection(displayFare),
                                       SizedBox(height: 20.h),
                                     ],
                                   ),
@@ -160,7 +172,7 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
               ),
             ),
           ),
-          SizedBox(width: 40.w), // Balance the back button
+          SizedBox(width: 40.w),
         ],
       ),
     );
@@ -171,21 +183,115 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: AppColors.primary,
-          ),
+          CircularProgressIndicator(color: AppColors.primary),
           SizedBox(height: 16.h),
           Text(
             'Saving trip data...',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
           ),
         ],
       ),
     );
   }
+
+  // NEW: Fare Display Section
+  Widget _buildFareSection(double fare) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.primary.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: AppColors.primary,
+                  size: 24.sp,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Fare',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      '₹ ${fare.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 6.h,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Paid',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+        ],
+      ),
+    );
+  }
+
+  
 
   Widget _buildShareButton() {
     return Container(
@@ -282,20 +388,16 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
   ) {
     return SummaryCard(
       rideDetails: RideDetails(
-        type: 'Maunal Bike',
+        type: 'Manual Bike',
         bikeImage: 'assets/images/bike.png',
         price: 0,
         rideId: widget.tripData?.bikeId ??
-            tripsController.endTripDetails.value?.data?.bikeId ??
+            tripsController.endTripDetails.value?.data?.trip?.bikeId ??
             "k2590tnkfx",
-        frameNumber:
-            bikeDataController.bikeData.value?.frameNumber ?? 'FN0199dfff',
-        duration: _getDurationText(
-          bikeController.totalDuration.value,
-          localStorage,
-        ),
+        frameNumber: bikeDataController.bikeData.value?.frameNumber ?? 'FN0199dfff',
+        duration: _getDurationText(bikeController.totalDuration.value, localStorage),
         calories: _getCaloriesText(
-          tripsController.endTripDetails.value?.data?.kcal,
+          tripsController.endTripDetails.value?.data?.rideSummary?.caloriesBurned,
           bikeController.lastTripCalories.value,
           localStorage,
         ),
@@ -335,7 +437,7 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
         child: Container(
           width: double.infinity,
           height: 170.h,
-          color: Colors.white, // Ensure white background for map
+          color: Colors.white,
           child: PathView(
             pathPoints: bikeController.pathPoints.isNotEmpty
                 ? bikeController.pathPoints
@@ -359,36 +461,32 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     try {
       print('📤 Capturing and sharing trip summary...');
       
-      // Add delay to ensure UI is fully rendered
       await Future.delayed(Duration(milliseconds: 300));
       
       final Uint8List? image = await screenshotController.capture(
         delay: Duration(milliseconds: 500),
-        pixelRatio: 2.0, // High quality screenshot
+        pixelRatio: 2.0,
       );
       
       if (image != null) {
-        // Get temporary directory
         final directory = await getTemporaryDirectory();
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final imagePath = '${directory.path}/trip_summary_$timestamp.png';
         
-        // Save image to file
         final File imageFile = File(imagePath);
         await imageFile.writeAsBytes(image);
         
         print('✅ Screenshot saved to: $imagePath');
         
-        // Share the image with a nice message
         await Share.shareXFiles(
           [XFile(imagePath)],
           text: 'Check out my amazing trip! 🚴‍♂️\n'
+                'Total Fare: ₹${widget.fareAmount.toStringAsFixed(0)}\n'
                 '#Mjollnir #CyclingLife #FitnessJourney',
         );
         
         print('✅ Trip summary shared successfully');
         
-        // Show success feedback
         Get.snackbar(
           'Success! 🎉',
           'Trip summary shared successfully',
@@ -406,7 +504,6 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     } catch (e) {
       print('❌ Error sharing trip: $e');
       
-      // Show error feedback
       Get.snackbar(
         'Oops! 😔',
         'Could not share trip summary. Please try again.',
@@ -436,27 +533,23 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
     try {
       print('🔄 RideSummary: Handling close...');
 
-      // Ensure main page state is properly reset
       if (Get.isRegistered<MainPageController>()) {
         final mainController = Get.find<MainPageController>();
         print('🔄 Refreshing main page subscription status...');
         await mainController.refreshSubscriptionStatus();
 
-        // Force update to QR scanner if user was on bike tab
         if (mainController.selectedIndex.value == 1) {
           print('🔄 Forcing navigation refresh for bike tab...');
-          mainController.updateSelectedIndex(0); // Go to home first
+          mainController.updateSelectedIndex(0);
           await Future.delayed(Duration(milliseconds: 100));
-          mainController.updateSelectedIndex(1); // Then back to QR scanner
+          mainController.updateSelectedIndex(1);
         }
       }
 
-      // Give some time for state updates
       await Future.delayed(Duration(milliseconds: 300));
 
       print('✅ RideSummary: State reset completed, navigating back...');
 
-      // Navigate back to main page
       if (Get.isDialogOpen == true) {
         Get.back();
       }
@@ -464,7 +557,6 @@ class _RideSummaryState extends State<RideSummary> with WidgetsBindingObserver {
       Get.back();
     } catch (e) {
       print('❌ Error in _handleClose: $e');
-      // Force navigation even if there's an error
       Navigator.of(context).pop();
     }
   }

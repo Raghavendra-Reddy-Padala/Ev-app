@@ -28,7 +28,7 @@ class FetchPlans extends GetxController {
     }
     
     final response = await http.get(
-      Uri.parse("https://ev.coffeecodes.in/v1/subscriptions/station/$bikeId"),
+      Uri.parse("https://ev-api.aks2.mellob.in/v1/subscriptions/station/$bikeId"),
       headers: {
         'Authorization': 'Bearer $authToken',
         'X-Karma-App': 'dafjcnalnsjn',

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mjollnir/features/wallet/controller/wallet_controller.dart';
+import 'package:mjollnir/shared/components/payment/payment_web.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 String formatBalance(double balance) {
@@ -105,15 +106,20 @@ class _WalletTopupState extends State<WalletTopup> {
             TextButton(
               child: const Text("Confirm"),
               onPressed: () async {
-                Navigator.of(context).pop();
-                await _processTopUp();
-              },
-            ),
+                  final String response =
+                      await controller.topUp(_amountController.text);
+                  String url =
+                      "https://payments.avidia.in/payments/$response";
+                  Get.back();
+                  Get.to(paymentWeb(url: url));
+                }),
           ],
         );
       },
     );
   }
+
+  
 
   Future<void> _processTopUp() async {
     setState(() {

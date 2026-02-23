@@ -152,8 +152,8 @@ class _RidingOwnBikeButtonState extends State<_RidingOwnBikeButton> {
 
       await _clearExistingTripData(storage, bikeController);
       final startTripData = StartTrip(
-        bikeId: "_3a0ienbqx",
-        stationId: "6xugln92qx",
+        bikeId: "jbpf-o74p-",
+        stationId: "jfxu2lumqq",
         personal: true,
       );
 
