@@ -134,6 +134,7 @@ jobs:
 
           # Build
           flutter pub get
+          flutter pub upgrade google_fonts
           flutter build apk --release
 
           echo "=== Build complete ==="
