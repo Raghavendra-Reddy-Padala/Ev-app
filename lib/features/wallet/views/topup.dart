@@ -4,7 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mjollnir/features/wallet/controller/wallet_controller.dart';
-import 'package:mjollnir/shared/components/payment/payment_web.dart';
+import 'package:mjollnir/features/wallet/views/billing_address_screen.dart';
+import 'package:mjollnir/features/wallet/views/dodo_checkout_screen.dart';
 import 'package:mjollnir/shared/constants/colors.dart';
 
 String formatBalance(double balance) {
@@ -89,56 +90,53 @@ class _WalletTopupState extends State<WalletTopup> {
     }
 
     _focusNode.unfocus();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Confirm Payment"),
-          content: Text(
-              "Do you want to proceed with the top-up of ₹${_amountController.text}?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              child: const Text("Confirm"),
-              onPressed: () async {
-                  final String response =
-                      await controller.topUp(_amountController.text);
-                  String url =
-                      "https://payments.avidia.in/payments/$response";
-                  Get.back();
-                  Get.to(paymentWeb(url: url));
-                }),
-          ],
-        );
-      },
-    );
+    _startDodoPayment();
+  }
+
+  Future<void> _startDodoPayment() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await controller.createDodoPayment(_amountController.text);
+
+      if (result == null) {
+        Get.snackbar("Error", "Failed to initiate payment. Please try again.");
+        return;
+      }
+
+      if (result['error'] == 'BILLING_ADDRESS_REQUIRED') {
+        setState(() => _isLoading = false);
+        final saved = await Get.to(() => const BillingAddressScreen());
+        if (saved == true) {
+          // Retry payment after billing address is saved
+          _startDodoPayment();
+        }
+        return;
+      }
+
+      final checkoutUrl = result['checkout_url']?.toString() ?? '';
+      final paymentId = result['payment_id']?.toString() ?? '';
+      final paymentAmount = result['amount']?.toString() ?? _amountController.text;
+
+      if (checkoutUrl.isEmpty || paymentId.isEmpty) {
+        Get.snackbar("Error", "Invalid payment response. Please try again.");
+        return;
+      }
+
+      Get.to(() => DodoCheckoutScreen(
+        checkoutUrl: checkoutUrl,
+        paymentId: paymentId,
+        amount: paymentAmount,
+      ));
+    } catch (e) {
+      Get.snackbar("Error", "Payment failed: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   
 
-  Future<void> _processTopUp() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await controller.topUpWallet(_amountController.text);
-      
-      
-    } catch (e) {
-      print("Top-up error: $e");
-      Get.snackbar("Error", "Failed to process top-up: $e");
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   Widget _buildQuickAmountButtons() {
     final amounts = ['50', '100', '200', '500'];
@@ -299,7 +297,7 @@ class _WalletTopupState extends State<WalletTopup> {
                       ),
                     )
                   : Text(
-                      "Proceed with Razorpay",
+                      "Proceed to Pay",
                       style: AppTextThemes.bodyMedium().copyWith(
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

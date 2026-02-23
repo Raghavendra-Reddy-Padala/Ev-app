@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:mjollnir/core/api/api_constants.dart';
 import 'package:mjollnir/core/utils/logger.dart';
@@ -9,6 +10,15 @@ import '../../../shared/models/wallet/wallet_models.dart';
 class WalletController extends BaseController {
   final Rxn<WalletData> walletData = Rxn<WalletData>();
   final RxList<Transaction> transactions = <Transaction>[].obs;
+
+  // Billing address state
+  final RxBool hasBillingAddress = false.obs;
+  final RxMap<String, String> billingAddress = <String, String>{}.obs;
+
+  // Dodo payment state
+  final RxString currentPaymentId = ''.obs;
+  final RxString currentPaymentStatus = ''.obs;
+  Timer? _statusPollTimer;
 
   @override
   void onInit() {
@@ -181,5 +191,175 @@ class WalletController extends BaseController {
   // Method to manually refresh balance (useful for pull-to-refresh)
   Future<void> onRefresh() async {
     await refreshWalletData();
+  }
+
+  @override
+  void onClose() {
+    _statusPollTimer?.cancel();
+    super.onClose();
+  }
+
+  // ============ Billing Address Methods ============
+
+  Future<void> fetchBillingAddress() async {
+    try {
+      final String? authToken = await getToken();
+      if (authToken == null) return;
+
+      final response = await apiService.get(
+        endpoint: ApiConstants.billingAddressGet,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn',
+        },
+      );
+
+      if (response != null && response['success'] == true) {
+        final data = response['data'];
+        hasBillingAddress.value = data['has_billing'] ?? false;
+        billingAddress.value = {
+          'street': data['street']?.toString() ?? '',
+          'city': data['city']?.toString() ?? '',
+          'state': data['state']?.toString() ?? '',
+          'zipcode': data['zipcode']?.toString() ?? '',
+          'country': data['country']?.toString() ?? '',
+        };
+      }
+    } catch (e) {
+      AppLogger.e('Error fetching billing address: $e');
+    }
+  }
+
+  Future<bool> updateBillingAddress({
+    required String street,
+    required String city,
+    required String state,
+    required String zipcode,
+    required String country,
+  }) async {
+    try {
+      isLoading.value = true;
+      final String? authToken = await getToken();
+      if (authToken == null) return false;
+
+      final response = await apiService.post(
+        endpoint: ApiConstants.billingAddressUpdate,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn',
+        },
+        body: {
+          'street': street,
+          'city': city,
+          'state': state,
+          'zipcode': zipcode,
+          'country': country,
+        },
+      );
+
+      if (response != null && response['success'] == true) {
+        hasBillingAddress.value = true;
+        billingAddress.value = {
+          'street': street,
+          'city': city,
+          'state': state,
+          'zipcode': zipcode,
+          'country': country,
+        };
+        return true;
+      }
+      return false;
+    } catch (e) {
+      AppLogger.e('Error updating billing address: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ============ Dodo Payment Methods ============
+
+  Future<Map<String, dynamic>?> createDodoPayment(String amount) async {
+    try {
+      isLoading.value = true;
+      final String? authToken = await getToken();
+      if (authToken == null) return null;
+
+      final response = await apiService.post(
+        endpoint: ApiConstants.dodoCreatePayment,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn',
+        },
+        body: {
+          'amount': amount,
+        },
+      );
+
+      if (response != null && response['success'] == true) {
+        final data = response['data'];
+        currentPaymentId.value = data['payment_id']?.toString() ?? '';
+        currentPaymentStatus.value = 'pending';
+        return {
+          'payment_id': data['payment_id'],
+          'checkout_url': data['checkout_url'],
+          'amount': data['amount'],
+        };
+      } else {
+        final data = response?['data'];
+        if (data != null && data['error_code'] == 'BILLING_ADDRESS_REQUIRED') {
+          return {'error': 'BILLING_ADDRESS_REQUIRED'};
+        }
+        return null;
+      }
+    } catch (e) {
+      AppLogger.e('Error creating Dodo payment: $e');
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<String> checkPaymentStatus(String paymentId) async {
+    try {
+      final String? authToken = await getToken();
+      if (authToken == null) return 'pending';
+
+      final response = await apiService.get(
+        endpoint: '${ApiConstants.dodoPaymentStatus}/$paymentId',
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'X-Karma-App': 'dafjcnalnsjn',
+        },
+      );
+
+      if (response != null && response['success'] == true) {
+        final status = response['data']['status']?.toString() ?? 'pending';
+        currentPaymentStatus.value = status;
+        return status;
+      }
+      return 'pending';
+    } catch (e) {
+      AppLogger.e('Error checking payment status: $e');
+      return 'pending';
+    }
+  }
+
+  void startPollingPaymentStatus(String paymentId, {Function(String)? onStatusChange}) {
+    _statusPollTimer?.cancel();
+    _statusPollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      final status = await checkPaymentStatus(paymentId);
+      if (status == 'success' || status == 'failed' || status == 'cancelled') {
+        timer.cancel();
+        if (status == 'success') {
+          await refreshWalletData();
+        }
+        onStatusChange?.call(status);
+      }
+    });
+  }
+
+  void stopPollingPaymentStatus() {
+    _statusPollTimer?.cancel();
   }
 }

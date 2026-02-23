@@ -58,4 +58,13 @@ class ApiConstants {
   static const String issues = 'issues';
     static const String userFollowers = 'user/followers';
 
+  // Dodo Payments
+  static const String dodoCreatePayment = 'dodo/create-payment';
+  static const String dodoPaymentStatus = 'dodo/status';
+  static const String dodoWebhook = 'dodo/webhook';
+
+  // Billing Address
+  static const String billingAddressGet = 'user/billing-address';
+  static const String billingAddressUpdate = 'user/billing-address';
+
 }
