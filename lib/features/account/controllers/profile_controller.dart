@@ -69,15 +69,25 @@ class ProfileController extends BaseController {
         return;
       }
       final response = await useApiOrDummy(
-               // dummyData: () => _getDummyActivityGraphData(dateRange, metric),
-        apiCall: () async => _getDummyActivityGraphData(dateRange, metric),
-
-        // dummyData: () => _getDummyActivityGraphData(dateRange, metric),
+        apiCall: () => apiService.post(
+          endpoint: ApiConstants.activityGraph,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'X-Karma-App': 'dafjcnalnsjn'
+          },
+          body: {
+            'metric': metric,
+            'start_date': '${dateRange.start.year}-${dateRange.start.month.toString().padLeft(2, '0')}-${dateRange.start.day.toString().padLeft(2, '0')}',
+            'end_date': '${dateRange.end.year}-${dateRange.end.month.toString().padLeft(2, '0')}-${dateRange.end.day.toString().padLeft(2, '0')}',
+          },
+        ),
       );
 
-      if (response != null) {
+      if (response != null && response['success'] == true && response['data'] != null) {
         activityGraphData.value =
-            ActivityGraphData.fromJson(response, dateRange, metric);
+            ActivityGraphData.fromJson(response['data'], dateRange, metric);
+      } else {
+        activityGraphData.value = ActivityGraphData.dummy(dateRange, metric);
       }
     } catch (e) {
       handleError(e);

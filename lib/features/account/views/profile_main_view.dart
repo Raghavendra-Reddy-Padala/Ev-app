@@ -528,7 +528,6 @@ class _ProfileContent extends StatelessWidget {
 
   Widget _buildActivityGraph() {
     return Obx(() {
-      controller.fetchTripSummary();
       final summary = controller.tripSummary.value;
 
       return ActivityGraphWidget(

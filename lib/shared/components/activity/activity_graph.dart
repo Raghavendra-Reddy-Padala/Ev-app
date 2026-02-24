@@ -161,6 +161,13 @@ class ActivityGraphWidget extends StatelessWidget {
     final totalValue = graphData.totalValue;
     final unit = graphData.unit;
 
+    final avgValue = graphData.data.isNotEmpty
+        ? totalValue / graphData.data.length
+        : 0.0;
+    final peakValue = graphData.data.isNotEmpty
+        ? graphData.data.values.reduce((a, b) => a > b ? a : b)
+        : 0.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
@@ -170,11 +177,11 @@ class ActivityGraphWidget extends StatelessWidget {
         ),
         _buildStatItem(
           'Average',
-          '${(totalValue / graphData.data.length).toStringAsFixed(1)} $unit',
+          '${avgValue.toStringAsFixed(1)} $unit',
         ),
         _buildStatItem(
           'Peak',
-          '${graphData.data.values.reduce((a, b) => a > b ? a : b).toStringAsFixed(1)} $unit',
+          '${peakValue.toStringAsFixed(1)} $unit',
         ),
       ],
     );

@@ -22,12 +22,38 @@ class ActivityGraphData {
     final Map<int, double> data = {};
     final Map<int, String> xLabels = {};
 
-    if (json['data'] != null) {
-      final List<dynamic> dataList = json['data'];
-      for (int i = 0; i < dataList.length; i++) {
-        final item = dataList[i];
-        data[i] = (item['value'] ?? 0.0).toDouble();
-        xLabels[i] = item['label'] ?? '';
+    final rawData = json['data'];
+    final rawLabels = json['x_labels'];
+
+    if (rawData != null) {
+      if (rawData is List) {
+        // Array format: [{value: ..., label: ...}, ...]
+        for (int i = 0; i < rawData.length; i++) {
+          final item = rawData[i];
+          data[i] = (item['value'] ?? 0.0).toDouble();
+          xLabels[i] = item['label'] ?? '';
+        }
+      } else if (rawData is Map) {
+        // Map format from backend: {"0": 5.2, "1": 3.1, ...}
+        rawData.forEach((key, value) {
+          final index = int.tryParse(key.toString()) ?? 0;
+          data[index] = (value ?? 0.0).toDouble();
+        });
+        // Parse x_labels map
+        if (rawLabels != null && rawLabels is Map) {
+          rawLabels.forEach((key, value) {
+            final index = int.tryParse(key.toString()) ?? 0;
+            xLabels[index] = value?.toString() ?? '';
+          });
+        }
+      }
+    }
+
+    // If no labels were parsed, generate day labels from date range
+    if (xLabels.isEmpty && data.isNotEmpty) {
+      for (final key in data.keys) {
+        final date = dateRange.start.add(Duration(days: key));
+        xLabels[key] = _formatDateLabel(date, dateRange.end.difference(dateRange.start).inDays + 1);
       }
     }
 
@@ -37,7 +63,7 @@ class ActivityGraphData {
       dateRange: dateRange,
       metric: metric,
       totalValue: (json['total_value'] ?? 0.0).toDouble(),
-      unit: json['unit'] ?? '',
+      unit: json['unit'] ?? _getUnitForMetric(metric),
     );
   }
 

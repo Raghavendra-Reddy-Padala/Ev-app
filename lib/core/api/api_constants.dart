@@ -48,7 +48,7 @@ class ApiConstants {
 
   static const String referralCode = 'user/invite_code';
   static const String referralBenefits = 'user/referral_benefits';
-  static const String activityGraph = 'analytics/activity_graph';
+  static const String activityGraph = 'user/metrics';
 
   static const String toggleBike = 'metal/toggle';
 
