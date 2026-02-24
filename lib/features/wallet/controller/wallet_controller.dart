@@ -63,7 +63,7 @@ class WalletController extends BaseController {
             walletData.refresh();
             
             AppLogger.i('Wallet balance fetched: ${walletData.value?.balance}');
-            AppLogger.i('Raw API balance: ${response['data']['balance']}');
+            AppLogger.i('Raw API balance: ${response['data']?['balance']}');
             return true;
           }
           return false;

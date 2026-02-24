@@ -1,26 +1,26 @@
 class WalletBalanceResponse {
   final bool success;
-  final WalletData data;
+  final WalletData? data;
   final String message;
 
   WalletBalanceResponse({
     required this.success,
-    required this.data,
+    this.data,
     required this.message,
   });
 
   factory WalletBalanceResponse.fromJson(Map<String, dynamic> json) {
     return WalletBalanceResponse(
-      success: json['success'],
-      data: WalletData.fromJson(json['data']),
-      message: json['message'],
+      success: json['success'] ?? false,
+      data: json['data'] != null ? WalletData.fromJson(json['data']) : null,
+      message: json['message'] ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'success': success,
-      'data': data.toMap(),
+      'data': data?.toMap(),
       'message': message,
     };
   }
@@ -37,8 +37,7 @@ class WalletData {
 
   factory WalletData.fromJson(Map<String, dynamic> json) {
     return WalletData(
-      userId: json['user_id'],
-      // Convert from paisa to rupees (divide by 100)
+      userId: json['user_id']?.toString() ?? '',
       balance: (json['balance'] ?? 0).toDouble(),
     );
   }

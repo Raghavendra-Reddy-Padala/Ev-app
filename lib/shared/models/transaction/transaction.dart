@@ -64,12 +64,15 @@ class TransactionResponse {
   }
 
   factory TransactionResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
     return TransactionResponse(
-      success: json['success'],
-      transactions: (json['data'] as List)
-          .map((transactionJson) => Transaction.fromJson(transactionJson))
-          .toList(),
-      message: json['message'],
+      success: json['success'] ?? false,
+      transactions: data != null && data is List
+          ? data
+              .map((transactionJson) => Transaction.fromJson(transactionJson))
+              .toList()
+          : [],
+      message: json['message'] ?? '',
     );
   }
 }
